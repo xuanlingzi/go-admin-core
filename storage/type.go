@@ -47,3 +47,21 @@ type AdapterLocker interface {
 	String() string
 	Lock(key string, ttl int64, options *redislock.Options) (*redislock.Lock, error)
 }
+
+type AdapterSms interface {
+	String() string
+	Send(phones []string, templateId string, params []string) error
+}
+
+type AdapterCos interface {
+	String() string
+	PutFromFile(fileLocation string) error
+}
+
+type AdapterAmqp interface {
+	String() string
+	PublishOnQueue(queueName string, body []byte) error
+	SubscribeToQueue(queueName string, consumerName string, handlerFunc AmqpConsumerFunc) error
+}
+
+type AmqpConsumerFunc func([]byte) error
