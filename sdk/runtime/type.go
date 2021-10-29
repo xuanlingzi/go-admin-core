@@ -52,19 +52,22 @@ type Runtime interface {
 	GetQueuePrefix(string) storage.AdapterQueue
 
 	SetLockerAdapter(storage.AdapterLocker)
-	GetLockerAdapter() map[string]storage.AdapterLocker
+	GetLockerAdapter() storage.AdapterLocker
 	GetLockerPrefix(string) storage.AdapterLocker
 
-	SetSmsAdapter(string, storage.AdapterSms)
-	GetSmsAdapter() storage.AdapterSms
-	GetSmsKey(key string) storage.AdapterSms
+	SetAnnounceAdapter(string, storage.AdapterAnnounce)
+	GetAnnounceAdapter() storage.AdapterAnnounce
+	GetAnnounceAdapters() map[string]storage.AdapterAnnounce
+	GetAnnounceKey(key string) storage.AdapterAnnounce
 
-	SetCosAdapter(string, storage.AdapterCos)
-	GetCosAdapter() map[string]storage.AdapterCos
-	GetCosKey(key string) storage.AdapterCos
+	SetFileStoreAdapter(string, storage.AdapterFileStore)
+	GetFileStoreAdapter() storage.AdapterFileStore
+	GetFileStoreAdapters() map[string]storage.AdapterFileStore
+	GetFileStoreKey(key string) storage.AdapterFileStore
 
 	SetAmqpAdapter(string, storage.AdapterAmqp)
-	GetAmqpAdapter() map[string]storage.AdapterAmqp
+	GetAmqpAdapter() storage.AdapterAmqp
+	GetAmqpAdapters() map[string]storage.AdapterAmqp
 	GetAmqpKey(key string) storage.AdapterAmqp
 
 	SetHandler(key string, routerGroup func(r *gin.RouterGroup, hand ...*gin.HandlerFunc))

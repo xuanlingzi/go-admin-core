@@ -48,14 +48,14 @@ type AdapterLocker interface {
 	Lock(key string, ttl int64, options *redislock.Options) (*redislock.Lock, error)
 }
 
-type AdapterSms interface {
+type AdapterAnnounce interface {
 	String() string
-	Send(phones []string, templateId string, params []string) error
+	Send(addresses []string, template string, params []string) error
 }
 
-type AdapterCos interface {
+type AdapterFileStore interface {
 	String() string
-	PutFromFile(fileLocation string) error
+	Upload(name, location string) error
 }
 
 type AdapterAmqp interface {
