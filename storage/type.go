@@ -55,7 +55,7 @@ type AdapterAnnounce interface {
 
 type AdapterFileStore interface {
 	String() string
-	Upload(name, location string) error
+	Upload(name, location string) (string, error)
 }
 
 type AdapterAmqp interface {

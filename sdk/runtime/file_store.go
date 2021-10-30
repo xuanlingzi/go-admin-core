@@ -18,6 +18,6 @@ func (e *FileStore) String() string {
 }
 
 // Upload Put file to fileStores
-func (e FileStore) Upload(name, location string) error {
+func (e FileStore) Upload(name, location string) (string, error) {
 	return e.store.Upload(name, location)
 }
