@@ -70,6 +70,11 @@ func (e Cache) HashGet(hk, key string) (string, error) {
 	return e.store.HashGet(hk, e.prefix+intervalTenant+key)
 }
 
+// HashSet set val in hashtable cache
+func (e Cache) HashSet(hk, key string, val interface{}, expire int) error {
+	return e.store.HashSet(hk, e.prefix+intervalTenant+key, val, expire)
+}
+
 // HashDel delete one key:value pair in hashtable cache
 func (e Cache) HashDel(hk, key string) error {
 	return e.store.HashDel(hk, e.prefix+intervalTenant+key)

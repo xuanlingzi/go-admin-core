@@ -57,6 +57,11 @@ func (r *Redis) HashGet(hk, key string) (string, error) {
 	return r.client.HGet(hk, key).Result()
 }
 
+// HashSet delete key in specify redis's hashtable
+func (r *Redis) HashSet(hk, key string, val interface{}, _ int) error {
+	return r.client.HSet(hk, key, val).Err()
+}
+
 // HashDel delete key in specify redis's hashtable
 func (r *Redis) HashDel(hk, key string) error {
 	return r.client.HDel(hk, key).Err()
