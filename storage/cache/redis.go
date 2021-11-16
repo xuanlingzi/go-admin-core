@@ -52,6 +52,11 @@ func (r *Redis) Del(key string) error {
 	return r.client.Del(key).Err()
 }
 
+// HashKeys from key
+func (r *Redis) HashKeys(hk string) ([]string, error) {
+	return r.client.HKeys(hk).Result()
+}
+
 // HashGet from key
 func (r *Redis) HashGet(hk, key string) (string, error) {
 	return r.client.HGet(hk, key).Result()

@@ -65,6 +65,11 @@ func (e Cache) Del(key string) error {
 	return e.store.Del(e.prefix + intervalTenant + key)
 }
 
+// HashKeys get val in hashtable cache
+func (e Cache) HashKeys(hk string) ([]string, error) {
+	return e.store.HashKeys(hk)
+}
+
 // HashGet get val in hashtable cache
 func (e Cache) HashGet(hk, key string) (string, error) {
 	return e.store.HashGet(hk, e.prefix+intervalTenant+key)

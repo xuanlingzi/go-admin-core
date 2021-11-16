@@ -89,6 +89,11 @@ func (m *Memory) del(key string) error {
 	return nil
 }
 
+func (m *Memory) HashKeys(hk string) ([]string, error) {
+	// TODO 返回Keys
+	return []string{}, nil
+}
+
 func (m *Memory) HashGet(hk, key string) (string, error) {
 	item, err := m.getItem(hk + key)
 	if err != nil || item == nil {

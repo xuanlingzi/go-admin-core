@@ -15,6 +15,7 @@ type AdapterCache interface {
 	Get(key string) (string, error)
 	Set(key string, val interface{}, expire int) error
 	Del(key string) error
+	HashKeys(hk string) ([]string, error)
 	HashGet(hk, key string) (string, error)
 	HashSet(hk, key string, val interface{}, expire int) error
 	HashDel(hk, key string) error
