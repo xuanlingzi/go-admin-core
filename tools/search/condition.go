@@ -70,6 +70,7 @@ type resolveSearchTag struct {
 	Table  string
 	On     []string
 	Join   string
+	Custom string
 }
 
 // makeTag 解析search的tag标签
@@ -102,6 +103,10 @@ func makeTag(tag string) *resolveSearchTag {
 		case "join":
 			if len(ts) > 1 {
 				r.Join = ts[1]
+			}
+		case "custom":
+			if len(ts) > 1 {
+				r.Custom = ts[1]
 			}
 		}
 	}

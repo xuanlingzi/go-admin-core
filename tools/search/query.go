@@ -100,7 +100,11 @@ func ResolveSearchQuery(driver string, q interface{}, condition Condition) {
 		case "order":
 			switch strings.ToLower(qValue.Field(i).String()) {
 			case "desc", "asc":
-				condition.SetOrder(fmt.Sprintf("`%s`.`%s` %s", t.Table, t.Column, qValue.Field(i).String()))
+				if t.Custom != "" {
+					condition.SetOrder(fmt.Sprintf(t.Custom+" %s", qValue.Field(i).String()))
+				} else {
+					condition.SetOrder(fmt.Sprintf("`%s`.`%s` %s", t.Table, t.Column, qValue.Field(i).String()))
+				}
 			}
 		}
 	}
