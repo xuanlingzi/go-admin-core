@@ -1,12 +1,12 @@
 package runtime
 
 import (
-	"github.com/go-admin-team/go-admin-core/storage"
+	"github.com/xuanlingzi/go-admin-core/storage"
 )
 
 type FileStore struct {
-	prefix          string
-	store           storage.AdapterFileStore
+	prefix string
+	store  storage.AdapterFileStore
 }
 
 // String string输出

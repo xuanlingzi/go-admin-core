@@ -1,12 +1,12 @@
 package runtime
 
 import (
-	"github.com/go-admin-team/go-admin-core/storage"
+	"github.com/xuanlingzi/go-admin-core/storage"
 )
 
 type Amqp struct {
-	prefix          string
-	store           storage.AdapterAmqp
+	prefix string
+	store  storage.AdapterAmqp
 }
 
 // String string输出

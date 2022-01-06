@@ -12,9 +12,9 @@ import (
 	"fmt"
 	"time"
 
-	log "github.com/go-admin-team/go-admin-core/logger"
-	"github.com/go-admin-team/go-admin-core/server/grpc/interceptors/logging"
-	reqtags "github.com/go-admin-team/go-admin-core/server/grpc/interceptors/request_tag"
+	log "github.com/xuanlingzi/go-admin-core/logger"
+	"github.com/xuanlingzi/go-admin-core/server/grpc/interceptors/logging"
+	reqtags "github.com/xuanlingzi/go-admin-core/server/grpc/interceptors/request_tag"
 	middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	opentracing "github.com/grpc-ecosystem/go-grpc-middleware/tracing/opentracing"
 	"google.golang.org/grpc"

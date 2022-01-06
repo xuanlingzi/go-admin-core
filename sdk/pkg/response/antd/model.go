@@ -3,7 +3,7 @@ package antd
 import (
 	"fmt"
 
-	resp "github.com/go-admin-team/go-admin-core/sdk/pkg/response"
+	resp "github.com/xuanlingzi/go-admin-core/sdk/pkg/response"
 )
 
 const (
@@ -29,10 +29,10 @@ type response struct {
 
 type Pages struct {
 	Response
-	Data interface{} `json:"data,omitempty"` // response data
-	Total    int `json:"total,omitempty"`
-	Current  int `json:"current,omitempty"`
-	PageSize int `json:"pageSize,omitempty"`
+	Data     interface{} `json:"data,omitempty"` // response data
+	Total    int         `json:"total,omitempty"`
+	Current  int         `json:"current,omitempty"`
+	PageSize int         `json:"pageSize,omitempty"`
 }
 
 type pages struct {

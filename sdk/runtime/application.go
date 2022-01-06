@@ -6,9 +6,9 @@ import (
 	"sync"
 
 	"github.com/casbin/casbin/v2"
-	"github.com/go-admin-team/go-admin-core/logger"
-	"github.com/go-admin-team/go-admin-core/storage"
-	"github.com/go-admin-team/go-admin-core/storage/queue"
+	"github.com/xuanlingzi/go-admin-core/logger"
+	"github.com/xuanlingzi/go-admin-core/storage"
+	"github.com/xuanlingzi/go-admin-core/storage/queue"
 	"github.com/robfig/cron/v3"
 	"gorm.io/gorm"
 )
@@ -24,9 +24,9 @@ type Application struct {
 	queue       storage.AdapterQueue
 	locker      storage.AdapterLocker
 	memoryQueue storage.AdapterQueue
-	fileStores map[string]storage.AdapterFileStore
-	announces  map[string]storage.AdapterAnnounce
-	amqp       map[string]storage.AdapterAmqp
+	fileStores  map[string]storage.AdapterFileStore
+	announces   map[string]storage.AdapterAnnounce
+	amqp        map[string]storage.AdapterAmqp
 	handler     map[string][]func(r *gin.RouterGroup, hand ...*gin.HandlerFunc)
 	routers     []Router
 }

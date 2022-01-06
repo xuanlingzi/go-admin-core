@@ -1,12 +1,12 @@
 package runtime
 
 import (
-	"github.com/go-admin-team/go-admin-core/storage"
+	"github.com/xuanlingzi/go-admin-core/storage"
 )
 
 type Announce struct {
-	prefix          string
-	store           storage.AdapterAnnounce
+	prefix string
+	store  storage.AdapterAnnounce
 }
 
 // String string输出
