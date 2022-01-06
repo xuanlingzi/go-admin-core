@@ -24,12 +24,12 @@ require (
 	github.com/slok/go-http-metrics v0.10.0
 	github.com/smartystreets/goconvey v1.6.4
 	github.com/xuanlingzi/go-admin-core v1.3.9
-	github.com/xuanlingzi/go-admin-core/plugins/logger/zap v0.0.0-20210610020726-2db73adb505d
+	github.com/xuanlingzi/go-admin-core/plugins/logger/zap v1.3.0-rc.2
 	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5
 	gorm.io/gorm v1.21.11
 )
 
-replace (
-	github.com/xuanlingzi/go-admin-core => ../
-	github.com/xuanlingzi/go-admin-core/plugins/logger/zap => ../plugins/logger/zap
-)
+//replace (
+//	github.com/xuanlingzi/go-admin-core => ../
+//	github.com/xuanlingzi/go-admin-core/plugins/logger/zap => ../plugins/logger/zap
+//)
