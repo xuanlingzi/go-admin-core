@@ -67,22 +67,22 @@ func (e Cache) Del(key string) error {
 
 // HashKeys get val in hashtable cache
 func (e Cache) HashKeys(hk string) ([]string, error) {
-	return e.store.HashKeys(hk)
+	return e.store.HashKeys(e.prefix + intervalTenant + hk)
 }
 
 // HashGet get val in hashtable cache
 func (e Cache) HashGet(hk, key string) (string, error) {
-	return e.store.HashGet(hk, e.prefix+intervalTenant+key)
+	return e.store.HashGet(e.prefix+intervalTenant+hk, key)
 }
 
 // HashSet set val in hashtable cache
 func (e Cache) HashSet(hk, key string, val interface{}, expire int) error {
-	return e.store.HashSet(hk, e.prefix+intervalTenant+key, val, expire)
+	return e.store.HashSet(e.prefix+intervalTenant+hk, key, val, expire)
 }
 
 // HashDel delete one key:value pair in hashtable cache
 func (e Cache) HashDel(hk, key string) error {
-	return e.store.HashDel(hk, e.prefix+intervalTenant+key)
+	return e.store.HashDel(e.prefix+intervalTenant+hk, key)
 }
 
 // Increase value
