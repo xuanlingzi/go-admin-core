@@ -23,11 +23,11 @@ require (
 	github.com/shamsher31/goimgext v1.0.0
 	github.com/slok/go-http-metrics v0.10.0
 	github.com/smartystreets/goconvey v1.6.4
-	github.com/xuanlingzi/go-admin-core v1.3.9
+	github.com/xuanlingzi/go-admin-core v1.3.10
 	github.com/xuanlingzi/go-admin-core/plugins/logger/zap v1.3.5-rc.1
 	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5
 	gorm.io/gorm v1.21.11
 )
-replace (
-	github.com/xuanlingzi/go-admin-core => ../
-)
+//replace (
+//	github.com/xuanlingzi/go-admin-core => ../
+//)
