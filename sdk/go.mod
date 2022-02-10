@@ -28,3 +28,6 @@ require (
 	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5
 	gorm.io/gorm v1.21.11
 )
+replace (
+	github.com/xuanlingzi/go-admin-core => ../
+)

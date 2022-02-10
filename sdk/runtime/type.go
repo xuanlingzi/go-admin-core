@@ -2,12 +2,13 @@ package runtime
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/xuanlingzi/go-admin-core/message"
 	"net/http"
 
 	"github.com/casbin/casbin/v2"
+	"github.com/robfig/cron/v3"
 	"github.com/xuanlingzi/go-admin-core/logger"
 	"github.com/xuanlingzi/go-admin-core/storage"
-	"github.com/robfig/cron/v3"
 	"gorm.io/gorm"
 )
 
@@ -55,20 +56,25 @@ type Runtime interface {
 	GetLockerAdapter() storage.AdapterLocker
 	GetLockerPrefix(string) storage.AdapterLocker
 
-	SetAnnounceAdapter(string, storage.AdapterAnnounce)
-	GetAnnounceAdapter() storage.AdapterAnnounce
-	GetAnnounceAdapters() map[string]storage.AdapterAnnounce
-	GetAnnounceKey(key string) storage.AdapterAnnounce
+	SetSmsAdapter(string, message.AdapterSms)
+	GetSmsAdapter() message.AdapterSms
+	GetSmsAdapters() map[string]message.AdapterSms
+	GetSmsKey(key string) message.AdapterSms
+
+	SetMailAdapter(string, message.AdapterMail)
+	GetMailAdapter() message.AdapterMail
+	GetMailAdapters() map[string]message.AdapterMail
+	GetMailKey(key string) message.AdapterMail
 
 	SetFileStoreAdapter(string, storage.AdapterFileStore)
 	GetFileStoreAdapter() storage.AdapterFileStore
 	GetFileStoreAdapters() map[string]storage.AdapterFileStore
 	GetFileStoreKey(key string) storage.AdapterFileStore
 
-	SetAmqpAdapter(string, storage.AdapterAmqp)
-	GetAmqpAdapter() storage.AdapterAmqp
-	GetAmqpAdapters() map[string]storage.AdapterAmqp
-	GetAmqpKey(key string) storage.AdapterAmqp
+	SetAmqpAdapter(string, message.AdapterAmqp)
+	GetAmqpAdapter() message.AdapterAmqp
+	GetAmqpAdapters() map[string]message.AdapterAmqp
+	GetAmqpKey(key string) message.AdapterAmqp
 
 	SetHandler(key string, routerGroup func(r *gin.RouterGroup, hand ...*gin.HandlerFunc))
 	GetHandler() map[string][]func(r *gin.RouterGroup, hand ...*gin.HandlerFunc)

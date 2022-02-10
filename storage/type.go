@@ -50,20 +50,7 @@ type AdapterLocker interface {
 	Lock(key string, ttl int64, options *redislock.Options) (*redislock.Lock, error)
 }
 
-type AdapterAnnounce interface {
-	String() string
-	Send(addresses []string, template string, params []string) error
-}
-
 type AdapterFileStore interface {
 	String() string
 	Upload(name, location string) (string, error)
 }
-
-type AdapterAmqp interface {
-	String() string
-	PublishOnQueue(queueName string, body []byte) error
-	SubscribeToQueue(queueName string, consumerName string, handlerFunc AmqpConsumerFunc) error
-}
-
-type AmqpConsumerFunc func([]byte) error

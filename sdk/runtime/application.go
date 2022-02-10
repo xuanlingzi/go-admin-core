@@ -2,14 +2,15 @@ package runtime
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/xuanlingzi/go-admin-core/message"
 	"net/http"
 	"sync"
 
 	"github.com/casbin/casbin/v2"
+	"github.com/robfig/cron/v3"
 	"github.com/xuanlingzi/go-admin-core/logger"
 	"github.com/xuanlingzi/go-admin-core/storage"
 	"github.com/xuanlingzi/go-admin-core/storage/queue"
-	"github.com/robfig/cron/v3"
 	"gorm.io/gorm"
 )
 
@@ -25,8 +26,9 @@ type Application struct {
 	locker      storage.AdapterLocker
 	memoryQueue storage.AdapterQueue
 	fileStores  map[string]storage.AdapterFileStore
-	announces   map[string]storage.AdapterAnnounce
-	amqp        map[string]storage.AdapterAmqp
+	sms         map[string]message.AdapterSms
+	mail        map[string]message.AdapterMail
+	amqp        map[string]message.AdapterAmqp
 	handler     map[string][]func(r *gin.RouterGroup, hand ...*gin.HandlerFunc)
 	routers     []Router
 }
@@ -129,8 +131,9 @@ func NewConfig() *Application {
 		middlewares: make(map[string]interface{}),
 		memoryQueue: queue.NewMemory(10000),
 		fileStores:  make(map[string]storage.AdapterFileStore),
-		announces:   make(map[string]storage.AdapterAnnounce),
-		amqp:        make(map[string]storage.AdapterAmqp),
+		sms:         make(map[string]message.AdapterSms),
+		mail:        make(map[string]message.AdapterMail),
+		amqp:        make(map[string]message.AdapterAmqp),
 		handler:     make(map[string][]func(r *gin.RouterGroup, hand ...*gin.HandlerFunc)),
 		routers:     make([]Router, 0),
 	}
@@ -223,30 +226,56 @@ func (e *Application) GetLockerPrefix(key string) storage.AdapterLocker {
 	return NewLocker(key, e.locker)
 }
 
-// SetAnnounceAdapter 设置缓存
-func (e *Application) SetAnnounceAdapter(key string, c storage.AdapterAnnounce) {
+// SetSmsAdapter 设置缓存
+func (e *Application) SetSmsAdapter(key string, c message.AdapterSms) {
 	e.mux.Lock()
 	defer e.mux.Unlock()
-	e.announces[key] = c
+	e.sms[key] = c
 }
 
-// GetAnnounceAdapter 获取缓存
-func (e *Application) GetAnnounceAdapter() storage.AdapterAnnounce {
-	return e.GetAnnounceKey("*")
+// GetSmsAdapter 获取缓存
+func (e *Application) GetSmsAdapter() message.AdapterSms {
+	return e.GetSmsKey("*")
 }
 
-// GetAnnounceAdapters 获取缓存
-func (e *Application) GetAnnounceAdapters() map[string]storage.AdapterAnnounce {
+// GetSmsAdapters 获取缓存
+func (e *Application) GetSmsAdapters() map[string]message.AdapterSms {
 	e.mux.Lock()
 	defer e.mux.Unlock()
-	return e.announces
+	return e.sms
 }
 
-// GetAnnounceKey 获取带租户标记的sms
-func (e *Application) GetAnnounceKey(key string) storage.AdapterAnnounce {
+// GetSmsKey 获取带租户标记的sms
+func (e *Application) GetSmsKey(key string) message.AdapterSms {
 	e.mux.Lock()
 	defer e.mux.Unlock()
-	return e.announces[key]
+	return e.sms[key]
+}
+
+// SetMailAdapter 设置缓存
+func (e *Application) SetMailAdapter(key string, c message.AdapterMail) {
+	e.mux.Lock()
+	defer e.mux.Unlock()
+	e.mail[key] = c
+}
+
+// GetMailAdapter 获取缓存
+func (e *Application) GetMailAdapter() message.AdapterMail {
+	return e.GetMailKey("*")
+}
+
+// GetMailAdapters 获取缓存
+func (e *Application) GetMailAdapters() map[string]message.AdapterMail {
+	e.mux.Lock()
+	defer e.mux.Unlock()
+	return e.mail
+}
+
+// GetMailKey 获取带租户标记的mail
+func (e *Application) GetMailKey(key string) message.AdapterMail {
+	e.mux.Lock()
+	defer e.mux.Unlock()
+	return e.mail[key]
 }
 
 // SetFileStoreAdapter 设置缓存
@@ -276,24 +305,24 @@ func (e *Application) GetFileStoreKey(key string) storage.AdapterFileStore {
 }
 
 // SetAmqpAdapter 设置缓存
-func (e *Application) SetAmqpAdapter(key string, c storage.AdapterAmqp) {
+func (e *Application) SetAmqpAdapter(key string, c message.AdapterAmqp) {
 	e.mux.Lock()
 	defer e.mux.Unlock()
 	e.amqp[key] = c
 }
 
 // GetAmqpAdapter 获取缓存
-func (e *Application) GetAmqpAdapter() storage.AdapterAmqp {
+func (e *Application) GetAmqpAdapter() message.AdapterAmqp {
 	return e.GetAmqpKey("*")
 }
 
 // GetAmqpAdapters 获取缓存
-func (e *Application) GetAmqpAdapters() map[string]storage.AdapterAmqp {
+func (e *Application) GetAmqpAdapters() map[string]message.AdapterAmqp {
 	return e.amqp
 }
 
 // GetAmqpKey 获取带租户标记的amqp
-func (e *Application) GetAmqpKey(key string) storage.AdapterAmqp {
+func (e *Application) GetAmqpKey(key string) message.AdapterAmqp {
 	e.mux.Lock()
 	defer e.mux.Unlock()
 	return e.amqp[key]
