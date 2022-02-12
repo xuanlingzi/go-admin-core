@@ -16,3 +16,4 @@
  - [x] AMQP
  - [x] Redis增加支持HashSet、HashKeys
  - [x] DTO配置search增加自定义排序模式
+ - [x] 邮件发送
