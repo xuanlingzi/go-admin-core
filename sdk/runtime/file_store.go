@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"github.com/xuanlingzi/go-admin-core/storage"
+	"os"
 )
 
 type FileStore struct {
@@ -18,6 +19,14 @@ func (e *FileStore) String() string {
 }
 
 // Upload Put file to fileStores
-func (e FileStore) Upload(name, location string) (string, error) {
-	return e.store.Upload(name, location)
+func (e FileStore) Upload(name, file *os.File) (string, error) {
+	return e.store.Upload(name, file)
+}
+
+func (e FileStore) UploadFromFile(name, location string) (string, error) {
+	return e.store.UploadFromFile(name, location)
+}
+
+func (e FileStore) GetClient(name, location string) interface{} {
+	return e.store.GetClient()
 }

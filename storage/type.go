@@ -1,9 +1,9 @@
 package storage
 
 import (
-	"time"
-
 	"github.com/bsm/redislock"
+	"os"
+	"time"
 )
 
 const (
@@ -52,5 +52,7 @@ type AdapterLocker interface {
 
 type AdapterFileStore interface {
 	String() string
-	Upload(name, location string) (string, error)
+	Upload(name, file *os.File) (string, error)
+	UploadFromFile(name, location string) (string, error)
+	GetClient() interface{}
 }
