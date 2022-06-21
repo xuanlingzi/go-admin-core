@@ -29,6 +29,7 @@ type Application struct {
 	sms         map[string]message.AdapterSms
 	mail        map[string]message.AdapterMail
 	amqp        map[string]message.AdapterAmqp
+	thirdParty  map[string]message.AdapterThirdParty
 	handler     map[string][]func(r *gin.RouterGroup, hand ...*gin.HandlerFunc)
 	routers     []Router
 }
@@ -134,6 +135,7 @@ func NewConfig() *Application {
 		sms:         make(map[string]message.AdapterSms),
 		mail:        make(map[string]message.AdapterMail),
 		amqp:        make(map[string]message.AdapterAmqp),
+		thirdParty:  make(map[string]message.AdapterThirdParty),
 		handler:     make(map[string][]func(r *gin.RouterGroup, hand ...*gin.HandlerFunc)),
 		routers:     make([]Router, 0),
 	}
@@ -326,6 +328,30 @@ func (e *Application) GetAmqpKey(key string) message.AdapterAmqp {
 	e.mux.Lock()
 	defer e.mux.Unlock()
 	return e.amqp[key]
+}
+
+// SetThirdPartyAdapter 设置缓存
+func (e *Application) SetThirdPartyAdapter(key string, c message.AdapterThirdParty) {
+	e.mux.Lock()
+	defer e.mux.Unlock()
+	e.thirdParty[key] = c
+}
+
+// GetThirdPartyAdapter 获取缓存
+func (e *Application) GetThirdPartyAdapter() message.AdapterThirdParty {
+	return e.GetThirdPartyKey("*")
+}
+
+// GetThirdPartyAdapters 获取缓存
+func (e *Application) GetThirdPartyAdapters() map[string]message.AdapterThirdParty {
+	return e.thirdParty
+}
+
+// GetThirdPartyKey 获取带租户标记的amqp
+func (e *Application) GetThirdPartyKey(key string) message.AdapterThirdParty {
+	e.mux.Lock()
+	defer e.mux.Unlock()
+	return e.thirdParty[key]
 }
 
 func (e *Application) SetHandler(key string, routerGroup func(r *gin.RouterGroup, hand ...*gin.HandlerFunc)) {

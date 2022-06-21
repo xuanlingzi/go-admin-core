@@ -157,7 +157,7 @@ var (
 	ErrMissingLoginValues = errors.New("missing Username or Password or Code")
 
 	// ErrFailedAuthentication indicates authentication failed, could be faulty username or password
-	ErrFailedAuthentication = errors.New("incorrect Username or Password")
+	ErrFailedAuthentication = errors.New("无效的用户名或密码")
 
 	// ErrFailedTokenCreation indicates JWT Token failed to create, reason unknown
 	ErrFailedTokenCreation = errors.New("failed to create JWT Token")
@@ -189,7 +189,9 @@ var (
 	// ErrInvalidSigningAlgorithm indicates signing algorithm is invalid, needs to be HS256, HS384, HS512, RS256, RS384 or RS512
 	ErrInvalidSigningAlgorithm = errors.New("invalid signing algorithm")
 
-	ErrInvalidVerificationode = errors.New("验证码错误")
+	ErrInvalidVerificationCode = errors.New("验证码错误")
+
+	ErrInvalidThirdPartyWeChatBind = errors.New("微信未绑定，请通过用户名密码登录后绑定微信")
 
 	// ErrNoPrivKeyFile indicates that the given private key is unreadable
 	ErrNoPrivKeyFile = errors.New("private key file unreadable")
@@ -200,7 +202,7 @@ var (
 	// ErrInvalidPrivKey indicates that the given private key is invalid
 	ErrInvalidPrivKey = errors.New("private key invalid")
 
-	// ErrInvalidPubKey indicates the the given public key is invalid
+	// ErrInvalidPubKey indicates the given public key is invalid
 	ErrInvalidPubKey = errors.New("public key invalid")
 
 	// IdentityKey default identity key

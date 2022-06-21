@@ -76,6 +76,11 @@ type Runtime interface {
 	GetAmqpAdapters() map[string]message.AdapterAmqp
 	GetAmqpKey(key string) message.AdapterAmqp
 
+	SetThirdPartyAdapter(string, message.AdapterThirdParty)
+	GetThirdPartyAdapter() message.AdapterThirdParty
+	GetThirdPartyAdapters() map[string]message.AdapterThirdParty
+	GetThirdPartyKey(key string) message.AdapterThirdParty
+
 	SetHandler(key string, routerGroup func(r *gin.RouterGroup, hand ...*gin.HandlerFunc))
 	GetHandler() map[string][]func(r *gin.RouterGroup, hand ...*gin.HandlerFunc)
 	GetHandlerPrefix(key string) []func(r *gin.RouterGroup, hand ...*gin.HandlerFunc)

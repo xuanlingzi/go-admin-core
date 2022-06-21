@@ -21,3 +21,13 @@ type AdapterAmqp interface {
 }
 
 type AmqpConsumerFunc func([]byte) error
+
+type AdapterThirdParty interface {
+	String() string
+	GetToken(merchant, platform string) string
+	GetConnectUrl(state, scope, redirectUrl string, popUp bool) (string, error)
+	GetAccessToken(force bool) (string, error)
+	GetUserAccessToken(code, state string) (string, error)
+	GetUserInfo(accessToken, openId string) (string, error)
+	SendTemplateMessage(openId, templateId, url string, data []byte) (string, error)
+}
