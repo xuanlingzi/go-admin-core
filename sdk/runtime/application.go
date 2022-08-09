@@ -36,6 +36,25 @@ type Application struct {
 	routers     []Router
 }
 
+// NewConfig 默认值
+func NewConfig() *Application {
+	return &Application{
+		dbs:         make(map[string]*gorm.DB),
+		casbins:     make(map[string]*casbin.SyncedEnforcer),
+		crontab:     make(map[string]*cron.Cron),
+		middlewares: make(map[string]interface{}),
+		memoryQueue: queue.NewMemory(10000),
+		fileStores:  make(map[string]storage.AdapterFileStore),
+		sms:         make(map[string]message.AdapterSms),
+		mail:        make(map[string]message.AdapterMail),
+		amqp:        make(map[string]message.AdapterAmqp),
+		thirdParty:  make(map[string]message.AdapterThirdParty),
+		blockChain:  make(map[string]block_chain.AdapterBroker),
+		handler:     make(map[string][]func(r *gin.RouterGroup, hand ...*gin.HandlerFunc)),
+		routers:     make([]Router, 0),
+	}
+}
+
 type Router struct {
 	HttpMethod, RelativePath, Handler string
 }
@@ -123,24 +142,6 @@ func (e *Application) SetLogger(l logger.Logger) {
 // GetLogger 获取日志组件
 func (e *Application) GetLogger() logger.Logger {
 	return logger.DefaultLogger
-}
-
-// NewConfig 默认值
-func NewConfig() *Application {
-	return &Application{
-		dbs:         make(map[string]*gorm.DB),
-		casbins:     make(map[string]*casbin.SyncedEnforcer),
-		crontab:     make(map[string]*cron.Cron),
-		middlewares: make(map[string]interface{}),
-		memoryQueue: queue.NewMemory(10000),
-		fileStores:  make(map[string]storage.AdapterFileStore),
-		sms:         make(map[string]message.AdapterSms),
-		mail:        make(map[string]message.AdapterMail),
-		amqp:        make(map[string]message.AdapterAmqp),
-		thirdParty:  make(map[string]message.AdapterThirdParty),
-		handler:     make(map[string][]func(r *gin.RouterGroup, hand ...*gin.HandlerFunc)),
-		routers:     make([]Router, 0),
-	}
 }
 
 // SetCrontab 设置对应key的crontab

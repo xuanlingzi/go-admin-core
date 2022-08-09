@@ -22,7 +22,7 @@ require (
 	github.com/shamsher31/goimgext v1.0.0
 	github.com/slok/go-http-metrics v0.10.0
 	github.com/smartystreets/goconvey v1.7.2
-	github.com/xuanlingzi/go-admin-core v1.3.15
+	github.com/xuanlingzi/go-admin-core v1.3.16
 	github.com/xuanlingzi/go-admin-core/plugins/logger/zap v1.3.5-rc.1
 	github.com/xuanlingzi/gorm-adapter/v3 v3.2.1-0.20220523055446-8b16ec988e0b
 	golang.org/x/crypto v0.0.0-20220518034528-6f7dac969898
