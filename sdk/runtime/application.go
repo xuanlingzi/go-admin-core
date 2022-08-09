@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/xuanlingzi/go-admin-core/block_chain"
 	"github.com/xuanlingzi/go-admin-core/message"
 	"net/http"
 	"sync"
@@ -30,6 +31,7 @@ type Application struct {
 	mail        map[string]message.AdapterMail
 	amqp        map[string]message.AdapterAmqp
 	thirdParty  map[string]message.AdapterThirdParty
+	blockChain  map[string]block_chain.AdapterBroker
 	handler     map[string][]func(r *gin.RouterGroup, hand ...*gin.HandlerFunc)
 	routers     []Router
 }
@@ -352,6 +354,30 @@ func (e *Application) GetThirdPartyKey(key string) message.AdapterThirdParty {
 	e.mux.Lock()
 	defer e.mux.Unlock()
 	return e.thirdParty[key]
+}
+
+// SetBlockChainAdapter 设置缓存
+func (e *Application) SetBlockChainAdapter(key string, c block_chain.AdapterBroker) {
+	e.mux.Lock()
+	defer e.mux.Unlock()
+	e.blockChain[key] = c
+}
+
+// GetBlockChainAdapter 获取缓存
+func (e *Application) GetBlockChainAdapter() block_chain.AdapterBroker {
+	return e.GetBlockChainKey("*")
+}
+
+// GetBlockChainAdapters 获取缓存
+func (e *Application) GetBlockChainAdapters() map[string]block_chain.AdapterBroker {
+	return e.blockChain
+}
+
+// GetBlockChainKey 获取带租户标记
+func (e *Application) GetBlockChainKey(key string) block_chain.AdapterBroker {
+	e.mux.Lock()
+	defer e.mux.Unlock()
+	return e.blockChain[key]
 }
 
 func (e *Application) SetHandler(key string, routerGroup func(r *gin.RouterGroup, hand ...*gin.HandlerFunc)) {

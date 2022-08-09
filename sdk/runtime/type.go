@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/xuanlingzi/go-admin-core/block_chain"
 	"github.com/xuanlingzi/go-admin-core/message"
 	"net/http"
 
@@ -80,6 +81,11 @@ type Runtime interface {
 	GetThirdPartyAdapter() message.AdapterThirdParty
 	GetThirdPartyAdapters() map[string]message.AdapterThirdParty
 	GetThirdPartyKey(key string) message.AdapterThirdParty
+
+	SetBlockChainAdapter(string, block_chain.AdapterBroker)
+	GetBlockChainAdapter() block_chain.AdapterBroker
+	GetBlockChainAdapters() map[string]block_chain.AdapterBroker
+	GetBlockChainKey(key string) block_chain.AdapterBroker
 
 	SetHandler(key string, routerGroup func(r *gin.RouterGroup, hand ...*gin.HandlerFunc))
 	GetHandler() map[string][]func(r *gin.RouterGroup, hand ...*gin.HandlerFunc)
