@@ -7,5 +7,5 @@ const (
 type AdapterBroker interface {
 	String() string
 	Send(content string, callback string) error
-	Status(content string, hash string) error
+	Status(content string, hash string) (string, error)
 }
