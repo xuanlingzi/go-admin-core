@@ -6,6 +6,6 @@ const (
 
 type AdapterBroker interface {
 	String() string
-	Send(content string, callback string) (string, error)
-	Status(content string, hash string) (string, error)
+	Send(chain string, content string, callback string) (string, error)
+	Status(chain string, content string, hash string) (string, error)
 }

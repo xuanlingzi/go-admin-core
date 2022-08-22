@@ -16,11 +16,11 @@ func (e *BlockChain) String() string {
 }
 
 // Send 发送上链内容
-func (e BlockChain) Send(content string, callback string) (string, error) {
-	return e.broker.Send(content, callback)
+func (e BlockChain) Send(chain string, content string, callback string) (string, error) {
+	return e.broker.Send(chain, content, callback)
 }
 
 // Status 上链状态
-func (e BlockChain) Status(content string, hash string) (string, error) {
-	return e.broker.Status(content, hash)
+func (e BlockChain) Status(chain string, content string, hash string) (string, error) {
+	return e.broker.Status(chain, content, hash)
 }
