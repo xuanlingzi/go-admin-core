@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/sirupsen/logrus v1.8.0
-	github.com/xuanlingzi/go-admin-core v1.3.20
+	github.com/xuanlingzi/go-admin-core v1.3.21
 )
 
 require (

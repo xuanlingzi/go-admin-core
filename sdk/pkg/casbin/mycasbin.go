@@ -7,10 +7,10 @@ import (
 	"github.com/casbin/casbin/v2/log"
 	"github.com/casbin/casbin/v2/model"
 	redisWatcher "github.com/casbin/redis-watcher/v2"
-	"github.com/go-admin-team/go-admin-core/logger"
-	"github.com/go-admin-team/go-admin-core/sdk"
-	"github.com/go-admin-team/go-admin-core/sdk/config"
 	"github.com/go-redis/redis/v8"
+	"github.com/xuanlingzi/go-admin-core/logger"
+	"github.com/xuanlingzi/go-admin-core/sdk"
+	"github.com/xuanlingzi/go-admin-core/sdk/config"
 	"gorm.io/gorm"
 
 	gormAdapter "github.com/xuanlingzi/gorm-adapter/v3"

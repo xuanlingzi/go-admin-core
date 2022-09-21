@@ -14,7 +14,7 @@ import (
 	"github.com/xuanlingzi/go-admin-core/sdk/pkg"
 	"github.com/xuanlingzi/go-admin-core/sdk/pkg/response"
 	"github.com/xuanlingzi/go-admin-core/sdk/service"
-	"github.com/xuanlingzi/go-admin-team/go-admin-core/storage"
+	"github.com/xuanlingzi/go-admin-core/storage"
 	"github.com/xuanlingzi/go-admin-core/tools/language"
 	"gorm.io/gorm"
 )
