@@ -9,3 +9,11 @@
  - [x] 日志插件zap
  - [x] 大文件分割写入
 ---
+
+扩展
+ - [x] 腾讯云COS文件上传
+ - [x] 腾讯云短信发送
+ - [x] AMQP
+ - [x] Redis增加支持HashSet、HashKeys
+ - [x] DTO配置search增加自定义排序模式
+ - [x] 邮件发送

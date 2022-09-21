@@ -5,10 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-redis/redis/v7"
 	"github.com/robinjoseph08/redisqueue/v2"
 
-	"github.com/go-admin-team/go-admin-core/storage"
+	"github.com/xuanlingzi/go-admin-core/storage"
 )
 
 func TestRedis_Append(t *testing.T) {

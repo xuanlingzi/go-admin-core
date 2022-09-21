@@ -2,14 +2,16 @@ package runtime
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/xuanlingzi/go-admin-core/block_chain"
+	"github.com/xuanlingzi/go-admin-core/message"
 	"net/http"
 	"sync"
 
 	"github.com/casbin/casbin/v2"
-	"github.com/go-admin-team/go-admin-core/logger"
-	"github.com/go-admin-team/go-admin-core/storage"
-	"github.com/go-admin-team/go-admin-core/storage/queue"
 	"github.com/robfig/cron/v3"
+	"github.com/xuanlingzi/go-admin-core/logger"
+	"github.com/xuanlingzi/go-admin-core/storage"
+	"github.com/xuanlingzi/go-admin-core/storage/queue"
 	"gorm.io/gorm"
 )
 
@@ -24,11 +26,34 @@ type Application struct {
 	queue       storage.AdapterQueue
 	locker      storage.AdapterLocker
 	memoryQueue storage.AdapterQueue
+	fileStores  map[string]storage.AdapterFileStore
+	sms         map[string]message.AdapterSms
+	mail        map[string]message.AdapterMail
+	amqp        map[string]message.AdapterAmqp
+	thirdParty  map[string]message.AdapterThirdParty
+	blockChain  map[string]block_chain.AdapterBroker
 	handler     map[string][]func(r *gin.RouterGroup, hand ...*gin.HandlerFunc)
 	routers     []Router
 	configs     map[string]interface{} // 系统参数
 	appRouters  []func()               // app路由
 
+// NewConfig 默认值
+func NewConfig() *Application {
+	return &Application{
+		dbs:         make(map[string]*gorm.DB),
+		casbins:     make(map[string]*casbin.SyncedEnforcer),
+		crontab:     make(map[string]*cron.Cron),
+		middlewares: make(map[string]interface{}),
+		memoryQueue: queue.NewMemory(10000),
+		fileStores:  make(map[string]storage.AdapterFileStore),
+		sms:         make(map[string]message.AdapterSms),
+		mail:        make(map[string]message.AdapterMail),
+		amqp:        make(map[string]message.AdapterAmqp),
+		thirdParty:  make(map[string]message.AdapterThirdParty),
+		blockChain:  make(map[string]block_chain.AdapterBroker),
+		handler:     make(map[string][]func(r *gin.RouterGroup, hand ...*gin.HandlerFunc)),
+		routers:     make([]Router, 0),
+	}
 }
 
 type Router struct {
@@ -219,6 +244,156 @@ func (e *Application) GetLockerAdapter() storage.AdapterLocker {
 
 func (e *Application) GetLockerPrefix(key string) storage.AdapterLocker {
 	return NewLocker(key, e.locker)
+}
+
+// SetSmsAdapter 设置缓存
+func (e *Application) SetSmsAdapter(key string, c message.AdapterSms) {
+	e.mux.Lock()
+	defer e.mux.Unlock()
+	e.sms[key] = c
+}
+
+// GetSmsAdapter 获取缓存
+func (e *Application) GetSmsAdapter() message.AdapterSms {
+	return e.GetSmsKey("*")
+}
+
+// GetSmsAdapters 获取缓存
+func (e *Application) GetSmsAdapters() map[string]message.AdapterSms {
+	e.mux.Lock()
+	defer e.mux.Unlock()
+	return e.sms
+}
+
+// GetSmsKey 获取带租户标记的sms
+func (e *Application) GetSmsKey(key string) message.AdapterSms {
+	e.mux.Lock()
+	defer e.mux.Unlock()
+	return e.sms[key]
+}
+
+// SetMailAdapter 设置缓存
+func (e *Application) SetMailAdapter(key string, c message.AdapterMail) {
+	e.mux.Lock()
+	defer e.mux.Unlock()
+	e.mail[key] = c
+}
+
+// GetMailAdapter 获取缓存
+func (e *Application) GetMailAdapter() message.AdapterMail {
+	return e.GetMailKey("*")
+}
+
+// GetMailAdapters 获取缓存
+func (e *Application) GetMailAdapters() map[string]message.AdapterMail {
+	e.mux.Lock()
+	defer e.mux.Unlock()
+	return e.mail
+}
+
+// GetMailKey 获取带租户标记的mail
+func (e *Application) GetMailKey(key string) message.AdapterMail {
+	e.mux.Lock()
+	defer e.mux.Unlock()
+	return e.mail[key]
+}
+
+// SetFileStoreAdapter 设置缓存
+func (e *Application) SetFileStoreAdapter(key string, c storage.AdapterFileStore) {
+	e.mux.Lock()
+	defer e.mux.Unlock()
+	e.fileStores[key] = c
+}
+
+// GetFileStoreAdapter 获取缓存
+func (e *Application) GetFileStoreAdapter() storage.AdapterFileStore {
+	return e.GetFileStoreKey("*")
+}
+
+// GetFileStoreAdapters 获取缓存
+func (e *Application) GetFileStoreAdapters() map[string]storage.AdapterFileStore {
+	e.mux.Lock()
+	defer e.mux.Unlock()
+	return e.fileStores
+}
+
+// GetFileStoreKey 获取带租户标记的cos
+func (e *Application) GetFileStoreKey(key string) storage.AdapterFileStore {
+	e.mux.Lock()
+	defer e.mux.Unlock()
+	return e.fileStores[key]
+}
+
+// SetAmqpAdapter 设置缓存
+func (e *Application) SetAmqpAdapter(key string, c message.AdapterAmqp) {
+	e.mux.Lock()
+	defer e.mux.Unlock()
+	e.amqp[key] = c
+}
+
+// GetAmqpAdapter 获取缓存
+func (e *Application) GetAmqpAdapter() message.AdapterAmqp {
+	return e.GetAmqpKey("*")
+}
+
+// GetAmqpAdapters 获取缓存
+func (e *Application) GetAmqpAdapters() map[string]message.AdapterAmqp {
+	return e.amqp
+}
+
+// GetAmqpKey 获取带租户标记的amqp
+func (e *Application) GetAmqpKey(key string) message.AdapterAmqp {
+	e.mux.Lock()
+	defer e.mux.Unlock()
+	return e.amqp[key]
+}
+
+// SetThirdPartyAdapter 设置缓存
+func (e *Application) SetThirdPartyAdapter(key string, c message.AdapterThirdParty) {
+	e.mux.Lock()
+	defer e.mux.Unlock()
+	e.thirdParty[key] = c
+}
+
+// GetThirdPartyAdapter 获取缓存
+func (e *Application) GetThirdPartyAdapter() message.AdapterThirdParty {
+	return e.GetThirdPartyKey("*")
+}
+
+// GetThirdPartyAdapters 获取缓存
+func (e *Application) GetThirdPartyAdapters() map[string]message.AdapterThirdParty {
+	return e.thirdParty
+}
+
+// GetThirdPartyKey 获取带租户标记的amqp
+func (e *Application) GetThirdPartyKey(key string) message.AdapterThirdParty {
+	e.mux.Lock()
+	defer e.mux.Unlock()
+	return e.thirdParty[key]
+}
+
+// SetBlockChainAdapter 设置缓存
+func (e *Application) SetBlockChainAdapter(key string, c block_chain.AdapterBroker) {
+	e.mux.Lock()
+	defer e.mux.Unlock()
+	e.blockChain[key] = c
+}
+
+// GetBlockChainAdapter 获取缓存
+func (e *Application) GetBlockChainAdapter() block_chain.AdapterBroker {
+	return e.GetBlockChainKey("*")
+}
+
+// GetBlockChainAdapters 获取缓存
+func (e *Application) GetBlockChainAdapters() map[string]block_chain.AdapterBroker {
+	return e.blockChain
+}
+
+// GetBlockChainKey 获取带租户标记
+func (e *Application) GetBlockChainKey(key string) block_chain.AdapterBroker {
+	e.mux.Lock()
+	defer e.mux.Unlock()
+	return e.blockChain[key]
 }
 
 func (e *Application) SetHandler(key string, routerGroup func(r *gin.RouterGroup, hand ...*gin.HandlerFunc)) {

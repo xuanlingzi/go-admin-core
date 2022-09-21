@@ -89,12 +89,29 @@ func (m *Memory) del(key string) error {
 	return nil
 }
 
+func (m *Memory) HashKeys(hk string) ([]string, error) {
+	// TODO 返回Keys
+	return []string{}, nil
+}
+
 func (m *Memory) HashGet(hk, key string) (string, error) {
 	item, err := m.getItem(hk + key)
 	if err != nil || item == nil {
 		return "", err
 	}
 	return item.Value, err
+}
+
+func (m *Memory) HashSet(hk, key string, val interface{}, expire int) error {
+	s, err := cast.ToStringE(val)
+	if err != nil {
+		return err
+	}
+	item := &item{
+		Value:   s,
+		Expired: time.Now().Add(time.Duration(expire) * time.Second),
+	}
+	return m.setItem(hk+key, item)
 }
 
 func (m *Memory) HashDel(hk, key string) error {

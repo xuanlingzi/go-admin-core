@@ -1,10 +1,10 @@
 package config
 
 import (
-	"github.com/go-admin-team/go-admin-core/storage"
-	"github.com/go-admin-team/go-admin-core/storage/queue"
-	"github.com/go-redis/redis/v7"
+	"github.com/go-redis/redis/v9"
 	"github.com/robinjoseph08/redisqueue/v2"
+	"github.com/xuanlingzi/go-admin-core/storage"
+	"github.com/xuanlingzi/go-admin-core/storage/queue"
 	"time"
 )
 
@@ -51,8 +51,21 @@ func (e Queue) Setup() (storage.AdapterQueue, error) {
 			client = redis.NewClient(options)
 			_redis = client
 		}
-		e.Redis.Producer.RedisClient = client
-		e.Redis.Consumer.RedisClient = client
+		redisOption := &redisqueue.RedisOptions{
+			Network:    client.Options().Network,
+			Addr:       client.Options().Addr,
+			Username:   client.Options().Username,
+			Password:   client.Options().Password,
+			DB:         client.Options().DB,
+			MaxRetries: client.Options().MaxRetries,
+			PoolSize:   client.Options().PoolSize,
+		}
+		e.Redis.Producer = &redisqueue.ProducerOptions{
+			RedisOptions: redisOption,
+		} // .RedisClient = client
+		e.Redis.Consumer = &redisqueue.ConsumerOptions{
+			RedisOptions: redisOption,
+		} // .RedisClient = client
 		return queue.NewRedis(e.Redis.Producer, e.Redis.Consumer)
 	}
 	if e.NSQ != nil {
