@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/go-redis/redis/v8"
+	"github.com/go-redis/redis/v9"
 )
 
 var _redis *redis.Client

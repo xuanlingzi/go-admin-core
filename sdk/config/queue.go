@@ -1,7 +1,7 @@
 package config
 
 import (
-	"github.com/go-redis/redis/v8"
+	"github.com/go-redis/redis/v9"
 	"github.com/robinjoseph08/redisqueue/v2"
 	"github.com/xuanlingzi/go-admin-core/storage"
 	"github.com/xuanlingzi/go-admin-core/storage/queue"

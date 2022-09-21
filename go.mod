@@ -5,11 +5,10 @@ go 1.16
 require (
 	github.com/BurntSushi/toml v1.1.0
 	github.com/bitly/go-simplejson v0.5.0
-	github.com/bsm/redislock v0.7.2
+	github.com/bsm/redislock v0.8.0
 	github.com/fsnotify/fsnotify v1.5.4
 	github.com/ghodss/yaml v1.0.0
 	github.com/gin-gonic/gin v1.8.1
-	github.com/go-redis/redis/v8 v8.11.5
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/google/uuid v1.3.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
@@ -39,6 +38,7 @@ require (
 	github.com/git-chglog/git-chglog v0.15.1 // indirect
 	github.com/go-playground/validator/v10 v10.11.0 // indirect
 	github.com/go-redis/redis/v7 v7.4.1 // indirect
+	github.com/go-redis/redis/v9 v9.0.0-beta.2 // indirect
 	github.com/golang-jwt/jwt/v4 v4.4.1 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/huandu/xstrings v1.3.2 // indirect

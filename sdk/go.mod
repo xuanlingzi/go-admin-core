@@ -11,7 +11,6 @@ require (
 	github.com/go-playground/locales v0.14.0
 	github.com/go-playground/universal-translator v0.18.0
 	github.com/go-playground/validator/v10 v10.11.1
-	github.com/go-redis/redis/v8 v8.11.5
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/websocket v1.5.0
@@ -22,7 +21,7 @@ require (
 	github.com/shamsher31/goimgext v1.0.0
 	github.com/slok/go-http-metrics v0.10.0
 	github.com/smartystreets/goconvey v1.7.2
-	github.com/xuanlingzi/go-admin-core v1.3.19
+	github.com/xuanlingzi/go-admin-core v1.3.20
 	github.com/xuanlingzi/go-admin-core/plugins/logger/zap v1.3.5-rc.1
 	github.com/xuanlingzi/gorm-adapter/v3 v3.2.1-0.20220523055446-8b16ec988e0b
 	golang.org/x/crypto v0.0.0-20220919173607-35f4265a4bc0
@@ -32,8 +31,8 @@ require (
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.6 // indirect
 	github.com/andygrunwald/go-jira v1.16.0 // indirect
+	github.com/go-redis/redis/v9 v9.0.0-beta.2 // indirect
 	github.com/goccy/go-json v0.9.11 // indirect
-	github.com/golang-jwt/jwt/v4 v4.4.2 // indirect
 	github.com/gopherjs/gopherjs v1.17.2 // indirect
 	github.com/henrylee2cn/goutil v0.0.0-20210818094442-ed2b3cfe804b // indirect
 	github.com/imdario/mergo v0.3.13 // indirect
