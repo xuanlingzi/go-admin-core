@@ -3,6 +3,7 @@ package runtime
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/xuanlingzi/go-admin-core/block_chain"
+	"github.com/xuanlingzi/go-admin-core/lbs"
 	"github.com/xuanlingzi/go-admin-core/message"
 	"net/http"
 	"sync"
@@ -32,6 +33,7 @@ type Application struct {
 	amqp        map[string]message.AdapterAmqp
 	thirdParty  map[string]message.AdapterThirdParty
 	blockChain  map[string]block_chain.AdapterBroker
+	lbs         map[string]lbs.AdapterLocationBasedService
 	handler     map[string][]func(r *gin.RouterGroup, hand ...*gin.HandlerFunc)
 	routers     []Router
 	configs     map[string]interface{} // 系统参数
@@ -141,6 +143,7 @@ func NewConfig() *Application {
 		amqp:        make(map[string]message.AdapterAmqp),
 		thirdParty:  make(map[string]message.AdapterThirdParty),
 		blockChain:  make(map[string]block_chain.AdapterBroker),
+		lbs:         make(map[string]lbs.AdapterLocationBasedService),
 		handler:     make(map[string][]func(r *gin.RouterGroup, hand ...*gin.HandlerFunc)),
 		routers:     make([]Router, 0),
 		configs:     make(map[string]interface{}),
@@ -382,6 +385,30 @@ func (e *Application) GetBlockChainKey(key string) block_chain.AdapterBroker {
 	e.mux.Lock()
 	defer e.mux.Unlock()
 	return e.blockChain[key]
+}
+
+// SetLocationBasedServiceAdapter 设置LBS
+func (e *Application) SetLocationBasedServiceAdapter(key string, c lbs.AdapterLocationBasedService) {
+	e.mux.Lock()
+	defer e.mux.Unlock()
+	e.lbs[key] = c
+}
+
+// GetLocationBasedServiceAdapter 获取LBS
+func (e *Application) GetLocationBasedServiceAdapter() lbs.AdapterLocationBasedService {
+	return e.GetLocationBasedServiceKey("*")
+}
+
+// GetLocationBasedServiceAdapters 获取LBS
+func (e *Application) GetLocationBasedServiceAdapters() map[string]lbs.AdapterLocationBasedService {
+	return e.lbs
+}
+
+// GetLocationBasedServiceKey 获取LBS
+func (e *Application) GetLocationBasedServiceKey(key string) lbs.AdapterLocationBasedService {
+	e.mux.Lock()
+	defer e.mux.Unlock()
+	return e.lbs[key]
 }
 
 func (e *Application) SetHandler(key string, routerGroup func(r *gin.RouterGroup, hand ...*gin.HandlerFunc)) {

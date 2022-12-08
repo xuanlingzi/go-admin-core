@@ -3,6 +3,7 @@ package runtime
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/xuanlingzi/go-admin-core/block_chain"
+	"github.com/xuanlingzi/go-admin-core/lbs"
 	"github.com/xuanlingzi/go-admin-core/message"
 	"net/http"
 
@@ -81,6 +82,11 @@ type Runtime interface {
 	GetThirdPartyAdapter() message.AdapterThirdParty
 	GetThirdPartyAdapters() map[string]message.AdapterThirdParty
 	GetThirdPartyKey(key string) message.AdapterThirdParty
+
+	SetLocationBasedServiceAdapter(string, lbs.AdapterLocationBasedService)
+	GetLocationBasedServiceAdapter() lbs.AdapterLocationBasedService
+	GetLocationBasedServiceAdapters() map[string]lbs.AdapterLocationBasedService
+	GetLocationBasedServiceKey(key string) lbs.AdapterLocationBasedService
 
 	SetBlockChainAdapter(string, block_chain.AdapterBroker)
 	GetBlockChainAdapter() block_chain.AdapterBroker
