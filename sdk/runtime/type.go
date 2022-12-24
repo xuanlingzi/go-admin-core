@@ -5,6 +5,7 @@ import (
 	"github.com/xuanlingzi/go-admin-core/block_chain"
 	"github.com/xuanlingzi/go-admin-core/lbs"
 	"github.com/xuanlingzi/go-admin-core/message"
+	"github.com/xuanlingzi/go-admin-core/third_party"
 	"net/http"
 
 	"github.com/casbin/casbin/v2"
@@ -78,10 +79,10 @@ type Runtime interface {
 	GetAmqpAdapters() map[string]message.AdapterAmqp
 	GetAmqpKey(key string) message.AdapterAmqp
 
-	SetThirdPartyAdapter(string, message.AdapterThirdParty)
-	GetThirdPartyAdapter() message.AdapterThirdParty
-	GetThirdPartyAdapters() map[string]message.AdapterThirdParty
-	GetThirdPartyKey(key string) message.AdapterThirdParty
+	SetThirdPartyAdapter(string, third_party.AdapterThirdParty)
+	GetThirdPartyAdapter() third_party.AdapterThirdParty
+	GetThirdPartyAdapters() map[string]third_party.AdapterThirdParty
+	GetThirdPartyKey(key string) third_party.AdapterThirdParty
 
 	SetLocationBasedServiceAdapter(string, lbs.AdapterLocationBasedService)
 	GetLocationBasedServiceAdapter() lbs.AdapterLocationBasedService

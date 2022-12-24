@@ -128,12 +128,7 @@ func otherSql(driver string, t *resolveSearchTag, condition Condition, qValue re
 	case "exact", "iexact":
 		condition.SetWhere(fmt.Sprintf("%s = ?", column), []interface{}{qValue.Field(i).Interface()})
 	case "contains", "icontains":
-		//fixme mysql不支持ilike
-		if driver == Postgres && t.Type == "icontains" {
-			condition.SetWhere(fmt.Sprintf("%s ilike ?", column), []interface{}{"%" + qValue.Field(i).String() + "%"})
-		} else {
-			condition.SetWhere(fmt.Sprintf("%s like ?", column), []interface{}{"%" + qValue.Field(i).String() + "%"})
-		}
+		condition.SetWhere(fmt.Sprintf("%s like ?", column), []interface{}{"%" + qValue.Field(i).String() + "%"})
 	case "gt":
 		condition.SetWhere(fmt.Sprintf("%s > ?", column), []interface{}{qValue.Field(i).Interface()})
 	case "gte":
@@ -143,17 +138,9 @@ func otherSql(driver string, t *resolveSearchTag, condition Condition, qValue re
 	case "lte":
 		condition.SetWhere(fmt.Sprintf("%s <= ?", column), []interface{}{qValue.Field(i).Interface()})
 	case "startswith", "istartswith":
-		if driver == Postgres && t.Type == "istartswith" {
-			condition.SetWhere(fmt.Sprintf("%s ilike ?", column), []interface{}{qValue.Field(i).String() + "%"})
-		} else {
-			condition.SetWhere(fmt.Sprintf("%s like ?", column), []interface{}{qValue.Field(i).String() + "%"})
-		}
+		condition.SetWhere(fmt.Sprintf("%s like ?", column), []interface{}{qValue.Field(i).String() + "%"})
 	case "endswith", "iendswith":
-		if driver == Postgres && t.Type == "iendswith" {
-			condition.SetWhere(fmt.Sprintf("%s ilike ?", column), []interface{}{"%" + qValue.Field(i).String()})
-		} else {
-			condition.SetWhere(fmt.Sprintf("%s like ?", column), []interface{}{"%" + qValue.Field(i).String()})
-		}
+		condition.SetWhere(fmt.Sprintf("%s like ?", column), []interface{}{"%" + qValue.Field(i).String()})
 	case "in":
 		condition.SetWhere(fmt.Sprintf("%s in (?)", column), []interface{}{qValue.Field(i).Interface()})
 	case "isnull":

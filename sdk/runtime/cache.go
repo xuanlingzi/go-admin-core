@@ -61,8 +61,17 @@ func (e Cache) Set(key string, val interface{}, expire int) error {
 }
 
 // Del delete key in cache
-func (e Cache) Del(key string) error {
-	return e.store.Del(e.prefix + intervalTenant + key)
+func (e Cache) Del(key ...string) error {
+	var keys []string
+	for _, k := range key {
+		keys = append(keys, e.prefix+intervalTenant+k)
+	}
+	return e.store.Del(keys...)
+}
+
+// DelPattern delete key in cache
+func (e Cache) DelPattern(pattern string) error {
+	return e.store.DelPattern(e.prefix + intervalTenant + pattern)
 }
 
 // HashKeys get val in hashtable cache
@@ -81,8 +90,13 @@ func (e Cache) HashSet(hk, key string, val interface{}, expire int) error {
 }
 
 // HashDel delete one key:value pair in hashtable cache
-func (e Cache) HashDel(hk, key string) error {
-	return e.store.HashDel(e.prefix+intervalTenant+hk, key)
+func (e Cache) HashDel(hk string, key ...string) error {
+	return e.store.HashDel(e.prefix+intervalTenant+hk, key...)
+}
+
+// HashDelPattern delete one key:value pair in hashtable cache
+func (e Cache) HashDelPattern(hk, pattern string) error {
+	return e.store.HashDelPattern(e.prefix+intervalTenant+hk, pattern)
 }
 
 // Increase value
@@ -116,4 +130,8 @@ func (e Cache) PutToken(token *oauth2.Token) error {
 		return err
 	}
 	return e.store.Set(e.prefix+intervalTenant+e.wxTokenStoreKey, string(rb), int(token.ExpiresIn)-200)
+}
+
+func (e Cache) GetClient() interface{} {
+	return e.store.GetClient()
 }

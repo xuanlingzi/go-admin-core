@@ -117,23 +117,23 @@ func (e *Api) MakeService(c *service.Service) *Api {
 }
 
 // Error 通常错误数据处理
-func (e Api) Error(code int, err error, msg string) {
-	response.Error(e.Context, code, err, msg)
+func (e Api) Error(code int, err error, message ...string) {
+	response.Error(e.Context, code, err, message...)
 }
 
 // OK 通常成功数据处理
-func (e Api) OK(data interface{}, msg string) {
-	response.OK(e.Context, data, msg)
+func (e Api) OK(data interface{}, message ...string) {
+	response.OK(e.Context, data, message...)
 }
 
 // PageOK 分页数据处理
-func (e Api) PageOK(result interface{}, count int, pageIndex int, pageSize int, msg string) {
-	response.PageOK(e.Context, result, count, pageIndex, pageSize, msg)
+func (e Api) PageOK(result interface{}, count int, pageIndex int, pageSize int, message ...string) {
+	response.PageOK(e.Context, result, count, pageIndex, pageSize, message...)
 }
 
 // Custom 兼容函数
 func (e Api) Custom(data gin.H) {
-	response.Custum(e.Context, data)
+	response.Custom(e.Context, data)
 }
 
 func (e Api) Translate(form, to interface{}) {

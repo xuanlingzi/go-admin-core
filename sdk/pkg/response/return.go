@@ -2,6 +2,7 @@ package response
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 
@@ -11,13 +12,13 @@ import (
 var Default = &response{}
 
 // Error 失败数据处理
-func Error(c *gin.Context, code int, err error, msg string) {
+func Error(c *gin.Context, code int, err error, message ...string) {
 	res := Default.Clone()
 	if err != nil {
-		res.SetMsg(err.Error())
+		res.SetMessage(err.Error())
 	}
-	if msg != "" {
-		res.SetMsg(msg)
+	if len(message) > 0 {
+		res.SetMessage(strings.Join(message, ","))
 	}
 	res.SetTraceID(pkg.GenerateMsgIDFromContext(c))
 	res.SetCode(int32(code))
@@ -28,12 +29,12 @@ func Error(c *gin.Context, code int, err error, msg string) {
 }
 
 // OK 通常成功数据处理
-func OK(c *gin.Context, data interface{}, msg string) {
+func OK(c *gin.Context, data interface{}, message ...string) {
 	res := Default.Clone()
 	res.SetData(data)
 	res.SetSuccess(true)
-	if msg != "" {
-		res.SetMsg(msg)
+	if len(message) > 0 {
+		res.SetMessage(strings.Join(message, ","))
 	}
 	res.SetTraceID(pkg.GenerateMsgIDFromContext(c))
 	res.SetCode(http.StatusOK)
@@ -43,17 +44,17 @@ func OK(c *gin.Context, data interface{}, msg string) {
 }
 
 // PageOK 分页数据处理
-func PageOK(c *gin.Context, result interface{}, count int, pageIndex int, pageSize int, msg string) {
+func PageOK(c *gin.Context, result interface{}, count int, pageIndex int, pageSize int, message ...string) {
 	var res page
 	res.List = result
 	res.Count = count
 	res.PageIndex = pageIndex
 	res.PageSize = pageSize
-	OK(c, res, msg)
+	OK(c, res, message...)
 }
 
-// Custum 兼容函数
-func Custum(c *gin.Context, data gin.H) {
+// Custom 兼容函数
+func Custom(c *gin.Context, data gin.H) {
 	data["requestId"] = pkg.GenerateMsgIDFromContext(c)
 	c.Set("result", data)
 	c.AbortWithStatusJSON(http.StatusOK, data)

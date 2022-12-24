@@ -65,7 +65,7 @@ func (e *response) SetTraceID(id string) {
 	e.TraceId = id
 }
 
-func (e *response) SetMsg(msg string) {
+func (e *response) SetMessage(msg string) {
 	e.ErrorMessage = msg
 }
 
