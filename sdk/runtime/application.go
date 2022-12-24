@@ -5,6 +5,7 @@ import (
 	"github.com/xuanlingzi/go-admin-core/block_chain"
 	"github.com/xuanlingzi/go-admin-core/lbs"
 	"github.com/xuanlingzi/go-admin-core/message"
+	"github.com/xuanlingzi/go-admin-core/third_party"
 	"net/http"
 	"sync"
 
@@ -31,7 +32,7 @@ type Application struct {
 	sms         map[string]message.AdapterSms
 	mail        map[string]message.AdapterMail
 	amqp        map[string]message.AdapterAmqp
-	thirdParty  map[string]message.AdapterThirdParty
+	thirdParty  map[string]third_party.AdapterThirdParty
 	blockChain  map[string]block_chain.AdapterBroker
 	lbs         map[string]lbs.AdapterLocationBasedService
 	handler     map[string][]func(r *gin.RouterGroup, hand ...*gin.HandlerFunc)
@@ -141,7 +142,7 @@ func NewConfig() *Application {
 		sms:         make(map[string]message.AdapterSms),
 		mail:        make(map[string]message.AdapterMail),
 		amqp:        make(map[string]message.AdapterAmqp),
-		thirdParty:  make(map[string]message.AdapterThirdParty),
+		thirdParty:  make(map[string]third_party.AdapterThirdParty),
 		blockChain:  make(map[string]block_chain.AdapterBroker),
 		lbs:         make(map[string]lbs.AdapterLocationBasedService),
 		handler:     make(map[string][]func(r *gin.RouterGroup, hand ...*gin.HandlerFunc)),
@@ -340,24 +341,24 @@ func (e *Application) GetAmqpKey(key string) message.AdapterAmqp {
 }
 
 // SetThirdPartyAdapter 设置缓存
-func (e *Application) SetThirdPartyAdapter(key string, c message.AdapterThirdParty) {
+func (e *Application) SetThirdPartyAdapter(key string, c third_party.AdapterThirdParty) {
 	e.mux.Lock()
 	defer e.mux.Unlock()
 	e.thirdParty[key] = c
 }
 
 // GetThirdPartyAdapter 获取缓存
-func (e *Application) GetThirdPartyAdapter() message.AdapterThirdParty {
+func (e *Application) GetThirdPartyAdapter() third_party.AdapterThirdParty {
 	return e.GetThirdPartyKey("*")
 }
 
 // GetThirdPartyAdapters 获取缓存
-func (e *Application) GetThirdPartyAdapters() map[string]message.AdapterThirdParty {
+func (e *Application) GetThirdPartyAdapters() map[string]third_party.AdapterThirdParty {
 	return e.thirdParty
 }
 
 // GetThirdPartyKey 获取带租户标记的amqp
-func (e *Application) GetThirdPartyKey(key string) message.AdapterThirdParty {
+func (e *Application) GetThirdPartyKey(key string) third_party.AdapterThirdParty {
 	e.mux.Lock()
 	defer e.mux.Unlock()
 	return e.thirdParty[key]

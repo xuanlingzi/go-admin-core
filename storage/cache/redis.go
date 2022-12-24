@@ -2,7 +2,9 @@ package cache
 
 import (
 	"context"
+	"errors"
 	"github.com/go-redis/redis/v9"
+	"strings"
 	"time"
 )
 
@@ -48,8 +50,20 @@ func (r *Redis) Set(key string, val interface{}, expire int) error {
 }
 
 // Del delete key in redis
-func (r *Redis) Del(key string) error {
-	return r.client.Del(context.TODO(), key).Err()
+func (r *Redis) Del(key ...string) error {
+	return r.client.Del(context.TODO(), key...).Err()
+}
+
+// DelPattern delete key in redis
+func (r *Redis) DelPattern(pattern string) error {
+	keys, err := r.client.Keys(context.Background(), pattern).Result()
+	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			return nil
+		}
+		return err
+	}
+	return r.client.Del(context.Background(), keys...).Err()
 }
 
 // HashKeys from key
@@ -68,8 +82,26 @@ func (r *Redis) HashSet(hk, key string, val interface{}, _ int) error {
 }
 
 // HashDel delete key in specify redis's hashtable
-func (r *Redis) HashDel(hk, key string) error {
-	return r.client.HDel(context.TODO(), hk, key).Err()
+func (r *Redis) HashDel(hk string, key ...string) error {
+	return r.client.HDel(context.TODO(), hk, key...).Err()
+}
+
+// HashDelPattern delete key in specify redis's hashtable
+func (r *Redis) HashDelPattern(hk, pattern string) error {
+	keys, err := r.client.HKeys(context.Background(), hk).Result()
+	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			return nil
+		}
+		return err
+	}
+	var delKeys []string
+	for _, key := range keys {
+		if strings.Contains(key, pattern) {
+			delKeys = append(delKeys, key)
+		}
+	}
+	return r.client.HDel(context.Background(), hk, delKeys...).Err()
 }
 
 // Increase
@@ -87,6 +119,6 @@ func (r *Redis) Expire(key string, dur time.Duration) error {
 }
 
 // GetClient 暴露原生client
-func (r *Redis) GetClient() *redis.Client {
+func (r *Redis) GetClient() interface{} {
 	return r.client
 }

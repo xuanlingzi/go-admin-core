@@ -16,6 +16,6 @@ func (e *Sms) String() string {
 }
 
 // Send val by announces
-func (e Sms) Send(addresses []string, template string, params []string) error {
+func (e Sms) Send(addresses []string, template string, params map[string]string) error {
 	return e.sms.Send(addresses, template, params)
 }

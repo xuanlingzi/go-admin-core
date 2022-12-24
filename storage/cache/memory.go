@@ -80,12 +80,31 @@ func (m *Memory) setItem(key string, item *item) error {
 	return nil
 }
 
-func (m *Memory) Del(key string) error {
-	return m.del(key)
+func (m *Memory) Del(key ...string) error {
+	return m.del(key...)
 }
 
-func (m *Memory) del(key string) error {
-	m.items.Delete(key)
+func (m *Memory) del(key ...string) error {
+	for _, k := range key {
+		m.items.Delete(k)
+	}
+	return nil
+}
+
+func (m *Memory) DelPattern(pattern string) error {
+	//var keys []string
+	//m.items.Range(func(key, value any) bool {
+	//	keyString := cast.ToString(key)
+	//	if strings.Contains(strings.ToLower(keyString), strings.ToLower(pattern)) {
+	//		keys = append(keys, keyString)
+	//	}
+	//	return true
+	//})
+	//for _, key := range keys {
+	//	if err := m.del(key); err != nil {
+	//		return err
+	//	}
+	//}
 	return nil
 }
 
@@ -114,8 +133,19 @@ func (m *Memory) HashSet(hk, key string, val interface{}, expire int) error {
 	return m.setItem(hk+key, item)
 }
 
-func (m *Memory) HashDel(hk, key string) error {
-	return m.del(hk + key)
+func (m *Memory) HashDel(hk string, key ...string) error {
+	var err error
+	for _, k := range key {
+		err = m.del(hk + k)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (m *Memory) HashDelPattern(hk, pattern string) error {
+	return m.DelPattern(hk + pattern)
 }
 
 func (m *Memory) Increase(key string) error {
@@ -161,4 +191,8 @@ func (m *Memory) Expire(key string, dur time.Duration) error {
 	}
 	item.Expired = time.Now().Add(dur)
 	return m.setItem(key, item)
+}
+
+func (m *Memory) GetClient() interface{} {
+	return m
 }

@@ -1,6 +1,7 @@
 package config
 
 import (
+	"github.com/go-redis/redis/v9"
 	"github.com/xuanlingzi/go-admin-core/storage"
 	"github.com/xuanlingzi/go-admin-core/storage/cache"
 )
@@ -25,7 +26,7 @@ func (e Cache) Setup() (storage.AdapterCache, error) {
 			return nil, err
 		}
 		if _redis == nil {
-			_redis = r.GetClient()
+			_redis = r.GetClient().(*redis.Client)
 		}
 		return r, nil
 	}
