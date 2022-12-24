@@ -2,10 +2,12 @@ package queue
 
 import (
 	"fmt"
+	"sync"
 	"testing"
 	"time"
 
-	"github.com/robinjoseph08/redisqueue/v2"
+	"github.com/go-admin-team/redisqueue/v2"
+	"github.com/go-redis/redis/v9"
 
 	"github.com/xuanlingzi/go-admin-core/storage"
 )
@@ -55,7 +57,7 @@ func TestRedis_Append(t *testing.T) {
 					Values: map[string]interface{}{
 						"key": "value",
 					},
-				}},
+				}, 3, sync.RWMutex{}},
 			},
 			false,
 		},
@@ -71,6 +73,8 @@ func TestRedis_Append(t *testing.T) {
 			}
 		})
 	}
+
+	t.Log("ok")
 }
 
 func TestRedis_Register(t *testing.T) {
