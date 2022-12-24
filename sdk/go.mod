@@ -28,8 +28,8 @@ require (
 	github.com/smartystreets/goconvey v1.6.4
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.565
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/sms v1.0.565
-	github.com/xuanlingzi/go-admin-core v1.3.25
-	github.com/xuanlingzi/go-admin-core/plugins/logger/zap v1.3.7
+	github.com/xuanlingzi/go-admin-core v1.3.26
+	github.com/xuanlingzi/go-admin-core/plugins/logger/zap v1.3.8
 	github.com/xuanlingzi/gorm-adapter/v3 v3.2.4
 	golang.org/x/crypto v0.4.0
 	gorm.io/gorm v1.24.2
@@ -132,8 +132,8 @@ require (
 	gorm.io/plugin/dbresolver v1.4.0 // indirect
 )
 
-replace github.com/xuanlingzi/go-admin-core => ../
-
-replace github.com/xuanlingzi/go-admin-core/plugins/logger/zap => ../plugins/logger/zap
-
-replace github.com/xuanlingzi/go-admin-core/plugins/logger/logrus => ../plugins/logger/logrus
+//replace github.com/xuanlingzi/go-admin-core => ../
+//
+//replace github.com/xuanlingzi/go-admin-core/plugins/logger/zap => ../plugins/logger/zap
+//
+//replace github.com/xuanlingzi/go-admin-core/plugins/logger/logrus => ../plugins/logger/logrus
