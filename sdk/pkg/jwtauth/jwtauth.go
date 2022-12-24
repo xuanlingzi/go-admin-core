@@ -75,16 +75,22 @@ type GinJWTMiddleware struct {
 	// 关键字段，用于存储用户信息
 	// Set the identity key
 	IdentityKey string
+
 	// 用户名
 	NiceKey string
+
 	// 数据权限类型
 	DataScopeKey string
+
 	// role key
 	RKey string
+
 	// 角色id
 	RoleIdKey string
+
 	// 角色key
 	RoleKey string
+
 	// 角色名称
 	RoleNameKey string
 
@@ -155,7 +161,7 @@ var (
 	ErrMissingLoginValues = errors.New("missing Username or Password or Code")
 
 	// ErrFailedAuthentication indicates authentication failed, could be faulty username or password
-	ErrFailedAuthentication = errors.New("incorrect Username or Password")
+	ErrFailedAuthentication = errors.New("无效的用户名或密码")
 
 	// ErrFailedTokenCreation indicates JWT Token failed to create, reason unknown
 	ErrFailedTokenCreation = errors.New("failed to create JWT Token")
@@ -187,7 +193,9 @@ var (
 	// ErrInvalidSigningAlgorithm indicates signing algorithm is invalid, needs to be HS256, HS384, HS512, RS256, RS384 or RS512
 	ErrInvalidSigningAlgorithm = errors.New("invalid signing algorithm")
 
-	ErrInvalidVerificationode = errors.New("验证码错误")
+	ErrInvalidVerificationCode = errors.New("验证码错误")
+
+	ErrInvalidThirdPartyWeChatBind = errors.New("微信未绑定，请通过用户名密码登录后绑定微信")
 
 	// ErrNoPrivKeyFile indicates that the given private key is unreadable
 	ErrNoPrivKeyFile = errors.New("private key file unreadable")
@@ -198,7 +206,7 @@ var (
 	// ErrInvalidPrivKey indicates that the given private key is invalid
 	ErrInvalidPrivKey = errors.New("private key invalid")
 
-	// ErrInvalidPubKey indicates the the given public key is invalid
+	// ErrInvalidPubKey indicates the given public key is invalid
 	ErrInvalidPubKey = errors.New("public key invalid")
 
 	// IdentityKey default identity key
@@ -396,6 +404,7 @@ func (mw *GinJWTMiddleware) middlewareImpl(c *gin.Context) {
 		mw.unauthorized(c, http.StatusUnauthorized, mw.HTTPStatusMessageFunc(err, c))
 		return
 	}
+
 	exp, err := claims.Exp()
 	if err != nil {
 		mw.unauthorized(c, http.StatusBadRequest, mw.HTTPStatusMessageFunc(err, c))

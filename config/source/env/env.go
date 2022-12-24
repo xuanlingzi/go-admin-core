@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-admin-team/go-admin-core/config/source"
+	"github.com/xuanlingzi/go-admin-core/config/source"
 	"github.com/imdario/mergo"
 )
 

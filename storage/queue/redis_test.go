@@ -2,13 +2,14 @@ package queue
 
 import (
 	"fmt"
-	"github.com/go-admin-team/redisqueue/v2"
-	"github.com/go-redis/redis/v9"
 	"sync"
 	"testing"
 	"time"
 
-	"github.com/go-admin-team/go-admin-core/storage"
+	"github.com/go-admin-team/redisqueue/v2"
+	"github.com/go-redis/redis/v9"
+
+	"github.com/xuanlingzi/go-admin-core/storage"
 )
 
 func TestRedis_Append(t *testing.T) {
@@ -52,7 +53,6 @@ func TestRedis_Append(t *testing.T) {
 			args{
 				name: "test",
 				message: &Message{redisqueue.Message{
-					ID:     "",
 					Stream: "test",
 					Values: map[string]interface{}{
 						"key": "value",
@@ -134,5 +134,4 @@ func TestRedis_Register(t *testing.T) {
 			}
 		})
 	}
-	t.Log("ok")
 }

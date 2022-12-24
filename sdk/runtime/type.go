@@ -2,12 +2,15 @@ package runtime
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/xuanlingzi/go-admin-core/block_chain"
+	"github.com/xuanlingzi/go-admin-core/lbs"
+	"github.com/xuanlingzi/go-admin-core/message"
 	"net/http"
 
 	"github.com/casbin/casbin/v2"
-	"github.com/go-admin-team/go-admin-core/logger"
-	"github.com/go-admin-team/go-admin-core/storage"
 	"github.com/robfig/cron/v3"
+	"github.com/xuanlingzi/go-admin-core/logger"
+	"github.com/xuanlingzi/go-admin-core/storage"
 	"gorm.io/gorm"
 )
 
@@ -54,6 +57,41 @@ type Runtime interface {
 	SetLockerAdapter(storage.AdapterLocker)
 	GetLockerAdapter() storage.AdapterLocker
 	GetLockerPrefix(string) storage.AdapterLocker
+
+	SetSmsAdapter(string, message.AdapterSms)
+	GetSmsAdapter() message.AdapterSms
+	GetSmsAdapters() map[string]message.AdapterSms
+	GetSmsKey(key string) message.AdapterSms
+
+	SetMailAdapter(string, message.AdapterMail)
+	GetMailAdapter() message.AdapterMail
+	GetMailAdapters() map[string]message.AdapterMail
+	GetMailKey(key string) message.AdapterMail
+
+	SetFileStoreAdapter(string, storage.AdapterFileStore)
+	GetFileStoreAdapter() storage.AdapterFileStore
+	GetFileStoreAdapters() map[string]storage.AdapterFileStore
+	GetFileStoreKey(key string) storage.AdapterFileStore
+
+	SetAmqpAdapter(string, message.AdapterAmqp)
+	GetAmqpAdapter() message.AdapterAmqp
+	GetAmqpAdapters() map[string]message.AdapterAmqp
+	GetAmqpKey(key string) message.AdapterAmqp
+
+	SetThirdPartyAdapter(string, message.AdapterThirdParty)
+	GetThirdPartyAdapter() message.AdapterThirdParty
+	GetThirdPartyAdapters() map[string]message.AdapterThirdParty
+	GetThirdPartyKey(key string) message.AdapterThirdParty
+
+	SetLocationBasedServiceAdapter(string, lbs.AdapterLocationBasedService)
+	GetLocationBasedServiceAdapter() lbs.AdapterLocationBasedService
+	GetLocationBasedServiceAdapters() map[string]lbs.AdapterLocationBasedService
+	GetLocationBasedServiceKey(key string) lbs.AdapterLocationBasedService
+
+	SetBlockChainAdapter(string, block_chain.AdapterBroker)
+	GetBlockChainAdapter() block_chain.AdapterBroker
+	GetBlockChainAdapters() map[string]block_chain.AdapterBroker
+	GetBlockChainKey(key string) block_chain.AdapterBroker
 
 	SetHandler(key string, routerGroup func(r *gin.RouterGroup, hand ...*gin.HandlerFunc))
 	GetHandler() map[string][]func(r *gin.RouterGroup, hand ...*gin.HandlerFunc)

@@ -12,7 +12,7 @@ func SetStore(s base64Captcha.Store) {
 	base64Captcha.DefaultMemStore = s
 }
 
-//configJsonBody json request body.
+// configJsonBody json request body.
 type configJsonBody struct {
 	Id            string
 	CaptchaType   string

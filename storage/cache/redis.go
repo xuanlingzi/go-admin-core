@@ -52,9 +52,19 @@ func (r *Redis) Del(key string) error {
 	return r.client.Del(context.TODO(), key).Err()
 }
 
+// HashKeys from key
+func (r *Redis) HashKeys(hk string) ([]string, error) {
+	return r.client.HKeys(context.TODO(), hk).Result()
+}
+
 // HashGet from key
 func (r *Redis) HashGet(hk, key string) (string, error) {
 	return r.client.HGet(context.TODO(), hk, key).Result()
+}
+
+// HashSet delete key in specify redis's hashtable
+func (r *Redis) HashSet(hk, key string, val interface{}, _ int) error {
+	return r.client.HSet(context.TODO(), hk, key, val).Err()
 }
 
 // HashDel delete key in specify redis's hashtable

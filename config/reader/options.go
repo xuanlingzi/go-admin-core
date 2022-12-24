@@ -1,11 +1,11 @@
 package reader
 
 import (
-	"github.com/go-admin-team/go-admin-core/config/encoder"
-	"github.com/go-admin-team/go-admin-core/config/encoder/json"
-	"github.com/go-admin-team/go-admin-core/config/encoder/toml"
-	"github.com/go-admin-team/go-admin-core/config/encoder/xml"
-	"github.com/go-admin-team/go-admin-core/config/encoder/yaml"
+	"github.com/xuanlingzi/go-admin-core/config/encoder"
+	"github.com/xuanlingzi/go-admin-core/config/encoder/json"
+	"github.com/xuanlingzi/go-admin-core/config/encoder/toml"
+	"github.com/xuanlingzi/go-admin-core/config/encoder/xml"
+	"github.com/xuanlingzi/go-admin-core/config/encoder/yaml"
 )
 
 type Options struct {

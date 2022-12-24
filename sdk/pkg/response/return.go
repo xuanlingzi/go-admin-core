@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/go-admin-team/go-admin-core/sdk/pkg"
+	"github.com/xuanlingzi/go-admin-core/sdk/pkg"
 )
 
 var Default = &response{}
