@@ -53,6 +53,13 @@ type Config struct {
 	Cache       *Cache                `yaml:"cache"`
 	Queue       *Queue                `yaml:"queue"`
 	Locker      *Locker               `yaml:"locker"`
+	FilePath    *FilePath             `json:"location,omitempty" yaml:"location"`
+	Lbs         *Lbs                  `json:"lbs,omitempty" yaml:"lbs"`
+	FileStore   *FileStore            `json:"file_store,omitempty" yaml:"file_store"`
+	Sms         *Sms                  `json:"sms,omitempty" yaml:"sms"`
+	Mail        *Mail                 `json:"mail" yaml:"mail"`
+	Amqp        *Amqp                 `json:"mq,omitempty" yaml:"mq"`
+	WeChat      *WeChat               `json:"wechat,omitempty" yaml:"wechat"`
 	Extend      interface{}           `yaml:"extend"`
 }
 
@@ -81,6 +88,13 @@ func Setup(s source.Source,
 			Cache:       CacheConfig,
 			Queue:       QueueConfig,
 			Locker:      LockerConfig,
+			FilePath:    FilePathConfig,
+			Lbs:         LbsConfig,
+			FileStore:   FileStoreConfig,
+			Sms:         SmsConfig,
+			Mail:        MailConfig,
+			Amqp:        AmqpConfig,
+			WeChat:      WeChatConfig,
 			Extend:      ExtendConfig,
 		},
 		callbacks: fs,

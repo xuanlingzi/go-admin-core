@@ -14,14 +14,17 @@ type AdapterCache interface {
 	String() string
 	Get(key string) (string, error)
 	Set(key string, val interface{}, expire int) error
-	Del(key string) error
+	Del(key ...string) error
+	DelPattern(pattern string) error
 	HashKeys(hk string) ([]string, error)
 	HashGet(hk, key string) (string, error)
 	HashSet(hk, key string, val interface{}, expire int) error
-	HashDel(hk, key string) error
+	HashDel(hk string, key ...string) error
+	HashDelPattern(hk, pattern string) error
 	Increase(key string) error
 	Decrease(key string) error
 	Expire(key string, dur time.Duration) error
+	GetClient() interface{}
 }
 
 type AdapterQueue interface {
@@ -55,4 +58,5 @@ type AdapterLocker interface {
 type AdapterFileStore interface {
 	String() string
 	Upload(name, location string) (string, error)
+	GetClient() interface{}
 }
