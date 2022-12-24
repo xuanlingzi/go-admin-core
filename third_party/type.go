@@ -40,14 +40,13 @@ var (
 
 type AdapterThirdParty interface {
 	String() string
-	GetToken(merchant, platform string) string
 	GetConnectUrl(state, scope string, popUp bool) (string, error)
 	GetAccessToken() (string, int, error)
 	GetJSApiTicket(accessToken string) (string, int, error)
 	GetUserAccessToken(code, state string) (string, error)
 	RefreshUserToken(refreshToken string, appId string) (string, error)
 	GetUserInfo(accessToken, openId string) (string, error)
-	SendTemplateMessage(openId, templateId, url string, data []byte) (string, error)
+	SendTemplateMessage(accessToken, openId, templateId, url string, data []byte) (string, error)
 }
 
 func httpGet(url string) (string, error) {

@@ -10,6 +10,7 @@ import (
 )
 
 var smtpLock sync.Mutex
+var _smtp *smtp.Client
 
 type SmtpClient struct {
 	client *smtp.Client
@@ -17,6 +18,11 @@ type SmtpClient struct {
 	port   string
 	auth   smtp.Auth
 	from   string
+}
+
+// GetSmtpClient 获取smtp客户端
+func GetSmtpClient() *smtp.Client {
+	return _smtp
 }
 
 func NewSmtpClient(client *smtp.Client, addr string, username, password, from string) *SmtpClient {

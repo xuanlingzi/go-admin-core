@@ -41,7 +41,7 @@ func (rc *TencentCosClient) Close() {
 
 }
 
-func (rc *TencentCosClient) Put(ctx context.Context, name, fileLocation string) (string, error) {
+func (rc *TencentCosClient) Upload(ctx context.Context, name, fileLocation string) (string, error) {
 	response, err := rc.client.Object.PutFromFile(ctx, name, fileLocation, nil)
 	if err != nil {
 		return fileLocation, err

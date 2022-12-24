@@ -4,9 +4,12 @@ import (
 	"fmt"
 	"github.com/spf13/cast"
 	"github.com/tidwall/gjson"
+	"github.com/tidwall/sjson"
 	"net/http"
 	"net/url"
 )
+
+var _wechatMp *http.Client
 
 type WeChatMp struct {
 	conn         *http.Client
@@ -15,7 +18,11 @@ type WeChatMp struct {
 	callbackAddr string
 }
 
-func NewWeChatMpMp(client *http.Client, appId, appSecret, callbackAddr string) *WeChatMp {
+func GetWeChatMpClient() *http.Client {
+	return _wechatMp
+}
+
+func NewWeChatMp(client *http.Client, appId, appSecret, callbackAddr string) *WeChatMp {
 	if client == nil {
 		client = &http.Client{
 			Transport: &http.Transport{},
@@ -178,6 +185,58 @@ func (m *WeChatMp) GetUserInfo(accessToken, openId string) (string, error) {
 	}
 
 	return body, nil
+}
+
+func (m *WeChatMp) SendTemplateMessage(accessToken, openId, templateId, redirectUrl string, data []byte) (string, error) {
+	/*
+			https://api.weixin.qq.com/cgi-bin/message/template/send?
+			access_token=ACCESS_TOKEN
+			{
+			   "touser":"OPENID",
+			   "template_id":"ngqIpbwh8bUfcSsECmogfXcV14J0tQlEpBO27izEYtY",
+			   "url":"http://weixin.qq.com/download",
+			   "miniprogram":{
+				 "appid":"xiaochengxuappid12345",
+				 "pagepath":"index?foo=bar"
+			   },
+			   "data":{
+					   "first": {
+						   "value":"恭喜你购买成功！",
+						   "color":"#173177"
+					   },
+					   "keyword1":{
+						   "value":"巧克力",
+						   "color":"#173177"
+					   },
+					   "keyword2": {
+						   "value":"39.8元",
+						   "color":"#173177"
+					   },
+					   "keyword3": {
+						   "value":"2014年9月22日",
+						   "color":"#173177"
+					   },
+					   "remark":{
+						   "value":"欢迎再次购买！",
+						   "color":"#173177"
+					   }
+			   }
+		   }
+	*/
+	url := fmt.Sprintf("%v?access_token=%v", WeChatTemplateMessageAddr, accessToken)
+
+	var body []byte
+	body, _ = sjson.SetBytes(body, "touser", openId)
+	body, _ = sjson.SetBytes(body, "template_id", templateId)
+	body, _ = sjson.SetBytes(body, "url", redirectUrl)
+	body, _ = sjson.SetRawBytes(body, "data", data)
+
+	resp, err := httpPost(url, string(body))
+	if err != nil {
+		return "", err
+	}
+
+	return resp, nil
 }
 
 // GetClient 暴露原生client

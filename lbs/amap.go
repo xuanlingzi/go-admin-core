@@ -9,13 +9,19 @@ import (
 	"strings"
 )
 
+var _amap *http.Client
+
 type Amap struct {
 	conn      *http.Client
 	addr      string
 	secretKey string
 }
 
-func NewAmap(client *http.Client, addr, secretKey string) (*Amap, error) {
+func GetAmapClient() *http.Client {
+	return _amap
+}
+
+func NewAmap(client *http.Client, addr, secretKey string) *Amap {
 	if client == nil {
 		client = &http.Client{
 			Transport: &http.Transport{},
@@ -26,7 +32,7 @@ func NewAmap(client *http.Client, addr, secretKey string) (*Amap, error) {
 		addr:      addr,
 		secretKey: secretKey,
 	}
-	return c, nil
+	return c
 }
 
 // Close 关闭连接

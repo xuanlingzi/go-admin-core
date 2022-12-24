@@ -43,7 +43,7 @@ func (m *AliyunOssClient) Check() bool {
 func (m *AliyunOssClient) Close() {
 }
 
-func (m *AliyunOssClient) Put(ctx context.Context, name, fileLocation string) (string, error) {
+func (m *AliyunOssClient) Upload(ctx context.Context, name, fileLocation string) (string, error) {
 	bucket, err := m.client.Bucket(m.bucket)
 	if err != nil {
 		return "", err

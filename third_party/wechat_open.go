@@ -1,17 +1,24 @@
 package third_party
 
 import (
+	"errors"
 	"fmt"
 	"github.com/spf13/cast"
 	"github.com/tidwall/gjson"
 	"net/http"
 )
 
+var _wechatOpen *http.Client
+
 type WeChatOpen struct {
 	conn         *http.Client
 	appId        string
 	appSecret    string
 	callbackAddr string
+}
+
+func GetWeChatOpenClient() *http.Client {
+	return _wechatMp
 }
 
 func NewWeChatOpen(client *http.Client, appId, appSecret, callbackAddr string) *WeChatOpen {
@@ -177,6 +184,10 @@ func (m *WeChatOpen) GetUserInfo(accessToken, openId string) (string, error) {
 	}
 
 	return body, nil
+}
+
+func (m *WeChatOpen) SendTemplateMessage(accessToken, openId, templateId, redirectUrl string, data []byte) (string, error) {
+	return "", errors.New("开放平台无法发送消息")
 }
 
 // GetClient 暴露原生client

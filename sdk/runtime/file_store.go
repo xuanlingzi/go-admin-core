@@ -1,6 +1,7 @@
 package runtime
 
 import (
+	"context"
 	"github.com/xuanlingzi/go-admin-core/storage"
 )
 
@@ -18,6 +19,6 @@ func (e *FileStore) String() string {
 }
 
 // Upload Put file to fileStores
-func (e FileStore) Upload(name, location string) (string, error) {
-	return e.store.Upload(name, location)
+func (e FileStore) Upload(ctx context.Context, name, location string) (string, error) {
+	return e.store.Upload(ctx, name, location)
 }
