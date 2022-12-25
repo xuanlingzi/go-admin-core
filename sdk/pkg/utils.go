@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"errors"
+	"github.com/xuanlingzi/go-admin-core/sdk/pkg/utils"
 	"log"
 	"runtime"
 	"strconv"
@@ -48,7 +49,7 @@ func HasError(err error, msg string, code ...int) {
 		if len(code) > 0 {
 			statusCode = code[0]
 		}
-		if msg == "" {
+		if utils.StringIsEmpty(msg) {
 			msg = err.Error()
 		}
 		_, file, line, _ := runtime.Caller(1)

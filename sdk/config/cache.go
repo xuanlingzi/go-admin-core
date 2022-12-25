@@ -7,7 +7,7 @@ import (
 )
 
 type Cache struct {
-	Redis  *RedisConnectOptions
+	Redis  *RedisConnectOptions `json:"redis" yaml:"redis"`
 	Memory interface{}
 }
 

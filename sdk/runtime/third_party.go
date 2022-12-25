@@ -2,7 +2,6 @@ package runtime
 
 import (
 	"errors"
-	"github.com/xuanlingzi/go-admin-core/sdk"
 	"github.com/xuanlingzi/go-admin-core/third_party"
 )
 
@@ -19,42 +18,18 @@ func (e *ThirdParty) String() string {
 	return e.thirdParty.String()
 }
 
-func (e *ThirdParty) GetAccessToken() (string, error) {
+func (e *ThirdParty) GetAccessToken() (string, int, error) {
 	if e.thirdParty == nil {
-		return "", errors.New("third party not initialized")
+		return "", 0, errors.New("third party not initialized")
 	}
-	accessToken, err := sdk.Runtime.GetCacheAdapter().Get(third_party.WECHAT_ACCESS_TOKEN)
-	if err != nil {
-		return accessToken, nil
-	}
-
-	accessToken, expireAt, err := e.thirdParty.GetAccessToken()
-	if err = sdk.Runtime.GetCacheAdapter().Set(third_party.WECHAT_ACCESS_TOKEN, accessToken, expireAt); err != nil {
-		return accessToken, err
-	}
-
-	return accessToken, nil
+	return e.thirdParty.GetAccessToken()
 }
 
-func (e *ThirdParty) GetJSApiTicket() (string, error) {
+func (e *ThirdParty) GetJSApiTicket(accessToken string) (string, int, error) {
 	if e.thirdParty == nil {
-		return "", errors.New("third party not initialized")
+		return "", 0, errors.New("third party not initialized")
 	}
-	ticket, err := sdk.Runtime.GetCacheAdapter().Get(third_party.WECHAT_JSAPI_TICKET)
-	if err != nil {
-		return ticket, nil
-	}
-
-	accessToken, err := e.GetAccessToken()
-	if err != nil {
-		return ticket, err
-	}
-	ticket, expireAt, err := e.thirdParty.GetJSApiTicket(accessToken)
-	if err = sdk.Runtime.GetCacheAdapter().Set(third_party.WECHAT_JSAPI_TICKET, ticket, expireAt); err != nil {
-		return ticket, err
-	}
-
-	return ticket, nil
+	return e.thirdParty.GetJSApiTicket(accessToken)
 }
 
 func (e *ThirdParty) GetConnectUrl(state, scope string, popUp bool) (string, error) {
@@ -86,9 +61,9 @@ func (e *ThirdParty) GetUserInfo(accessToken, openId string) (string, error) {
 }
 
 // SendTemplateMessage 发送模板消息
-func (e *ThirdParty) SendTemplateMessage(openId, templateId, url string, data []byte) (string, error) {
+func (e *ThirdParty) SendTemplateMessage(accessToken, openId, templateId, url string, data []byte) (string, error) {
 	if e.thirdParty == nil {
 		return "", nil
 	}
-	return e.thirdParty.SendTemplateMessage(openId, templateId, url, data)
+	return e.thirdParty.SendTemplateMessage(accessToken, openId, templateId, url, data)
 }

@@ -9,9 +9,9 @@ import (
 )
 
 type Queue struct {
-	Redis  *QueueRedis
-	Memory *QueueMemory
-	NSQ    *QueueNSQ `json:"nsq" yaml:"nsq"`
+	Redis  *QueueRedis  `json:"redis" yaml:"redis"`
+	Memory *QueueMemory `json:"memory" yaml:"memory"`
+	NSQ    *QueueNSQ    `json:"nsq" yaml:"nsq"`
 }
 
 type QueueRedis struct {
@@ -21,12 +21,12 @@ type QueueRedis struct {
 }
 
 type QueueMemory struct {
-	PoolSize uint
+	PoolSize uint `json:"pool_size" yaml:"pool_size"`
 }
 
 type QueueNSQ struct {
 	NSQOptions
-	ChannelPrefix string
+	ChannelPrefix string `json:"channel_prefix" yaml:"channel_prefix"`
 }
 
 var QueueConfig = new(Queue)

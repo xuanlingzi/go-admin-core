@@ -3,6 +3,7 @@ package jwtauth
 import (
 	"crypto/rsa"
 	"errors"
+	"github.com/xuanlingzi/go-admin-core/sdk/pkg/utils"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -292,11 +293,11 @@ func (mw *GinJWTMiddleware) usingPublicKeyAlgo() bool {
 // MiddlewareInit initialize jwt configs.
 func (mw *GinJWTMiddleware) MiddlewareInit() error {
 
-	if mw.TokenLookup == "" {
+	if utils.StringIsEmpty(mw.TokenLookup) {
 		mw.TokenLookup = "header:Authorization"
 	}
 
-	if mw.SigningAlgorithm == "" {
+	if utils.StringIsEmpty(mw.SigningAlgorithm) {
 		mw.SigningAlgorithm = "HS256"
 	}
 
@@ -356,7 +357,7 @@ func (mw *GinJWTMiddleware) MiddlewareInit() error {
 		}
 	}
 
-	if mw.IdentityKey == "" {
+	if utils.StringIsEmpty(mw.IdentityKey) {
 		mw.IdentityKey = IdentityKey
 	}
 
@@ -373,11 +374,11 @@ func (mw *GinJWTMiddleware) MiddlewareInit() error {
 		}
 	}
 
-	if mw.Realm == "" {
+	if utils.StringIsEmpty(mw.Realm) {
 		mw.Realm = "gin jwt"
 	}
 
-	if mw.CookieName == "" {
+	if utils.StringIsEmpty(mw.CookieName) {
 		mw.CookieName = "jwt"
 	}
 
@@ -614,7 +615,7 @@ func (mw *GinJWTMiddleware) TokenGenerator(data interface{}) (string, time.Time,
 func (mw *GinJWTMiddleware) jwtFromHeader(c *gin.Context, key string) (string, error) {
 	authHeader := c.Request.Header.Get(key)
 
-	if authHeader == "" {
+	if utils.StringIsEmpty(authHeader) {
 		return "", ErrEmptyAuthHeader
 	}
 
@@ -629,7 +630,7 @@ func (mw *GinJWTMiddleware) jwtFromHeader(c *gin.Context, key string) (string, e
 func (mw *GinJWTMiddleware) jwtFromQuery(c *gin.Context, key string) (string, error) {
 	token := c.Query(key)
 
-	if token == "" {
+	if utils.StringIsEmpty(token) {
 		return "", ErrEmptyQueryToken
 	}
 
@@ -639,7 +640,7 @@ func (mw *GinJWTMiddleware) jwtFromQuery(c *gin.Context, key string) (string, er
 func (mw *GinJWTMiddleware) jwtFromCookie(c *gin.Context, key string) (string, error) {
 	cookie, _ := c.Cookie(key)
 
-	if cookie == "" {
+	if utils.StringIsEmpty(cookie) {
 		return "", ErrEmptyCookieToken
 	}
 
@@ -649,7 +650,7 @@ func (mw *GinJWTMiddleware) jwtFromCookie(c *gin.Context, key string) (string, e
 func (mw *GinJWTMiddleware) jwtFromParam(c *gin.Context, key string) (string, error) {
 	token := c.Param(key)
 
-	if token == "" {
+	if utils.StringIsEmpty(token) {
 		return "", ErrEmptyParamToken
 	}
 

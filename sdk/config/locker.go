@@ -9,7 +9,7 @@ import (
 var LockerConfig = new(Locker)
 
 type Locker struct {
-	Redis *RedisConnectOptions
+	Redis *RedisConnectOptions `json:"redis" yaml:"redis"`
 }
 
 // Empty 空设置

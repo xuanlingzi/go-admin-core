@@ -1,7 +1,7 @@
 package config
 
 type FilePath struct {
-	Temp string
+	Temp string `json:"temp" yaml:"temp"`
 }
 
 var FilePathConfig = new(FilePath)

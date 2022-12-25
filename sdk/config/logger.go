@@ -3,12 +3,12 @@ package config
 import "github.com/xuanlingzi/go-admin-core/sdk/pkg/logger"
 
 type Logger struct {
-	Type      string
-	Path      string
-	Level     string
-	Stdout    string
-	EnabledDB bool
-	Cap       uint
+	Type      string `json:"type,omitempty" yaml:"type"`
+	Path      string `json:"path,omitempty" yaml:"path"`
+	Level     string `json:"level,omitempty" yaml:"level"`
+	Stdout    string `json:"stdout,omitempty" yaml:"stdout"`
+	EnabledDB bool   `json:"enabled_db,omitempty" yaml:"enabled_db"`
+	Cap       uint   `json:"cap,omitempty" yaml:"cap"`
 }
 
 // Setup 设置logger

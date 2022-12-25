@@ -43,24 +43,24 @@ func (e *Settings) init() {
 
 // Config 配置集合
 type Config struct {
-	Application *Application          `yaml:"application"`
-	Ssl         *Ssl                  `yaml:"ssl"`
-	Logger      *Logger               `yaml:"logger"`
-	Jwt         *Jwt                  `yaml:"jwt"`
-	Database    *Database             `yaml:"database"`
-	Databases   *map[string]*Database `yaml:"databases"`
-	Gen         *Gen                  `yaml:"gen"`
-	Cache       *Cache                `yaml:"cache"`
-	Queue       *Queue                `yaml:"queue"`
-	Locker      *Locker               `yaml:"locker"`
-	FilePath    *FilePath             `json:"location,omitempty" yaml:"location"`
+	Application *Application          `json:"application" yaml:"application"`
+	Ssl         *Ssl                  `json:"ssl" yaml:"ssl"`
+	Logger      *Logger               `json:"logger" yaml:"logger"`
+	Jwt         *Jwt                  `json:"jwt" yaml:"jwt"`
+	Database    *Database             `json:"database" yaml:"database"`
+	Databases   *map[string]*Database `json:"databases" yaml:"databases"`
+	Gen         *Gen                  `json:"gen" yaml:"gen"`
+	Cache       *Cache                `json:"cache" yaml:"cache"`
+	Queue       *Queue                `json:"queue" yaml:"queue"`
+	Locker      *Locker               `json:"locker" yaml:"locker"`
+	FilePath    *FilePath             `json:"file_path,omitempty" yaml:"file_path"`
 	Lbs         *Lbs                  `json:"lbs,omitempty" yaml:"lbs"`
 	FileStore   *FileStore            `json:"file_store,omitempty" yaml:"file_store"`
 	Sms         *Sms                  `json:"sms,omitempty" yaml:"sms"`
 	Mail        *Mail                 `json:"mail" yaml:"mail"`
 	Amqp        *Amqp                 `json:"mq,omitempty" yaml:"mq"`
 	WeChat      *WeChat               `json:"wechat,omitempty" yaml:"wechat"`
-	Extend      interface{}           `yaml:"extend"`
+	Extend      interface{}           `json:"extend" yaml:"extend"`
 }
 
 // 多db改造
