@@ -1,11 +1,11 @@
 package config
 
 type Application struct {
-	Host          string `json:"host,omitempty" yaml:"host"`
-	Port          int64  `json:"port,omitempty" yaml:"port"`
-	Name          string `json:"name,omitempty" yaml:"name"`
-	AesSecret     string `json:"aes_secret,omitempty" yaml:"aes_secret"`
 	Mode          string `json:"mode,omitempty" yaml:"mode"`
+	Name          string `json:"name,omitempty" yaml:"name"`
+	Host          string `json:"host,omitempty" yaml:"host"`
+	Port          int    `json:"port,omitempty" yaml:"port"`
+	JwtSecret     string `json:"jwt_secret,omitempty" yaml:"jwt_secret"`
 	ReadTimeout   int    `json:"read_timeout,omitempty" yaml:"read_timeout"`
 	WriterTimeout int    `json:"writer_timeout,omitempty" yaml:"writer_timeout"`
 	EnableDP      bool   `json:"enabled_data_permission,omitempty" yaml:"enabled_data_permission"`

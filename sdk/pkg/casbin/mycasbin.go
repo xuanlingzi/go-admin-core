@@ -7,7 +7,6 @@ import (
 	"github.com/casbin/casbin/v2/log"
 	"github.com/casbin/casbin/v2/model"
 	redisWatcher "github.com/go-admin-team/redis-watcher/v2"
-	"github.com/go-redis/redis/v9"
 	"github.com/xuanlingzi/go-admin-core/logger"
 	"github.com/xuanlingzi/go-admin-core/sdk"
 	"github.com/xuanlingzi/go-admin-core/sdk/config"

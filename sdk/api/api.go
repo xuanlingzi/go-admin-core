@@ -42,6 +42,7 @@ func (e *Api) AddError(err error) {
 func (e *Api) MakeContext(c *gin.Context) *Api {
 	e.Context = c
 	e.Logger = GetRequestLogger(c)
+	e.Errors = nil
 	return e
 }
 
@@ -121,12 +122,10 @@ func (e Api) Error(code int, err error, message ...string) {
 	response.Error(e.Context, code, err, message...)
 }
 
-// OK 通常成功数据处理
 func (e Api) OK(data interface{}, message ...string) {
 	response.OK(e.Context, data, message...)
 }
 
-// PageOK 分页数据处理
 func (e Api) PageOK(result interface{}, count int, pageIndex int, pageSize int, message ...string) {
 	response.PageOK(e.Context, result, count, pageIndex, pageSize, message...)
 }

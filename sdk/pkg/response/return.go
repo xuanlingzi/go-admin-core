@@ -35,9 +35,11 @@ func OK(c *gin.Context, data interface{}, message ...string) {
 	res.SetSuccess(true)
 	if len(message) > 0 {
 		res.SetMessage(strings.Join(message, ","))
+	} else {
+		res.SetMessage("OK")
 	}
 	res.SetTraceID(pkg.GenerateMsgIDFromContext(c))
-	res.SetCode(http.StatusOK)
+	res.SetCode(0)
 	c.Set("result", res)
 	c.Set("status", http.StatusOK)
 	c.AbortWithStatusJSON(http.StatusOK, res)

@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/go-admin-team/redisqueue/v2"
-	"github.com/go-redis/redis/v9"
 	"github.com/xuanlingzi/go-admin-core/storage"
 	"github.com/xuanlingzi/go-admin-core/storage/queue"
 )

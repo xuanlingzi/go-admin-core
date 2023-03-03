@@ -50,19 +50,19 @@ func GetUserIdInt64(c *gin.Context) int64 {
 }
 
 func GetUserIdStr(c *gin.Context) string {
-	return ExtractClaims(c).String("identity")
+	return ExtractClaims(c).String(jwt.IdentityKey)
 }
 
-func GetUserName(c *gin.Context) string {
-	return ExtractClaims(c).String("nice")
+func GetUsername(c *gin.Context) string {
+	return ExtractClaims(c).String(jwt.NiceKey)
 }
 
 func GetRoleName(c *gin.Context) string {
-	return ExtractClaims(c).String("rolekey")
+	return ExtractClaims(c).String(jwt.RoleKey)
 }
 
 func GetRoleId(c *gin.Context) int {
-	roleId, err := ExtractClaims(c).Int("roleid")
+	roleId, err := ExtractClaims(c).Int(jwt.RoleIdKey)
 	if err != nil {
 		fmt.Println(pkg.GetCurrentTimeStr() + " [WARING] " + c.Request.Method + " " + c.Request.URL.Path + " GetRoleId 缺少 roleid error: " + err.Error())
 		return 0
@@ -71,7 +71,7 @@ func GetRoleId(c *gin.Context) int {
 }
 
 func GetDeptId(c *gin.Context) int {
-	deptId, err := ExtractClaims(c).Int("deptid")
+	deptId, err := ExtractClaims(c).Int(jwt.DeptIdKey)
 	if err != nil {
 		fmt.Println(pkg.GetCurrentTimeStr() + " [WARING] " + c.Request.Method + " " + c.Request.URL.Path + " GetDeptId 缺少 deptid error: " + err.Error())
 		return 0
@@ -80,5 +80,5 @@ func GetDeptId(c *gin.Context) int {
 }
 
 func GetDeptName(c *gin.Context) string {
-	return ExtractClaims(c).String("deptkey")
+	return ExtractClaims(c).String(jwt.DeptNameKey)
 }
