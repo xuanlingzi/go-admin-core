@@ -44,6 +44,7 @@ func (e *Settings) init() {
 // Config 配置集合
 type Config struct {
 	Application *Application          `json:"application" yaml:"application"`
+	Secret      *Secret               `json:"secret" yaml:"secret"`
 	Ssl         *Ssl                  `json:"ssl" yaml:"ssl"`
 	Logger      *Logger               `json:"logger" yaml:"logger"`
 	Jwt         *Jwt                  `json:"jwt" yaml:"jwt"`
@@ -53,7 +54,6 @@ type Config struct {
 	Cache       *Cache                `json:"cache" yaml:"cache"`
 	Queue       *Queue                `json:"queue" yaml:"queue"`
 	Locker      *Locker               `json:"locker" yaml:"locker"`
-	FilePath    *FilePath             `json:"file_path,omitempty" yaml:"file_path"`
 	Lbs         *Lbs                  `json:"lbs,omitempty" yaml:"lbs"`
 	FileStore   *FileStore            `json:"file_store,omitempty" yaml:"file_store"`
 	Sms         *Sms                  `json:"sms,omitempty" yaml:"sms"`
@@ -79,6 +79,7 @@ func Setup(s source.Source,
 	_cfg = &Settings{
 		Settings: Config{
 			Application: ApplicationConfig,
+			Secret:      SecretConfig,
 			Ssl:         SslConfig,
 			Logger:      LoggerConfig,
 			Jwt:         JwtConfig,
@@ -88,7 +89,6 @@ func Setup(s source.Source,
 			Cache:       CacheConfig,
 			Queue:       QueueConfig,
 			Locker:      LockerConfig,
-			FilePath:    FilePathConfig,
 			Lbs:         LbsConfig,
 			FileStore:   FileStoreConfig,
 			Sms:         SmsConfig,

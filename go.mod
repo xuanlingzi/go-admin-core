@@ -12,12 +12,11 @@ require (
 	github.com/aliyunmq/mq-http-go-sdk v1.0.3
 	github.com/apache/pulsar-client-go v0.9.0
 	github.com/bitly/go-simplejson v0.5.0
-	github.com/bsm/redislock v0.8.2
+	github.com/bsm/redislock v0.9.1
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/ghodss/yaml v1.0.0
 	github.com/gin-gonic/gin v1.8.2
 	github.com/go-admin-team/redisqueue/v2 v2.0.0
-	github.com/go-redis/redis/v9 v9.0.0-rc.2
 	github.com/gogap/errors v0.0.0-20210818113853-edfbba0ddea9
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/google/uuid v1.3.0
@@ -25,9 +24,11 @@ require (
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/imdario/mergo v0.3.13
 	github.com/json-iterator/go v1.1.12
+	github.com/jung-kurt/gofpdf v1.16.2
 	github.com/nsqio/go-nsq v1.1.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.14.0
+	github.com/redis/go-redis/v9 v9.0.2
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
 	github.com/smartystreets/goconvey v1.6.4
 	github.com/spf13/cast v1.5.0
@@ -36,6 +37,7 @@ require (
 	github.com/tencentyun/cos-go-sdk-v5 v0.7.40
 	github.com/tidwall/gjson v1.14.4
 	github.com/tidwall/sjson v1.2.5
+	github.com/xuanlingzi/go-admin-core/sdk v1.4.1
 	github.com/xuri/excelize/v2 v2.6.1
 	golang.org/x/crypto v0.4.0
 	google.golang.org/grpc v1.38.0
@@ -82,6 +84,7 @@ require (
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
 	github.com/go-playground/validator/v10 v10.11.1 // indirect
+	github.com/go-redis/redis/v9 v9.0.0-rc.2 // indirect
 	github.com/go-sql-driver/mysql v1.7.0 // indirect
 	github.com/goccy/go-json v0.10.0 // indirect
 	github.com/godbus/dbus v0.0.0-20190726142602-4481cbc300e2 // indirect
@@ -126,6 +129,7 @@ require (
 	github.com/richardlehane/mscfb v1.0.4 // indirect
 	github.com/richardlehane/msoleps v1.0.3 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
+	github.com/shamsher31/goimgext v1.0.0 // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect
 	github.com/sirupsen/logrus v1.6.0 // indirect
 	github.com/smartystreets/assertions v1.1.0 // indirect

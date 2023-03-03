@@ -14,6 +14,7 @@ const (
 	yaml
 	form
 	query
+	header
 )
 
 var constructor = &bindConstructor{}
@@ -43,6 +44,8 @@ func (e *bindConstructor) GetBindingForGin(d interface{}) []binding.Binding {
 			mp[form] = binding.Form
 		case query:
 			mp[query] = binding.Query
+		case header:
+			mp[header] = binding.Header
 		default:
 			mp[0] = nil
 		}
@@ -75,6 +78,9 @@ func (e *bindConstructor) resolve(d interface{}) []uint8 {
 		}
 		if _, ok = tag.Lookup("query"); ok {
 			bs = append(bs, query)
+		}
+		if _, ok = tag.Lookup("header"); ok {
+			bs = append(bs, header)
 		}
 		if _, ok = tag.Lookup("uri"); ok {
 			bs = append(bs, 0)

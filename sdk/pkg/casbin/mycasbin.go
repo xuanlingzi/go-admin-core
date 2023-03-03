@@ -1,16 +1,16 @@
 package mycasbin
 
 import (
+	"github.com/redis/go-redis/v9"
 	"sync"
 
 	"github.com/casbin/casbin/v2"
 	"github.com/casbin/casbin/v2/log"
 	"github.com/casbin/casbin/v2/model"
-	redisWatcher "github.com/go-admin-team/redis-watcher/v2"
-	"github.com/go-redis/redis/v9"
 	"github.com/xuanlingzi/go-admin-core/logger"
 	"github.com/xuanlingzi/go-admin-core/sdk"
 	"github.com/xuanlingzi/go-admin-core/sdk/config"
+	redisWatcher "github.com/xuanlingzi/redis-watcher/v2"
 	"gorm.io/gorm"
 
 	gormAdapter "github.com/xuanlingzi/gorm-adapter/v3"

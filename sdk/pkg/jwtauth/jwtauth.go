@@ -4,8 +4,8 @@ import (
 	"crypto/rsa"
 	"errors"
 	"github.com/xuanlingzi/go-admin-core/sdk/pkg/utils"
-	"io/ioutil"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -59,7 +59,7 @@ type GinJWTMiddleware struct {
 	PayloadFunc func(data interface{}) MapClaims
 
 	// User can define own Unauthorized func.
-	Unauthorized func(*gin.Context, int, string)
+	Unauthorized func(*gin.Context, int, string, interface{})
 
 	// User can define own LoginResponse func.
 	LoginResponse func(*gin.Context, int, string, time.Time)
@@ -164,6 +164,8 @@ var (
 	// ErrFailedAuthentication indicates authentication failed, could be faulty username or password
 	ErrFailedAuthentication = errors.New("无效的用户名或密码")
 
+	ErrFailedAccessIdOrSecret = errors.New("错误的Access Id或Secret")
+
 	// ErrFailedTokenCreation indicates JWT Token failed to create, reason unknown
 	ErrFailedTokenCreation = errors.New("failed to create JWT Token")
 
@@ -210,29 +212,35 @@ var (
 	// ErrInvalidPubKey indicates the given public key is invalid
 	ErrInvalidPubKey = errors.New("public key invalid")
 
+	ErrInvalidOver3Times = errors.New("密码输入次数超过3次，请输入图形验证码")
+
+	ErrInvalidNeedTFA = errors.New("需要双因素认证")
+
 	// IdentityKey default identity key
 	IdentityKey = "identity"
 
 	// NiceKey 昵称
-	NiceKey      = "nice"
-	DataScopeKey = "datascope"
+	NiceKey = "nice"
+
+	// DataScopeKey 数据权限
+	DataScopeKey = "data_scope"
 
 	RKey = "r"
 
 	// RoleIdKey 角色id  Old
-	RoleIdKey = "roleid"
+	RoleIdKey = "role_id"
 
 	// RoleKey 角色名称  Old
-	RoleKey = "rolekey"
+	RoleKey = "role_key"
 
 	// RoleNameKey 角色名称  Old
-	RoleNameKey = "rolename"
+	RoleNameKey = "role_name"
 
-	// RoleIdKey 部门id
-	DeptId = "deptId"
+	// DeptIdKey 部门id
+	DeptIdKey = "dept_id"
 
-	// RoleKey 部门名称
-	DeptName = "deptName"
+	// DeptNameKey 部门名称
+	DeptNameKey = "dept_name"
 )
 
 // New for check error with GinJWTMiddleware
@@ -257,7 +265,7 @@ func (mw *GinJWTMiddleware) readKeys() error {
 }
 
 func (mw *GinJWTMiddleware) privateKey() error {
-	keyData, err := ioutil.ReadFile(mw.PrivKeyFile)
+	keyData, err := os.ReadFile(mw.PrivKeyFile)
 	if err != nil {
 		return ErrNoPrivKeyFile
 	}
@@ -270,7 +278,7 @@ func (mw *GinJWTMiddleware) privateKey() error {
 }
 
 func (mw *GinJWTMiddleware) publicKey() error {
-	keyData, err := ioutil.ReadFile(mw.PubKeyFile)
+	keyData, err := os.ReadFile(mw.PubKeyFile)
 	if err != nil {
 		return ErrNoPubKeyFile
 	}
@@ -317,7 +325,7 @@ func (mw *GinJWTMiddleware) MiddlewareInit() error {
 	}
 
 	if mw.Unauthorized == nil {
-		mw.Unauthorized = func(c *gin.Context, code int, message string) {
+		mw.Unauthorized = func(c *gin.Context, code int, message string, _ interface{}) {
 			c.JSON(http.StatusOK, gin.H{
 				"code":    code,
 				"message": message,
@@ -328,7 +336,7 @@ func (mw *GinJWTMiddleware) MiddlewareInit() error {
 	if mw.LoginResponse == nil {
 		mw.LoginResponse = func(c *gin.Context, code int, token string, expire time.Time) {
 			c.JSON(http.StatusOK, gin.H{
-				"code":   http.StatusOK,
+				"code":   code,
 				"token":  token,
 				"expire": expire.Format(time.RFC3339),
 			})
@@ -338,7 +346,7 @@ func (mw *GinJWTMiddleware) MiddlewareInit() error {
 	if mw.AntdLoginResponse == nil {
 		mw.AntdLoginResponse = func(c *gin.Context, code int, token string, expire time.Time) {
 			c.JSON(http.StatusOK, gin.H{
-				"code":             http.StatusOK,
+				"code":             code,
 				"success":          true,
 				"token":            token,
 				"currentAuthority": token,
@@ -350,7 +358,7 @@ func (mw *GinJWTMiddleware) MiddlewareInit() error {
 	if mw.RefreshResponse == nil {
 		mw.RefreshResponse = func(c *gin.Context, code int, token string, expire time.Time) {
 			c.JSON(http.StatusOK, gin.H{
-				"code":   http.StatusOK,
+				"code":   code,
 				"token":  token,
 				"expire": expire.Format(time.RFC3339),
 			})
@@ -458,6 +466,11 @@ func (mw *GinJWTMiddleware) LoginHandler(c *gin.Context) {
 	}
 	data, err := mw.Authenticator(c)
 	if err != nil {
+		if errors.Is(err, ErrInvalidOver3Times) || errors.Is(err, ErrInvalidNeedTFA) || errors.Is(err, ErrInvalidVerificationCode) {
+			mw.tfaUauthorized(c, 400, err.Error(), data)
+			return
+		}
+
 		mw.unauthorized(c, 400, mw.HTTPStatusMessageFunc(err, c))
 		return
 	}
@@ -493,7 +506,7 @@ func (mw *GinJWTMiddleware) LoginHandler(c *gin.Context) {
 		)
 	}
 
-	mw.AntdLoginResponse(c, http.StatusOK, tokenString, expire)
+	mw.AntdLoginResponse(c, 0, tokenString, expire)
 }
 
 func (mw *GinJWTMiddleware) signedString(token *jwt.Token) (string, error) {
@@ -713,13 +726,26 @@ func (mw *GinJWTMiddleware) ParseTokenString(token string) (*jwt.Token, error) {
 	})
 }
 
+func (mw *GinJWTMiddleware) tfaUauthorized(c *gin.Context, code int, message string, tfas interface{}) {
+	c.Header("WWW-Authenticate", "JWT realm="+mw.Realm)
+	if !mw.DisabledAbort {
+		c.Abort()
+	}
+
+	tfaAuth := gin.H{
+		"two_factor_auths": tfas,
+	}
+
+	mw.Unauthorized(c, code, message, tfaAuth)
+}
+
 func (mw *GinJWTMiddleware) unauthorized(c *gin.Context, code int, message string) {
 	c.Header("WWW-Authenticate", "JWT realm="+mw.Realm)
 	if !mw.DisabledAbort {
 		c.Abort()
 	}
 
-	mw.Unauthorized(c, code, message)
+	mw.Unauthorized(c, code, message, nil)
 }
 
 // ExtractClaims help to extract the JWT claims
