@@ -3,7 +3,7 @@ module github.com/xuanlingzi/go-admin-core/plugins/logger/zap
 go 1.19
 
 require (
-	github.com/xuanlingzi/go-admin-core v1.4.1
+	github.com/xuanlingzi/go-admin-core v1.4.2
 	go.uber.org/zap v1.24.0
 )
 

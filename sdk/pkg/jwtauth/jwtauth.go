@@ -45,6 +45,16 @@ type GinJWTMiddleware struct {
 	// Check error (e) to determine the appropriate error message.
 	Authenticator func(c *gin.Context) (interface{}, error)
 
+	// Callback function that should perform the authentication of the user based on WeChat auth info.
+	// Must return user data as user identifier, it will be stored in Claim Array. Required.
+	// Check error (e) to determine the appropriate error message.
+	WeChatAuthenticator func(c *gin.Context) (interface{}, error)
+
+	// Callback function that should perform the authentication of the user based on two factor auth info.
+	// Must return user data as user identifier, it will be stored in Claim Array. Required.
+	// Check error (e) to determine the appropriate error message.
+	TwoFactorAuthenticator func(c *gin.Context) (interface{}, error)
+
 	// Callback function that should perform the authorization of the authenticated user. Called
 	// only after an authentication success. Must return true on success, false on failure.
 	// Optional, default to success.
@@ -467,13 +477,52 @@ func (mw *GinJWTMiddleware) LoginHandler(c *gin.Context) {
 	data, err := mw.Authenticator(c)
 	if err != nil {
 		if errors.Is(err, ErrInvalidOver3Times) || errors.Is(err, ErrInvalidNeedTFA) || errors.Is(err, ErrInvalidVerificationCode) {
-			mw.tfaUauthorized(c, 400, err.Error(), data)
+			mw.tfaUauthorized(c, 0, err.Error(), data)
 			return
 		}
 
 		mw.unauthorized(c, 400, mw.HTTPStatusMessageFunc(err, c))
 		return
 	}
+
+	mw.authorized(c, data)
+}
+
+// WeChatLoginHandler can be used by clients to get a jwt token.
+// Payload needs to be json in the form of {"state": "STATE", "code": "CODE"}.
+// Reply will be of the form {"token": "TOKEN"}.
+func (mw *GinJWTMiddleware) WeChatLoginHandler(c *gin.Context) {
+	if mw.WeChatAuthenticator == nil {
+		mw.unauthorized(c, http.StatusInternalServerError, mw.HTTPStatusMessageFunc(ErrMissingAuthenticatorFunc, c))
+		return
+	}
+	data, err := mw.WeChatAuthenticator(c)
+	if err != nil {
+		mw.unauthorized(c, 400, mw.HTTPStatusMessageFunc(err, c))
+		return
+	}
+
+	mw.authorized(c, data)
+}
+
+// TwoFactorAuthHandler can be used by clients to get a jwt token.
+// Payload needs to be json in the form of {"state": "STATE", "code": "CODE"}.
+// Reply will be of the form {"token": "TOKEN"}.
+func (mw *GinJWTMiddleware) TwoFactorAuthHandler(c *gin.Context) {
+	if mw.TwoFactorAuthenticator == nil {
+		mw.unauthorized(c, http.StatusInternalServerError, mw.HTTPStatusMessageFunc(ErrMissingAuthenticatorFunc, c))
+		return
+	}
+	data, err := mw.TwoFactorAuthenticator(c)
+	if err != nil {
+		mw.unauthorized(c, 400, mw.HTTPStatusMessageFunc(err, c))
+		return
+	}
+
+	mw.authorized(c, data)
+}
+
+func (mw *GinJWTMiddleware) authorized(c *gin.Context, data interface{}) {
 	// Create the token
 	token := jwt.New(jwt.GetSigningMethod(mw.SigningAlgorithm))
 	claims := token.Claims.(jwt.MapClaims)
@@ -726,17 +775,13 @@ func (mw *GinJWTMiddleware) ParseTokenString(token string) (*jwt.Token, error) {
 	})
 }
 
-func (mw *GinJWTMiddleware) tfaUauthorized(c *gin.Context, code int, message string, tfas interface{}) {
+func (mw *GinJWTMiddleware) tfaUauthorized(c *gin.Context, code int, message string, data interface{}) {
 	c.Header("WWW-Authenticate", "JWT realm="+mw.Realm)
 	if !mw.DisabledAbort {
 		c.Abort()
 	}
 
-	tfaAuth := gin.H{
-		"two_factor_auths": tfas,
-	}
-
-	mw.Unauthorized(c, code, message, tfaAuth)
+	mw.Unauthorized(c, code, message, data)
 }
 
 func (mw *GinJWTMiddleware) unauthorized(c *gin.Context, code int, message string) {
