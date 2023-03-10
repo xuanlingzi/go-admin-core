@@ -46,6 +46,8 @@ func (rc *TencentCosClient) Upload(ctx context.Context, name, fileLocation strin
 	if err != nil {
 		return fileLocation, err
 	}
+	defer response.Body.Close()
+
 	return response.Response.Request.URL.String(), nil
 }
 

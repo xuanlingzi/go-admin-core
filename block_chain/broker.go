@@ -77,6 +77,8 @@ func httpGet(url string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	defer response.Body.Close()
+
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
 		return "", err
@@ -97,6 +99,7 @@ func httpPost(url, content string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	defer response.Body.Close()
 
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
