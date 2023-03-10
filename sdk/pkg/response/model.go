@@ -6,6 +6,9 @@ type Response struct {
 	Code      int32  `protobuf:"varint,2,opt,name=code,proto3" json:"code"`
 	Message   string `protobuf:"bytes,3,opt,name=msg,proto3" json:"message,omitempty"`
 	Status    string `protobuf:"bytes,4,opt,name=status,proto3" json:"status,omitempty"`
+
+	// 兼容性字段
+	ErrCode int32 `protobuf:"varint,2,opt,name=errCode,proto3" json:"err_code"`
 }
 
 type response struct {
@@ -42,6 +45,7 @@ func (e *response) SetMessage(s string) {
 
 func (e *response) SetCode(code int32) {
 	e.Code = code
+	e.ErrCode = code
 }
 
 func (e *response) SetSuccess(success bool) {
