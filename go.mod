@@ -37,7 +37,7 @@ require (
 	github.com/tencentyun/cos-go-sdk-v5 v0.7.40
 	github.com/tidwall/gjson v1.14.4
 	github.com/tidwall/sjson v1.2.5
-	github.com/xuanlingzi/go-admin-core/sdk v1.4.2
+	github.com/xuanlingzi/go-admin-core/sdk v1.4.4
 	github.com/xuri/excelize/v2 v2.6.1
 	golang.org/x/crypto v0.4.0
 	google.golang.org/grpc v1.38.0

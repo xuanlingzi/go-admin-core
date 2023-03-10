@@ -27,8 +27,8 @@ require (
 	github.com/smartystreets/goconvey v1.6.4
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.565
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/sms v1.0.565
-	github.com/xuanlingzi/go-admin-core v1.4.2
-	github.com/xuanlingzi/go-admin-core/plugins/logger/zap v1.4.0
+	github.com/xuanlingzi/go-admin-core v1.4.4
+	github.com/xuanlingzi/go-admin-core/plugins/logger/zap v1.4.4
 	github.com/xuanlingzi/gorm-adapter/v3 v3.2.4
 	github.com/xuanlingzi/redis-watcher/v2 v2.0.0-20230303150028-d12653e6562a
 	golang.org/x/crypto v0.4.0
