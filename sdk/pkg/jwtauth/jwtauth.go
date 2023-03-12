@@ -543,7 +543,7 @@ func (mw *GinJWTMiddleware) authorized(c *gin.Context, data interface{}) {
 
 	// set cookie
 	if mw.SendCookie {
-		maxage := int(expire.Unix() - time.Now().Unix())
+		maxage := int(expire.Unix() - mw.TimeFunc().Unix())
 		c.SetCookie(
 			mw.CookieName,
 			tokenString,
@@ -586,7 +586,7 @@ func (mw *GinJWTMiddleware) RefreshHandler(c *gin.Context) {
 func (mw *GinJWTMiddleware) RefreshToken(c *gin.Context) (string, time.Time, error) {
 	claims, err := mw.CheckIfTokenExpire(c)
 	if err != nil {
-		return "", time.Now(), err
+		return "", mw.TimeFunc(), err
 	}
 
 	// Create the token
@@ -603,12 +603,12 @@ func (mw *GinJWTMiddleware) RefreshToken(c *gin.Context) (string, time.Time, err
 	tokenString, err := mw.signedString(newToken)
 
 	if err != nil {
-		return "", time.Now(), err
+		return "", mw.TimeFunc(), err
 	}
 
 	// set cookie
 	if mw.SendCookie {
-		maxage := int(expire.Unix() - time.Now().Unix())
+		maxage := int(expire.Unix() - mw.TimeFunc().Unix())
 		c.SetCookie(
 			mw.CookieName,
 			tokenString,
