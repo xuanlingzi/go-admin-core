@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-admin-team/redisqueue/v2"
 	"github.com/xuanlingzi/go-admin-core/storage"
 	"github.com/xuanlingzi/go-admin-core/storage/queue"
 )
