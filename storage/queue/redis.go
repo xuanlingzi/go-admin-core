@@ -1,8 +1,8 @@
 package queue
 
 import (
-	"github.com/go-admin-team/redisqueue/v2"
 	"github.com/redis/go-redis/v9"
+	"github.com/xuanlingzi/redisqueue/v2"
 
 	"github.com/xuanlingzi/go-admin-core/storage"
 )

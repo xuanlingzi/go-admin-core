@@ -1,10 +1,10 @@
 package config
 
 import (
-	"github.com/go-admin-team/redisqueue/v2"
 	"github.com/redis/go-redis/v9"
 	"github.com/xuanlingzi/go-admin-core/storage"
 	"github.com/xuanlingzi/go-admin-core/storage/queue"
+	"github.com/xuanlingzi/redisqueue/v2"
 	"time"
 )
 
@@ -42,30 +42,25 @@ func (e Queue) Setup() (storage.AdapterQueue, error) {
 		e.Redis.Consumer.ReclaimInterval = e.Redis.Consumer.ReclaimInterval * time.Second
 		e.Redis.Consumer.BlockingTimeout = e.Redis.Consumer.BlockingTimeout * time.Second
 		e.Redis.Consumer.VisibilityTimeout = e.Redis.Consumer.VisibilityTimeout * time.Second
-		client := GetRedisClient()
-		if client == nil {
-			options, err := e.Redis.RedisConnectOptions.GetRedisOptions()
-			if err != nil {
-				return nil, err
-			}
-			client = redis.NewClient(options)
-			_redis = client
+		universalOption := redis.UniversalOptions{
+			Addrs:      []string{e.Redis.Addr},
+			ClientName: ApplicationConfig.Name,
+			DB:         e.Redis.DB,
+			Username:   e.Redis.Username,
+			Password:   e.Redis.Password,
+			MaxRetries: e.Redis.MaxRetries,
+			PoolSize:   e.Redis.PoolSize,
 		}
-		redisOption := &redisqueue.RedisOptions{
-			Network:    client.Options().Network,
-			Addr:       client.Options().Addr,
-			Username:   client.Options().Username,
-			Password:   client.Options().Password,
-			DB:         client.Options().DB,
-			MaxRetries: client.Options().MaxRetries,
-			PoolSize:   client.Options().PoolSize,
-		}
+		client := redis.NewUniversalClient(&universalOption)
+		redisOption := &redisqueue.RedisOptions{}
 		e.Redis.Producer = &redisqueue.ProducerOptions{
+			RedisClient:  client,
 			RedisOptions: redisOption,
-		} // .RedisClient = client
+		}
 		e.Redis.Consumer = &redisqueue.ConsumerOptions{
+			RedisClient:  client,
 			RedisOptions: redisOption,
-		} // .RedisClient = client
+		}
 		return queue.NewRedis(e.Redis.Producer, e.Redis.Consumer)
 	}
 	if e.NSQ != nil {
