@@ -6,7 +6,6 @@ import (
 	"github.com/gogap/errors"
 	"github.com/xuanlingzi/go-admin-core/logger"
 	"github.com/xuanlingzi/go-admin-core/message"
-	"github.com/xuanlingzi/go-admin-core/sdk/pkg/utils"
 	"strings"
 	"sync"
 	"time"
@@ -58,7 +57,7 @@ func (m *Rocket) PublishOnQueue(queueName string, body string, tag string) error
 	// Topic所属的实例ID，在消息队列RocketMQ版控制台创建。
 	// 若实例有命名空间，则实例ID必须传入；若实例无命名空间，则实例ID传入null空值或字符串空值。实例的命名空间可以在消息队列RocketMQ版控制台的实例详情页面查看。
 	instanceId := m.instanceId
-	if utils.StringIsEmpty(m.namespace) {
+	if m.namespace == "" {
 		instanceId = ""
 	}
 	producer := m.conn.GetProducer(instanceId, queueName)
@@ -85,7 +84,7 @@ func (m *Rocket) SubscribeToQueue(queueName string, consumerName string, tag str
 
 	var err error
 	instanceId := m.instanceId
-	if utils.StringIsEmpty(m.namespace) {
+	if m.namespace == "" {
 		instanceId = ""
 	}
 	consumer := m.conn.GetConsumer(instanceId, queueName, consumerName, tag)
