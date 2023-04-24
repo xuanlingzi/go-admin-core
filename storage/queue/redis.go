@@ -5,6 +5,8 @@ import (
 	"github.com/xuanlingzi/redisqueue/v2"
 
 	"github.com/xuanlingzi/go-admin-core/storage"
+
+	"fmt"
 )
 
 // NewRedis redis模式
@@ -22,14 +24,16 @@ func NewRedis(
 	if err != nil {
 		return nil, err
 	}
+	r.stopErrors = make(chan struct{}, 1)
 	return r, nil
 }
 
 // Redis cache implement
 type Redis struct {
-	client   *redis.Client
-	consumer *redisqueue.Consumer
-	producer *redisqueue.Producer
+	client     *redis.Client
+	consumer   *redisqueue.Consumer
+	producer   *redisqueue.Producer
+	stopErrors chan struct{}
 }
 
 func (Redis) String() string {
@@ -70,9 +74,20 @@ func (r *Redis) Register(name string, f storage.ConsumerFunc) {
 }
 
 func (r *Redis) Run() {
+	go func() {
+		for {
+			select {
+			case err := <-r.consumer.Errors:
+				fmt.Printf("Redis Queue Error: %+v\n", err)
+			case <-r.stopErrors:
+				return
+			}
+		}
+	}()
 	r.consumer.Run()
 }
 
 func (r *Redis) Shutdown() {
+	r.stopErrors <- struct{}{}
 	r.consumer.Shutdown()
 }

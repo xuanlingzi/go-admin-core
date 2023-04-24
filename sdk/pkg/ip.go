@@ -3,7 +3,7 @@ package pkg
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net"
 	"net/http"
 )
@@ -21,7 +21,7 @@ func GetLocation(ip, key string) string {
 		return "未知位置"
 	}
 	defer resp.Body.Close()
-	s, err := ioutil.ReadAll(resp.Body)
+	s, err := io.ReadAll(resp.Body)
 	fmt.Println(string(s))
 
 	m := make(map[string]string)

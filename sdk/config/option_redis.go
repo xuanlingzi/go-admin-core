@@ -6,7 +6,7 @@ import (
 	"crypto/x509"
 	"fmt"
 	"github.com/redis/go-redis/v9"
-	"io/ioutil"
+	"os"
 )
 
 var _redis *redis.Client
@@ -66,9 +66,9 @@ func getTLS(c *Tls) (*tls.Config, error) {
 		}
 		// 创建一个新的、空的 CertPool，并尝试解析 PEM 编码的证书，解析成功会将其加到 CertPool 中
 		certPool := x509.NewCertPool()
-		ca, err := ioutil.ReadFile(c.Ca)
+		ca, err := os.ReadFile(c.Ca)
 		if err != nil {
-			fmt.Printf("ioutil.ReadFile err: %v\n", err)
+			fmt.Printf("os.ReadFile err: %v\n", err)
 			return nil, err
 		}
 
