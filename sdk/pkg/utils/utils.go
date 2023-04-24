@@ -12,7 +12,6 @@ import (
 	"fmt"
 	"github.com/xuanlingzi/go-admin-core/logger"
 	"io"
-	"io/ioutil"
 	"math/rand"
 	"net"
 	"net/http"
@@ -63,7 +62,7 @@ func Base64ToImage(imageBase64 string) ([]byte, error) {
 }
 
 func GetDirFiles(dir string) ([]string, error) {
-	dirList, err := ioutil.ReadDir(dir)
+	dirList, err := os.ReadDir(dir)
 	if err != nil {
 		return nil, err
 	}

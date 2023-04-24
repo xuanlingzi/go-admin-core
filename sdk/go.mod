@@ -26,10 +26,11 @@ require (
 	github.com/smartystreets/goconvey v1.6.4
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.565
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/sms v1.0.565
-	github.com/xuanlingzi/go-admin-core v1.4.7
+	github.com/xuanlingzi/go-admin-core v1.4.8
 	github.com/xuanlingzi/go-admin-core/plugins/logger/zap v1.4.4
 	github.com/xuanlingzi/gorm-adapter/v3 v3.2.4
 	github.com/xuanlingzi/redis-watcher/v2 v2.0.0-20230303150028-d12653e6562a
+	github.com/xuanlingzi/redisqueue/v2 v2.0.1
 	golang.org/x/crypto v0.8.0
 	gorm.io/gorm v1.24.2
 )
@@ -113,7 +114,6 @@ require (
 	github.com/ugorji/go/codec v1.2.7 // indirect
 	github.com/urfave/cli/v2 v2.25.1 // indirect
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
-	github.com/xuanlingzi/redisqueue/v2 v2.0.1 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
 	go.uber.org/zap v1.24.0 // indirect
@@ -131,8 +131,8 @@ require (
 	gorm.io/plugin/dbresolver v1.4.0 // indirect
 )
 
-replace (
-	github.com/xuanlingzi/go-admin-core => ../
-	github.com/xuanlingzi/go-admin-core/plugins/logger/logrus => ../plugins/logger/logrus
-	github.com/xuanlingzi/go-admin-core/plugins/logger/zap => ../plugins/logger/zap
-)
+//replace (
+//	github.com/xuanlingzi/go-admin-core => ../
+//	github.com/xuanlingzi/go-admin-core/plugins/logger/logrus => ../plugins/logger/logrus
+//	github.com/xuanlingzi/go-admin-core/plugins/logger/zap => ../plugins/logger/zap
+//)

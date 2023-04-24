@@ -2,7 +2,7 @@ package utils
 
 import (
 	"errors"
-	"io/ioutil"
+	"io"
 	"log"
 	"mime/multipart"
 	"net/http"
@@ -15,7 +15,7 @@ import (
 
 // GetSize 获取文件大小
 func GetSize(f multipart.File) (int, error) {
-	content, err := ioutil.ReadAll(f)
+	content, err := io.ReadAll(f)
 
 	return len(content), err
 }
