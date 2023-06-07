@@ -5,6 +5,7 @@ import (
 	"github.com/xuanlingzi/go-admin-core/block_chain"
 	"github.com/xuanlingzi/go-admin-core/lbs"
 	"github.com/xuanlingzi/go-admin-core/message"
+	"github.com/xuanlingzi/go-admin-core/payment"
 	"github.com/xuanlingzi/go-admin-core/third_party"
 	"net/http"
 
@@ -88,6 +89,11 @@ type Runtime interface {
 	GetLocationBasedServiceAdapter() lbs.AdapterLocationBasedService
 	GetLocationBasedServiceAdapters() map[string]lbs.AdapterLocationBasedService
 	GetLocationBasedServiceKey(key string) lbs.AdapterLocationBasedService
+
+	SetPaymentServiceAdapter(key string, c payment.AdapterPaymentService)
+	GetPaymentServiceAdapter() payment.AdapterPaymentService
+	GetPaymentServiceAdapters() map[string]payment.AdapterPaymentService
+	GetPaymentServiceKey(key string) payment.AdapterPaymentService
 
 	SetBlockChainAdapter(string, block_chain.AdapterBroker)
 	GetBlockChainAdapter() block_chain.AdapterBroker

@@ -60,6 +60,7 @@ type Config struct {
 	Mail        *Mail                 `json:"mail" yaml:"mail"`
 	Amqp        *Amqp                 `json:"mq,omitempty" yaml:"mq"`
 	WeChat      *WeChat               `json:"wechat,omitempty" yaml:"wechat"`
+	Payment     *Payment              `json:"payment,omitempty" yaml:"payment"`
 	Extend      interface{}           `json:"extend" yaml:"extend"`
 }
 
@@ -95,6 +96,7 @@ func Setup(s source.Source,
 			Mail:        MailConfig,
 			Amqp:        AmqpConfig,
 			WeChat:      WeChatConfig,
+			Payment:     PaymentConfig,
 			Extend:      ExtendConfig,
 		},
 		callbacks: fs,

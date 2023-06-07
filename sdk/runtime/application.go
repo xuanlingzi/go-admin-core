@@ -5,6 +5,7 @@ import (
 	"github.com/xuanlingzi/go-admin-core/block_chain"
 	"github.com/xuanlingzi/go-admin-core/lbs"
 	"github.com/xuanlingzi/go-admin-core/message"
+	"github.com/xuanlingzi/go-admin-core/payment"
 	"github.com/xuanlingzi/go-admin-core/third_party"
 	"net/http"
 	"sync"
@@ -35,6 +36,7 @@ type Application struct {
 	thirdParty  map[string]third_party.AdapterThirdParty
 	blockChain  map[string]block_chain.AdapterBroker
 	lbs         map[string]lbs.AdapterLocationBasedService
+	payment     map[string]payment.AdapterPaymentService
 	handler     map[string][]func(r *gin.RouterGroup, hand ...*gin.HandlerFunc)
 	routers     []Router
 	configs     map[string]interface{} // 系统参数
@@ -145,6 +147,7 @@ func NewConfig() *Application {
 		thirdParty:  make(map[string]third_party.AdapterThirdParty),
 		blockChain:  make(map[string]block_chain.AdapterBroker),
 		lbs:         make(map[string]lbs.AdapterLocationBasedService),
+		payment:     make(map[string]payment.AdapterPaymentService),
 		handler:     make(map[string][]func(r *gin.RouterGroup, hand ...*gin.HandlerFunc)),
 		routers:     make([]Router, 0),
 		configs:     make(map[string]interface{}),
@@ -410,6 +413,30 @@ func (e *Application) GetLocationBasedServiceKey(key string) lbs.AdapterLocation
 	e.mux.Lock()
 	defer e.mux.Unlock()
 	return e.lbs[key]
+}
+
+// SetPaymentServiceAdapter 设置支付
+func (e *Application) SetPaymentServiceAdapter(key string, c payment.AdapterPaymentService) {
+	e.mux.Lock()
+	defer e.mux.Unlock()
+	e.payment[key] = c
+}
+
+// GetPaymentServiceAdapter 获取支付
+func (e *Application) GetPaymentServiceAdapter() payment.AdapterPaymentService {
+	return e.GetPaymentServiceKey("*")
+}
+
+// GetPaymentServiceAdapters 获取支付
+func (e *Application) GetPaymentServiceAdapters() map[string]payment.AdapterPaymentService {
+	return e.payment
+}
+
+// GetPaymentServiceKey 获取支付
+func (e *Application) GetPaymentServiceKey(key string) payment.AdapterPaymentService {
+	e.mux.Lock()
+	defer e.mux.Unlock()
+	return e.payment[key]
 }
 
 func (e *Application) SetHandler(key string, routerGroup func(r *gin.RouterGroup, hand ...*gin.HandlerFunc)) {

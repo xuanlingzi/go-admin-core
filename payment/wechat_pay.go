@@ -2,7 +2,6 @@ package payment
 
 import (
 	"context"
-	"crypto/rsa"
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
@@ -13,27 +12,38 @@ import (
 	"github.com/wechatpay-apiv3/wechatpay-go/core/option"
 	"github.com/wechatpay-apiv3/wechatpay-go/services/payments/jsapi"
 	"github.com/wechatpay-apiv3/wechatpay-go/services/refunddomestic"
+	"github.com/wechatpay-apiv3/wechatpay-go/utils"
 	log "github.com/xuanlingzi/go-admin-core/logger"
 	"os"
 	"path/filepath"
 	"time"
 )
 
+var _wechat_pay *core.Client
+
 type WeChatPay struct {
-	client      *core.Client
-	merchantId  string
-	appId       string
-	apiKey      string
-	serialNo    string
-	certPath    string
-	privateKey  *rsa.PrivateKey
-	certificate *x509.Certificate
+	client         *core.Client
+	merchantId     string
+	appId          string
+	apiKey         string
+	serialNo       string
+	privateKeyPath string
+	certPath       string
 }
 
-func NewWeChatPay(client *core.Client, merchantId string, appId string, apiKey string, serialNo string, certPath string, privateKey *rsa.PrivateKey, certificate *x509.Certificate) (*WeChatPay, error) {
-	var err error
+// GetWeChatPayClient 获取BlockChain客户端
+func GetWeChatPayClient() *core.Client {
+	return _wechat_pay
+}
+
+func NewWeChatPay(client *core.Client, merchantId string, appId string, apiKey string, serialNo string, privateKeyPath string, certPath string) (*WeChatPay, error) {
 	ctx := context.Background()
 	if client == nil {
+		privateKey, err := utils.LoadPrivateKeyWithPath(privateKeyPath)
+		if err != nil {
+			return nil, err
+		}
+
 		client, err = core.NewClient(
 			ctx,
 			option.WithWechatPayAutoAuthCipher(merchantId, serialNo, privateKey, apiKey),
@@ -48,14 +58,13 @@ func NewWeChatPay(client *core.Client, merchantId string, appId string, apiKey s
 	}
 
 	c := &WeChatPay{
-		client:      client,
-		merchantId:  merchantId,
-		appId:       appId,
-		apiKey:      apiKey,
-		serialNo:    serialNo,
-		certPath:    certPath,
-		privateKey:  privateKey,
-		certificate: certificate,
+		client:         client,
+		merchantId:     merchantId,
+		appId:          appId,
+		apiKey:         apiKey,
+		serialNo:       serialNo,
+		privateKeyPath: privateKeyPath,
+		certPath:       certPath,
 	}
 	return c, nil
 }
@@ -72,34 +81,39 @@ func (*WeChatPay) String() string {
 	return "wechat_pay"
 }
 
-func (m *WeChatPay) DownloadCertificates() error {
+func (m *WeChatPay) GetCertificates() (*x509.Certificate, error) {
 	var err error
 	ctx := context.Background()
 	dl, err := downloader.NewCertificateDownloaderWithClient(ctx, m.client, m.apiKey)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	err = dl.DownloadCertificates(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
+	storePath, _ := filepath.Split(m.certPath)
 	for serialNo, certContent := range dl.ExportAll(ctx) {
-		fileLocation := filepath.Join(m.certPath, fmt.Sprintf("wechatpay_%v.pem", serialNo))
+		m.certPath = filepath.Join(storePath, fmt.Sprintf("wechatpay_%v.pem", serialNo))
 
-		f, err := os.Create(fileLocation)
+		f, err := os.Create(m.certPath)
 		if err != nil {
-			return fmt.Errorf("创建证书文件`%v`失败：%v", fileLocation, err)
+			return nil, fmt.Errorf("创建证书文件`%v`失败：%v", m.certPath, err)
 		}
 
 		_, err = f.WriteString(certContent + "\n")
 		if err != nil {
-			return fmt.Errorf("写入证书到`%v`失败: %v", fileLocation, err)
+			return nil, fmt.Errorf("写入证书到`%v`失败: %v", m.certPath, err)
 		}
 
-		log.Infof("写入证书到`%v`成功\n", fileLocation)
+		log.Infof("写入证书到`%v`成功\n", m.certPath)
 	}
 
-	return nil
+	certificate, err := utils.LoadCertificateWithPath(m.certPath)
+	if err != nil {
+		return nil, err
+	}
+	return certificate, nil
 }
 
 func (m *WeChatPay) PrePay(orderId string, amount int64, payerOpenId string, attach string, description string, expireAt time.Time, callbackAddr string) (string, error) {

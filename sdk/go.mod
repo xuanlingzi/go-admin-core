@@ -26,8 +26,7 @@ require (
 	github.com/smartystreets/goconvey v1.6.4
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.565
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/sms v1.0.565
-	github.com/wechatpay-apiv3/wechatpay-go v0.2.16
-	github.com/xuanlingzi/go-admin-core v1.4.9
+	github.com/xuanlingzi/go-admin-core v1.4.10
 	github.com/xuanlingzi/go-admin-core/plugins/logger/zap v1.4.4
 	github.com/xuanlingzi/gorm-adapter/v3 v3.2.4
 	github.com/xuanlingzi/redis-watcher/v2 v2.0.0-20230303150028-d12653e6562a
@@ -114,6 +113,7 @@ require (
 	github.com/tsuyoshiwada/go-gitcmd v0.0.0-20180205145712-5f1f5f9475df // indirect
 	github.com/ugorji/go/codec v1.2.7 // indirect
 	github.com/urfave/cli/v2 v2.25.1 // indirect
+	github.com/wechatpay-apiv3/wechatpay-go v0.2.16 // indirect
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
