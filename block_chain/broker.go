@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
-	"io"
+	"github.com/xuanlingzi/go-admin-core/tools/utils"
 	"net/http"
-	"strings"
 )
 
 type Broker struct {
@@ -48,12 +47,18 @@ func (m *Broker) Send(chain string, content string, callback string) (string, er
 	body, _ = sjson.Set(body, "callback", callback)
 
 	url := fmt.Sprintf("%v/send", m.mintAddr)
-	resp, err := httpPost(url, body)
+	resp, err := utils.HttpPost(url, body)
 	if err != nil {
-		return resp, err
+		return "", err
+	}
+	if !gjson.GetBytes(resp, "code").Exists() {
+		return "", errors.New(string(body))
+	}
+	if gjson.GetBytes(resp, "code").Int() != 0 {
+		return "", errors.New(gjson.GetBytes(resp, "message").String())
 	}
 
-	return resp, nil
+	return string(resp), nil
 }
 
 func (m *Broker) Status(chain string, content string, hash string) (string, error) {
@@ -64,56 +69,18 @@ func (m *Broker) Status(chain string, content string, hash string) (string, erro
 	body, _ = sjson.Set(body, "hash", hash)
 
 	url := fmt.Sprintf("%v/status", m.mintAddr)
-	resp, err := httpPost(url, body)
-	if err != nil {
-		return resp, err
-	}
-
-	return resp, nil
-}
-
-func httpGet(url string) (string, error) {
-	response, err := http.Get(url)
+	resp, err := utils.HttpPost(url, body)
 	if err != nil {
 		return "", err
 	}
-	defer response.Body.Close()
-
-	body, err := io.ReadAll(response.Body)
-	if err != nil {
-		return "", err
-	}
-
-	if !gjson.GetBytes(body, "code").Exists() {
+	if !gjson.GetBytes(resp, "code").Exists() {
 		return "", errors.New(string(body))
 	}
-	if gjson.GetBytes(body, "code").Int() != 0 {
-		return "", errors.New(gjson.GetBytes(body, "message").String())
+	if gjson.GetBytes(resp, "code").Int() != 0 {
+		return "", errors.New(gjson.GetBytes(resp, "message").String())
 	}
 
-	return string(body), nil
-}
-
-func httpPost(url, content string) (string, error) {
-	response, err := http.Post(url, "application/json", strings.NewReader(content))
-	if err != nil {
-		return "", err
-	}
-	defer response.Body.Close()
-
-	body, err := io.ReadAll(response.Body)
-	if err != nil {
-		return "", err
-	}
-
-	if !gjson.GetBytes(body, "code").Exists() {
-		return "", errors.New(string(body))
-	}
-	if gjson.GetBytes(body, "code").Int() != 0 {
-		return "", errors.New(gjson.GetBytes(body, "message").String())
-	}
-
-	return string(body), nil
+	return string(resp), nil
 }
 
 // GetClient 暴露原生client

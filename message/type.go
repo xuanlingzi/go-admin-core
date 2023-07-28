@@ -11,7 +11,9 @@ type AdapterMail interface {
 
 type AdapterSms interface {
 	String() string
+	Close()
 	Send(addresses []string, template string, params map[string]string) error
+	GetClient() interface{}
 }
 
 type AdapterAmqp interface {

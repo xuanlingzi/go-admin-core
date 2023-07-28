@@ -3,9 +3,7 @@ package third_party
 import (
 	"errors"
 	"github.com/tidwall/gjson"
-	"io"
-	"net/http"
-	"strings"
+	"github.com/xuanlingzi/go-admin-core/tools/utils"
 )
 
 // Wechat
@@ -50,13 +48,7 @@ type AdapterThirdParty interface {
 }
 
 func httpGet(url string) (string, error) {
-	response, err := http.Get(url)
-	if err != nil {
-		return "", err
-	}
-	defer response.Body.Close()
-
-	body, err := io.ReadAll(response.Body)
+	body, err := utils.HttpGet(url)
 	if err != nil {
 		return "", err
 	}
@@ -69,13 +61,7 @@ func httpGet(url string) (string, error) {
 }
 
 func httpPost(url, content string) (string, error) {
-	response, err := http.Post(url, "application/json", strings.NewReader(content))
-	if err != nil {
-		return "", err
-	}
-	defer response.Body.Close()
-
-	body, err := io.ReadAll(response.Body)
+	body, err := utils.HttpPost(url, content)
 	if err != nil {
 		return "", err
 	}

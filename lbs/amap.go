@@ -4,9 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/tidwall/gjson"
-	"io"
+	"github.com/xuanlingzi/go-admin-core/tools/utils"
 	"net/http"
-	"strings"
 )
 
 var _amap *http.Client
@@ -65,30 +64,34 @@ func (m *Amap) GetAddress(latitude, longitude, radius float64) (string, error) {
 		radius,
 	)
 
-	addressInfo, err := httpGet(url)
+	addressInfo, err := utils.HttpGet(url)
 	if err != nil {
 		return "", err
 	}
 
-	if gjson.Get(addressInfo, "regeocode.formatted_address").Exists() {
-		return gjson.Get(addressInfo, "regeocode.formatted_address").String(), nil
+	if gjson.GetBytes(addressInfo, "status").Exists() && gjson.GetBytes(addressInfo, "status").Int() != 1 {
+		return "", errors.New(gjson.GetBytes(addressInfo, "info").String())
+	}
+
+	if gjson.GetBytes(addressInfo, "regeocode.formatted_address").Exists() {
+		return gjson.GetBytes(addressInfo, "regeocode.formatted_address").String(), nil
 	}
 	addr := ""
-	if gjson.Get(addressInfo, "regeocode.addressComponent").Exists() {
-		addr += gjson.Get(addressInfo, "regeocode.addressComponent.country").String()
-		addr += gjson.Get(addressInfo, "regeocode.addressComponent.province").String()
-		if gjson.Get(addressInfo, "regeocode.addressComponent.city").Exists() {
-			city := gjson.Get(addressInfo, "regeocode.addressComponent.city").String()
+	if gjson.GetBytes(addressInfo, "regeocode.addressComponent").Exists() {
+		addr += gjson.GetBytes(addressInfo, "regeocode.addressComponent.country").String()
+		addr += gjson.GetBytes(addressInfo, "regeocode.addressComponent.province").String()
+		if gjson.GetBytes(addressInfo, "regeocode.addressComponent.city").Exists() {
+			city := gjson.GetBytes(addressInfo, "regeocode.addressComponent.city").String()
 			if city != "[]" {
 				addr += city
 			}
 		}
-		addr += gjson.Get(addressInfo, "regeocode.addressComponent.district").String()
-		addr += gjson.Get(addressInfo, "regeocode.addressComponent.township").String()
-		if gjson.Get(addressInfo, "regeocode.addressComponent.streetNumber").Exists() {
+		addr += gjson.GetBytes(addressInfo, "regeocode.addressComponent.district").String()
+		addr += gjson.GetBytes(addressInfo, "regeocode.addressComponent.township").String()
+		if gjson.GetBytes(addressInfo, "regeocode.addressComponent.streetNumber").Exists() {
 			addr += fmt.Sprintf("%v%v",
-				gjson.Get(addressInfo, "regeocode.addressComponent.streetNumber.street").String(),
-				gjson.Get(addressInfo, "regeocode.addressComponent.streetNumber.number").String(),
+				gjson.GetBytes(addressInfo, "regeocode.addressComponent.streetNumber.street").String(),
+				gjson.GetBytes(addressInfo, "regeocode.addressComponent.streetNumber.number").String(),
 			)
 		}
 	}
@@ -96,45 +99,7 @@ func (m *Amap) GetAddress(latitude, longitude, radius float64) (string, error) {
 	return addr, nil
 }
 
-func httpGet(url string) (string, error) {
-	response, err := http.Get(url)
-	if err != nil {
-		return "", err
-	}
-	defer response.Body.Close()
-
-	body, err := io.ReadAll(response.Body)
-	if err != nil {
-		return "", err
-	}
-
-	if gjson.GetBytes(body, "status").Exists() && gjson.GetBytes(body, "status").Int() != 1 {
-		return "", errors.New(gjson.GetBytes(body, "info").String())
-	}
-
-	return string(body), nil
-}
-
-func httpPost(url, content string) (string, error) {
-	response, err := http.Post(url, "application/json", strings.NewReader(content))
-	if err != nil {
-		return "", err
-	}
-	defer response.Body.Close()
-
-	body, err := io.ReadAll(response.Body)
-	if err != nil {
-		return "", err
-	}
-
-	if gjson.GetBytes(body, "status").Exists() && gjson.GetBytes(body, "status").Int() != 1 {
-		return "", errors.New(gjson.GetBytes(body, "info").String())
-	}
-
-	return string(body), nil
-}
-
 // GetClient 暴露原生client
-func (m *Amap) GetClient() *http.Client {
+func (m *Amap) GetClient() interface{} {
 	return m.conn
 }

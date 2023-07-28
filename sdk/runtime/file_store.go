@@ -19,6 +19,11 @@ func (e *FileStore) String() string {
 }
 
 // Upload Put file to fileStores
-func (e FileStore) Upload(ctx context.Context, name, location string) (string, error) {
+func (e *FileStore) Upload(ctx context.Context, name, location string) (string, error) {
 	return e.store.Upload(ctx, name, location)
+}
+
+// GetClient Put file to fileStores
+func (e *FileStore) GetClient() interface{} {
+	return e.store.GetClient()
 }

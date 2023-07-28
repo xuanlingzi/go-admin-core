@@ -13,9 +13,18 @@ type AliyunSMS struct {
 	signature string
 }
 
-func NewAliyunSms(client *dysmsapi20170525.Client, config *openapi.Config, signature string) *AliyunSMS {
+func NewAliyunSms(client *dysmsapi20170525.Client, accessId, accessSecret, region, signature string) *AliyunSMS {
 	if client == nil {
 		var err error
+
+		config := &openapi.Config{
+			// 必填，您的 AccessKey ID
+			AccessKeyId: tea.String(accessId),
+			// 必填，您的 AccessKey Secret
+			AccessKeySecret: tea.String(accessSecret),
+			// 访问的域名
+			Endpoint: tea.String(region),
+		}
 
 		/* 实例化要请求产品(以sms为例)的client对象
 		 * 第二个参数是地域信息，可以直接填写字符串ap-guangzhou，或者引用预设的常量 */
@@ -76,6 +85,6 @@ func (m *AliyunSMS) Close() {
 }
 
 // GetClient 暴露原生client
-func (m *AliyunSMS) GetClient() *dysmsapi20170525.Client {
+func (m *AliyunSMS) GetClient() interface{} {
 	return m.client
 }

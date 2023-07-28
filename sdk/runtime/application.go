@@ -5,6 +5,7 @@ import (
 	"github.com/xuanlingzi/go-admin-core/block_chain"
 	"github.com/xuanlingzi/go-admin-core/lbs"
 	"github.com/xuanlingzi/go-admin-core/message"
+	"github.com/xuanlingzi/go-admin-core/moderation"
 	"github.com/xuanlingzi/go-admin-core/payment"
 	"github.com/xuanlingzi/go-admin-core/third_party"
 	"net/http"
@@ -30,6 +31,7 @@ type Application struct {
 	locker      storage.AdapterLocker
 	memoryQueue storage.AdapterQueue
 	fileStores  map[string]storage.AdapterFileStore
+	moderation  map[string]moderation.AdapterModeration
 	sms         map[string]message.AdapterSms
 	mail        map[string]message.AdapterMail
 	amqp        map[string]message.AdapterAmqp
@@ -141,6 +143,7 @@ func NewConfig() *Application {
 		middlewares: make(map[string]interface{}),
 		memoryQueue: queue.NewMemory(10000),
 		fileStores:  make(map[string]storage.AdapterFileStore),
+		moderation:  make(map[string]moderation.AdapterModeration),
 		sms:         make(map[string]message.AdapterSms),
 		mail:        make(map[string]message.AdapterMail),
 		amqp:        make(map[string]message.AdapterAmqp),
@@ -317,6 +320,32 @@ func (e *Application) GetFileStoreKey(key string) storage.AdapterFileStore {
 	e.mux.Lock()
 	defer e.mux.Unlock()
 	return e.fileStores[key]
+}
+
+// SetModerationAdapter 设置缓存
+func (e *Application) SetModerationAdapter(key string, c moderation.AdapterModeration) {
+	e.mux.Lock()
+	defer e.mux.Unlock()
+	e.moderation[key] = c
+}
+
+// GetModerationAdapter 获取缓存
+func (e *Application) GetModerationAdapter() moderation.AdapterModeration {
+	return e.GetModerationKey("*")
+}
+
+// GetModerationAdapters 获取缓存
+func (e *Application) GetModerationAdapters() map[string]moderation.AdapterModeration {
+	e.mux.Lock()
+	defer e.mux.Unlock()
+	return e.moderation
+}
+
+// GetModerationKey 获取带租户标记的cos
+func (e *Application) GetModerationKey(key string) moderation.AdapterModeration {
+	e.mux.Lock()
+	defer e.mux.Unlock()
+	return e.moderation[key]
 }
 
 // SetAmqpAdapter 设置缓存

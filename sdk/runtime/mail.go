@@ -16,6 +16,6 @@ func (e *Mail) String() string {
 }
 
 // Send val by announces
-func (e Mail) Send(address []string, body []byte) error {
+func (e *Mail) Send(address []string, body []byte) error {
 	return e.mail.Send(address, body)
 }

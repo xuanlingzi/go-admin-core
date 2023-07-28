@@ -5,6 +5,7 @@ import (
 	"github.com/xuanlingzi/go-admin-core/block_chain"
 	"github.com/xuanlingzi/go-admin-core/lbs"
 	"github.com/xuanlingzi/go-admin-core/message"
+	"github.com/xuanlingzi/go-admin-core/moderation"
 	"github.com/xuanlingzi/go-admin-core/payment"
 	"github.com/xuanlingzi/go-admin-core/third_party"
 	"net/http"
@@ -73,7 +74,12 @@ type Runtime interface {
 	SetFileStoreAdapter(string, storage.AdapterFileStore)
 	GetFileStoreAdapter() storage.AdapterFileStore
 	GetFileStoreAdapters() map[string]storage.AdapterFileStore
-	GetFileStoreKey(key string) storage.AdapterFileStore
+	GetFileStoreKey(string) storage.AdapterFileStore
+
+	SetModerationAdapter(string, moderation.AdapterModeration)
+	GetModerationAdapter() moderation.AdapterModeration
+	GetModerationAdapters() map[string]moderation.AdapterModeration
+	GetModerationKey(string) moderation.AdapterModeration
 
 	SetAmqpAdapter(string, message.AdapterAmqp)
 	GetAmqpAdapter() message.AdapterAmqp
@@ -88,12 +94,12 @@ type Runtime interface {
 	SetLocationBasedServiceAdapter(string, lbs.AdapterLocationBasedService)
 	GetLocationBasedServiceAdapter() lbs.AdapterLocationBasedService
 	GetLocationBasedServiceAdapters() map[string]lbs.AdapterLocationBasedService
-	GetLocationBasedServiceKey(key string) lbs.AdapterLocationBasedService
+	GetLocationBasedServiceKey(string) lbs.AdapterLocationBasedService
 
-	SetPaymentServiceAdapter(key string, c payment.AdapterPaymentService)
+	SetPaymentServiceAdapter(string, payment.AdapterPaymentService)
 	GetPaymentServiceAdapter() payment.AdapterPaymentService
 	GetPaymentServiceAdapters() map[string]payment.AdapterPaymentService
-	GetPaymentServiceKey(key string) payment.AdapterPaymentService
+	GetPaymentServiceKey(string) payment.AdapterPaymentService
 
 	SetBlockChainAdapter(string, block_chain.AdapterBroker)
 	GetBlockChainAdapter() block_chain.AdapterBroker

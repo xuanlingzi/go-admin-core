@@ -1,8 +1,9 @@
 package config
 
 type FileStore struct {
-	TencentCos *TencentCos `json:"tencent_cos" yaml:"tencent_cos"`
-	AliyunOss  *AliyunOss  `json:"aliyun_oss" yaml:"aliyun_oss"`
+	Tencent *TencentFile `json:"tencent" yaml:"tencent"`
+	Aliyun  *AliyunFile  `json:"aliyun" yaml:"aliyun"`
+	Huawei  *HuaweiFile  `json:"huawei" yaml:"huawei"`
 }
 
 var FileStoreConfig = new(FileStore)

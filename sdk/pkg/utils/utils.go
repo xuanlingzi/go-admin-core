@@ -289,6 +289,17 @@ func HmacSignature(message, accessSecret string) []byte {
 	return mac.Sum(nil)
 }
 
+func UniqueId(prefix string) string {
+	loc, err := time.LoadLocation("Asia/Shanghai")
+	if err != nil {
+		return ""
+	}
+	now := time.Now().In(loc)
+	timeString := strings.Replace(now.Format("20060102150405.999"), ".", "", 1)
+	code := GenerateRandomCode(4)
+	return fmt.Sprintf("%s%s%s", prefix, timeString, code)
+}
+
 func Copy(dst, src interface{}) error {
 	var buf bytes.Buffer
 	if err := gob.NewEncoder(&buf).Encode(src); err != nil {
@@ -297,20 +308,35 @@ func Copy(dst, src interface{}) error {
 	return gob.NewDecoder(bytes.NewBuffer(buf.Bytes())).Decode(dst)
 }
 
-func HttpPost(url, content string) (string, error) {
-
-	response, err := http.Post(url, "application/json", strings.NewReader(content))
+func HttpGet(url string) ([]byte, error) {
+	response, err := http.Get(url)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	defer response.Body.Close()
 
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return string(body), nil
+	return body, nil
+}
+
+func HttpPost(url, content string) ([]byte, error) {
+
+	response, err := http.Post(url, "application/json", strings.NewReader(content))
+	if err != nil {
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return body, nil
 }
 
 func ReplaceI(origin, search, replace string, count ...int) string {

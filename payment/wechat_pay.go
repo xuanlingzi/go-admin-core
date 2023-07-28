@@ -2,6 +2,7 @@ package payment
 
 import (
 	"context"
+	"crypto/rsa"
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
@@ -79,6 +80,14 @@ func (m *WeChatPay) Close() {
 
 func (*WeChatPay) String() string {
 	return "wechat_pay"
+}
+
+func (m *WeChatPay) GetPrivateKey() (*rsa.PrivateKey, error) {
+	privateKey, err := utils.LoadPrivateKeyWithPath(m.privateKeyPath)
+	if err != nil {
+		return nil, err
+	}
+	return privateKey, nil
 }
 
 func (m *WeChatPay) GetCertificates() (*x509.Certificate, error) {

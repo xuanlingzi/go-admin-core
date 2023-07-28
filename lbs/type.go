@@ -1,9 +1,8 @@
 package lbs
 
-import "net/http"
-
 type AdapterLocationBasedService interface {
 	String() string
+	Close()
 	GetAddress(latitude, longitude, radius float64) (string, error)
-	GetClient() *http.Client
+	GetClient() interface{}
 }

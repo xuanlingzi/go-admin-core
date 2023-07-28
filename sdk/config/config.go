@@ -56,6 +56,7 @@ type Config struct {
 	Locker      *Locker               `json:"locker" yaml:"locker"`
 	Lbs         *Lbs                  `json:"lbs,omitempty" yaml:"lbs"`
 	FileStore   *FileStore            `json:"file_store,omitempty" yaml:"file_store"`
+	Moderation  *Moderation           `json:"moderation,omitempty" yaml:"moderation"`
 	Sms         *Sms                  `json:"sms,omitempty" yaml:"sms"`
 	Mail        *Mail                 `json:"mail" yaml:"mail"`
 	Amqp        *Amqp                 `json:"mq,omitempty" yaml:"mq"`
@@ -92,6 +93,7 @@ func Setup(s source.Source,
 			Locker:      LockerConfig,
 			Lbs:         LbsConfig,
 			FileStore:   FileStoreConfig,
+			Moderation:  ModerationConfig,
 			Sms:         SmsConfig,
 			Mail:        MailConfig,
 			Amqp:        AmqpConfig,
