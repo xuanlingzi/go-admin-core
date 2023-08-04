@@ -25,6 +25,7 @@ func NewAmap(client *http.Client, addr, secretKey string) *Amap {
 		client = &http.Client{
 			Transport: &http.Transport{},
 		}
+		_amap = client
 	}
 	c := &Amap{
 		conn:      client,

@@ -3,24 +3,41 @@ package cache
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/redis/go-redis/v9"
 	"strings"
 	"time"
 )
 
+var _redis *redis.Client
+
+// GetRedisClient 获取redis客户端
+func GetRedisClient() *redis.Client {
+	return _redis
+}
+
+// SetRedisClient 设置redis客户端
+func SetRedisClient(c *redis.Client) {
+	if _redis != nil && _redis != c {
+		_redis.Shutdown(context.TODO())
+	}
+	_redis = c
+}
+
 // NewRedis redis模式
-func NewRedis(client *redis.Client, options *redis.Options) (*Redis, error) {
+func NewRedis(client *redis.Client, options *redis.Options) *Redis {
 	if client == nil {
 		client = redis.NewClient(options)
+		_redis = client
 	}
 	r := &Redis{
 		client: client,
 	}
 	err := r.connect()
 	if err != nil {
-		return nil, err
+		panic(fmt.Sprintf("Redis cache init error %s", err.Error()))
 	}
-	return r, nil
+	return r
 }
 
 // Redis cache implement

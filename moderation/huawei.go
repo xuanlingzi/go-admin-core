@@ -7,6 +7,8 @@ import (
 	moderation "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/moderation/v3"
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/moderation/v3/model"
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/moderation/v3/region"
+	"github.com/tidwall/gjson"
+	"strings"
 )
 
 var _huaweiAudit *moderation.ModerationClient
@@ -17,6 +19,7 @@ func GetHuaweiAuditClient() *moderation.ModerationClient {
 
 type HuaweiAuditClient struct {
 	client      *moderation.ModerationClient
+	accessId    string
 	callbackUrl string
 }
 
@@ -30,12 +33,14 @@ func NewHuaweiAudit(client *moderation.ModerationClient, accessKey, secretKey, _
 
 		client = moderation.NewModerationClient(moderation.ModerationClientBuilder().WithRegion(region.ValueOf(_region)).WithCredential(auth).Build())
 		if err != nil {
-			panic(err)
+			panic(fmt.Sprintf("Huawei audit init error: %s", err.Error()))
 		}
+		_huaweiAudit = client
 	}
 
 	r := &HuaweiAuditClient{
 		client:      client,
+		accessId:    accessKey,
 		callbackUrl: callbackUrl,
 	}
 
@@ -43,7 +48,7 @@ func NewHuaweiAudit(client *moderation.ModerationClient, accessKey, secretKey, _
 }
 
 func (rc *HuaweiAuditClient) String() string {
-	return "huawei_audit"
+	return rc.accessId
 }
 
 func (rc *HuaweiAuditClient) Check() bool {
@@ -53,7 +58,7 @@ func (rc *HuaweiAuditClient) Check() bool {
 func (rc *HuaweiAuditClient) Close() {
 }
 
-func (rc *HuaweiAuditClient) AuditText(content string, suggestion *string, label *string, detail *string) error {
+func (rc *HuaweiAuditClient) AuditText(content string, result *int, label *string, detail *string) error {
 
 	requestData := model.TextDetectionDataReq{
 		Text: content,
@@ -69,8 +74,20 @@ func (rc *HuaweiAuditClient) AuditText(content string, suggestion *string, label
 		return fmt.Errorf("huawei Audit error: %v", err.Error())
 	}
 
-	suggestion = response.Result.Suggestion
-	label = response.Result.Label
+	switch *response.Result.Suggestion {
+	case "pass":
+		*result = 0
+	case "block":
+		*result = 1
+	case "review":
+		*result = 2
+	default:
+		*result = 1
+	}
+
+	if response.Result.Label != nil {
+		*label = *response.Result.Label
+	}
 	if response.Result.Details != nil {
 		b, err := json.Marshal(response.Result.Details)
 		if err == nil {
@@ -81,17 +98,17 @@ func (rc *HuaweiAuditClient) AuditText(content string, suggestion *string, label
 	return nil
 }
 
-func (rc *HuaweiAuditClient) AuditImage(url string, suggestion *string, label *string, detail *string) error {
+func (rc *HuaweiAuditClient) AuditImage(url string, result *int, label *string, detail *string) error {
 
 	var imageCategories = []string{
 		"porn",
 		"politics",
-		"abuse",
+		"terrorism",
 	}
 	imageReq := model.ImageDetectionReq{
 		Url:        &url,
 		Categories: imageCategories,
-		EventType:  "head_image",
+		EventType:  "album",
 	}
 	request := model.CheckImageModerationRequest{}
 	request.Body = &imageReq
@@ -100,8 +117,20 @@ func (rc *HuaweiAuditClient) AuditImage(url string, suggestion *string, label *s
 		return fmt.Errorf("huawei Audit error: %v", err.Error())
 	}
 
-	suggestion = response.Result.Suggestion
-	label = response.Result.Category
+	switch *response.Result.Suggestion {
+	case "pass":
+		*result = 0
+	case "block":
+		*result = 1
+	case "review":
+		*result = 2
+	default:
+		*result = 1
+	}
+
+	if response.Result.Category != nil {
+		*label = *response.Result.Category
+	}
 	if response.Result.Details != nil {
 		b, err := json.Marshal(response.Result.Details)
 		if err == nil {
@@ -112,7 +141,7 @@ func (rc *HuaweiAuditClient) AuditImage(url string, suggestion *string, label *s
 	return nil
 }
 
-func (rc *HuaweiAuditClient) AuditVideo(url string, frame int32) error {
+func (rc *HuaweiAuditClient) AuditVideo(url string, frame int32, jobId *string) error {
 
 	var audioCategories = []model.VideoCreateRequestAudioCategories{
 		model.GetVideoCreateRequestAudioCategoriesEnum().PORN,
@@ -140,10 +169,48 @@ func (rc *HuaweiAuditClient) AuditVideo(url string, frame int32) error {
 
 	request := model.RunCreateVideoModerationJobRequest{}
 	request.Body = &videoReq
-	_, err := rc.client.RunCreateVideoModerationJob(&request)
+	response, err := rc.client.RunCreateVideoModerationJob(&request)
 	if err != nil {
 		return fmt.Errorf("huawei Audit error: %v", err.Error())
 	}
+	*jobId = *response.JobId
+	return nil
+}
+
+func (rc *HuaweiAuditClient) AuditResult(body []byte, result *int, label *string, detail *string, jobId *string) error {
+
+	if gjson.GetBytes(body, "result.job_id").Exists() {
+		*jobId = gjson.GetBytes(body, "result.job_id").String()
+	}
+
+	switch strings.ToLower(gjson.GetBytes(body, "result.suggestion").String()) {
+	case "pass":
+		*result = 0
+	case "block":
+		*result = 1
+	case "review":
+		*result = 2
+	default:
+		*result = 1
+	}
+
+	if *result > 0 {
+		if gjson.GetBytes(body, "result.label").Exists() {
+			*label = gjson.GetBytes(body, "result.label").String()
+		}
+
+		if gjson.GetBytes(body, "result.image_detail").Exists() {
+			if *label == "" {
+				imageDetails := gjson.GetBytes(body, "result.image_detail").Array()
+				if len(imageDetails) > 0 {
+					*label = imageDetails[0].Get("category").String()
+				}
+			}
+
+			*detail = gjson.GetBytes(body, "result.image_detail").String()
+		}
+	}
+
 	return nil
 }
 

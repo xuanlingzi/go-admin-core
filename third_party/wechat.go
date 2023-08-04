@@ -1,55 +1,60 @@
 package third_party
 
 import (
+	"errors"
 	"fmt"
 	"github.com/spf13/cast"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
-var _wechatMp *http.Client
+var _wechatClient = make(map[string]*http.Client)
 
-type WeChatMp struct {
+type WeChatClient struct {
 	conn         *http.Client
 	appId        string
 	appSecret    string
+	appType      string
 	callbackAddr string
 }
 
-func GetWeChatMpClient() *http.Client {
-	return _wechatMp
+func GetWeChatClient(appId string) *http.Client {
+	return _wechatClient[appId]
 }
 
-func NewWeChatMp(client *http.Client, appId, appSecret, callbackAddr string) *WeChatMp {
+func NewWeChatClient(client *http.Client, appId, appSecret, callbackAddr, appType string) *WeChatClient {
 	if client == nil {
 		client = &http.Client{
 			Transport: &http.Transport{},
 		}
+		_wechatClient[appId] = client
 	}
-	c := &WeChatMp{
+	c := &WeChatClient{
 		conn:         client,
 		appId:        appId,
 		appSecret:    appSecret,
+		appType:      appType,
 		callbackAddr: callbackAddr,
 	}
 	return c
 }
 
 // Close 关闭连接
-func (m *WeChatMp) Close() {
+func (m *WeChatClient) Close() {
 	if m.conn != nil {
 		m.conn.CloseIdleConnections()
 		m.conn = nil
 	}
 }
 
-func (*WeChatMp) String() string {
-	return "wechat_mp"
+func (m *WeChatClient) String() string {
+	return m.appId
 }
 
-func (m *WeChatMp) GetAccessToken() (string, int, error) {
+func (m *WeChatClient) GetAccessToken() (string, int, error) {
 
 	var err error
 	var accessToken string
@@ -59,12 +64,12 @@ func (m *WeChatMp) GetAccessToken() (string, int, error) {
 		&appid=APPID
 		&secret=APPSECRET
 	*/
-	url := fmt.Sprintf("%v?appid=%v&secret=%v&grant_type=client_credential",
+	accessTokenUrl := fmt.Sprintf("%v?appid=%v&secret=%v&grant_type=client_credential",
 		WeChatAccessTokenAddr,
 		m.appId,
 		m.appSecret,
 	)
-	body, err := httpGet(url)
+	body, err := httpGet(accessTokenUrl)
 	if err != nil {
 		return "", 0, err
 	}
@@ -75,54 +80,75 @@ func (m *WeChatMp) GetAccessToken() (string, int, error) {
 	return accessToken, expiresIn, nil
 }
 
-func (m *WeChatMp) GetJSApiTicket(accessToken string) (string, int, error) {
+func (m *WeChatClient) GetJSApiTicket(accessToken string) (string, int, error) {
 
-	var err error
-	var ticket string
 	/*
 		https://api.weixin.qq.com/cgi-bin/ticket/getticket?
 		access_token=ACCESS_TOKEN
 		&type=jsapi
 	*/
-	url := fmt.Sprintf("%v?type=%v&access_token=%v",
+	ticketUrl := fmt.Sprintf("%v?type=%v&access_token=%v",
 		WeChatJSApiTicketAddr,
 		"jsapi",
 		accessToken,
 	)
-	body, err := httpGet(url)
+	body, err := httpGet(ticketUrl)
 	if err != nil {
 		return "", 0, err
 	}
 
-	ticket = gjson.Get(body, "ticket").String()
+	ticket := gjson.Get(body, "ticket").String()
 	expiresIn := cast.ToInt(gjson.Get(body, "expires_in").Int())
 
 	return ticket, expiresIn, nil
 }
 
-func (m *WeChatMp) GetConnectUrl(state, scope string, popUp bool) (string, error) {
-	/*
-		url?
-		appid=APPID
-		&redirect_uri=REDIRECT_URI
-		&response_type=code
-		&scope=SCOPE
-		&state=STATE
-		&forcePopup=FORCE_POPUP
-		#wechat_redirect
-	*/
-	url := fmt.Sprintf("%v?appid=%v&redirect_uri=%v&response_type=code&scope=%v&state=%v&forcePopup=%v#wechat_redirect",
-		WeChatAppConnectAddr,
-		m.appId,
-		url.QueryEscape(m.callbackAddr),
-		scope,
-		state,
-		popUp,
-	)
-	return url, nil
+func (m *WeChatClient) GetConnectUrl(state, scope string, popUp bool) (string, error) {
+
+	var connectUrl string
+	if strings.EqualFold(m.appType, "open") {
+		/*
+			url?
+			appid=APPID
+			&redirect_uri=REDIRECT_URI
+			&response_type=code
+			&scope=SCOPE
+			&state=STATE
+			&forcePopup=FORCE_POPUP
+			#wechat_redirect
+		*/
+		connectUrl = fmt.Sprintf("%v?appid=%v&redirect_uri=%v&response_type=code&scope=%v&state=%v&forcePopup=%v#wechat_redirect",
+			WeChatQRConnectAddr,
+			m.appId,
+			m.callbackAddr,
+			scope,
+			state,
+			popUp,
+		)
+	} else {
+		/*
+			url?
+			appid=APPID
+			&redirect_uri=REDIRECT_URI
+			&response_type=code
+			&scope=SCOPE
+			&state=STATE
+			&forcePopup=FORCE_POPUP
+			#wechat_redirect
+		*/
+		connectUrl = fmt.Sprintf("%v?appid=%v&redirect_uri=%v&response_type=code&scope=%v&state=%v&forcePopup=%v#wechat_redirect",
+			WeChatAppConnectAddr,
+			m.appId,
+			url.QueryEscape(m.callbackAddr),
+			scope,
+			state,
+			popUp,
+		)
+	}
+	return connectUrl, nil
 }
 
-func (m *WeChatMp) GetUserAccessToken(code, scope string) (string, error) {
+func (m *WeChatClient) GetUserAccessToken(code, scope string) (string, error) {
 	/*
 		https://api.weixin.qq.com/sns/oauth2/access_token?
 		appid=APPID
@@ -130,14 +156,14 @@ func (m *WeChatMp) GetUserAccessToken(code, scope string) (string, error) {
 		&code=CODE
 		&grant_type=authorization_code
 	*/
-	url := fmt.Sprintf("%v?appid=%v&secret=%v&code=%v&grant_type=authorization_code",
+	userAccessTokenUrl := fmt.Sprintf("%v?appid=%v&secret=%v&code=%v&grant_type=authorization_code",
 		WeChatUserAccessTokenAddr,
 		m.appId,
 		m.appSecret,
 		code,
 	)
 
-	body, err := httpGet(url)
+	body, err := httpGet(userAccessTokenUrl)
 	if err != nil {
 		return "", err
 	}
@@ -145,20 +171,20 @@ func (m *WeChatMp) GetUserAccessToken(code, scope string) (string, error) {
 	return body, nil
 }
 
-func (m *WeChatMp) RefreshUserToken(refreshToken string, appId string) (string, error) {
+func (m *WeChatClient) RefreshUserToken(refreshToken string, appId string) (string, error) {
 	/*
 		https://api.weixin.qq.com/sns/oauth2/refresh_token?
 		appid=APPID
 		&grant_type=refresh_token
 		&refresh_token=REFRESH_TOKEN
 	*/
-	url := fmt.Sprintf("%v?appid=%v&refresh_token=%v&grant_type=refresh_token",
+	refreshUserTokenUrl := fmt.Sprintf("%v?appid=%v&refresh_token=%v&grant_type=refresh_token",
 		WeChatRefreshUserTokenAddr,
 		appId,
 		refreshToken,
 	)
 
-	body, err := httpGet(url)
+	body, err := httpGet(refreshUserTokenUrl)
 	if err != nil {
 		return "", err
 	}
@@ -166,20 +192,21 @@ func (m *WeChatMp) RefreshUserToken(refreshToken string, appId string) (string, 
 	return body, nil
 }
 
-func (m *WeChatMp) GetUserInfo(accessToken, openId string) (string, error) {
+func (m *WeChatClient) GetUserInfo(userAccessToken, openId string) (string, error) {
+
 	/*
 		https://api.weixin.qq.com/sns/userinfo?
 		access_token=ACCESS_TOKEN
 		&openid=OPENID
 		&lang=zh_CN
 	*/
-	url := fmt.Sprintf("%v?access_token=%v&openid=%v&lang=zh_CN",
+	userInfoUrl := fmt.Sprintf("%v?access_token=%v&openid=%v&lang=zh_CN",
 		WeChatUserInfoAddr,
-		accessToken,
+		userAccessToken,
 		openId,
 	)
 
-	body, err := httpGet(url)
+	body, err := httpGet(userInfoUrl)
 	if err != nil {
 		return "", err
 	}
@@ -187,7 +214,12 @@ func (m *WeChatMp) GetUserInfo(accessToken, openId string) (string, error) {
 	return body, nil
 }
 
-func (m *WeChatMp) SendTemplateMessage(accessToken, openId, templateId, redirectUrl string, data []byte) (string, error) {
+func (m *WeChatClient) SendTemplateMessage(accessToken, openId, templateId, redirectUrl string, data []byte) (string, error) {
+
+	if strings.EqualFold(m.appType, "open") {
+		return "", errors.New("WeChat open app not support send template message")
+	}
+
 	/*
 			https://api.weixin.qq.com/cgi-bin/message/template/send?
 			access_token=ACCESS_TOKEN
@@ -223,7 +255,7 @@ func (m *WeChatMp) SendTemplateMessage(accessToken, openId, templateId, redirect
 			   }
 		   }
 	*/
-	url := fmt.Sprintf("%v?access_token=%v", WeChatTemplateMessageAddr, accessToken)
+	sendTemplateUrl := fmt.Sprintf("%v?access_token=%v", WeChatTemplateMessageAddr, accessToken)
 
 	var body []byte
 	body, _ = sjson.SetBytes(body, "touser", openId)
@@ -231,7 +263,7 @@ func (m *WeChatMp) SendTemplateMessage(accessToken, openId, templateId, redirect
 	body, _ = sjson.SetBytes(body, "url", redirectUrl)
 	body, _ = sjson.SetRawBytes(body, "data", data)
 
-	resp, err := httpPost(url, string(body))
+	resp, err := httpPost(sendTemplateUrl, string(body))
 	if err != nil {
 		return "", err
 	}
@@ -240,6 +272,6 @@ func (m *WeChatMp) SendTemplateMessage(accessToken, openId, templateId, redirect
 }
 
 // GetClient 暴露原生client
-func (m *WeChatMp) GetClient() *http.Client {
+func (m *WeChatClient) GetClient() *http.Client {
 	return m.conn
 }

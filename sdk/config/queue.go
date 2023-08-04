@@ -1,8 +1,10 @@
 package config
 
 import (
+	"fmt"
 	"github.com/redis/go-redis/v9"
 	"github.com/xuanlingzi/go-admin-core/storage"
+	"github.com/xuanlingzi/go-admin-core/storage/cache"
 	"github.com/xuanlingzi/go-admin-core/storage/queue"
 	"github.com/xuanlingzi/redisqueue/v2"
 	"time"
@@ -37,19 +39,15 @@ func (e Queue) Empty() bool {
 }
 
 // Setup 启用顺序 redis > 其他 > memory
-func (e Queue) Setup() (storage.AdapterQueue, error) {
+func (e Queue) Setup() storage.AdapterQueue {
 	if e.Redis != nil {
 		e.Redis.Consumer.ReclaimInterval = e.Redis.Consumer.ReclaimInterval * time.Second
 		e.Redis.Consumer.BlockingTimeout = e.Redis.Consumer.BlockingTimeout * time.Second
 		e.Redis.Consumer.VisibilityTimeout = e.Redis.Consumer.VisibilityTimeout * time.Second
-		client := GetRedisClient()
+		client := cache.GetRedisClient()
 		if client == nil {
-			options, err := e.Redis.RedisConnectOptions.GetRedisOptions()
-			if err != nil {
-				return nil, err
-			}
+			options := e.Redis.RedisConnectOptions.GetRedisOptions()
 			client = redis.NewClient(options)
-			_redis = client
 		}
 		e.Redis.Producer.RedisClient = client
 		e.Redis.Consumer.RedisClient = client
@@ -58,9 +56,9 @@ func (e Queue) Setup() (storage.AdapterQueue, error) {
 	if e.NSQ != nil {
 		cfg, err := e.NSQ.GetNSQOptions()
 		if err != nil {
-			return nil, err
+			panic(fmt.Sprintf("NSQ queue init error %s", err.Error()))
 		}
 		return queue.NewNSQ(e.NSQ.Addresses, cfg, e.NSQ.ChannelPrefix)
 	}
-	return queue.NewMemory(e.Memory.PoolSize), nil
+	return queue.NewMemory(e.Memory.PoolSize)
 }

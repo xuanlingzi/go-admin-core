@@ -16,6 +16,7 @@ var rocketLock sync.Mutex
 
 type Rocket struct {
 	conn       mq_http_sdk.MQClient
+	accessId   string
 	instanceId string
 	namespace  string
 }
@@ -26,16 +27,18 @@ func GetRocketClient() mq_http_sdk.MQClient {
 }
 
 // NewRocket redis模式
-func NewRocket(client mq_http_sdk.MQClient, endpoint, accessKey, secretKey, instanceId, namespace string) (*Rocket, error) {
+func NewRocket(client mq_http_sdk.MQClient, endpoint, accessKey, secretKey, instanceId, namespace string) *Rocket {
 	if client == nil {
 		client = mq_http_sdk.NewAliyunMQClient(endpoint, accessKey, secretKey, "")
+		_rocket = client
 	}
 	r := &Rocket{
 		conn:       client,
+		accessId:   accessKey,
 		instanceId: instanceId,
 		namespace:  namespace,
 	}
-	return r, nil
+	return r
 }
 
 // Close 关闭连接
@@ -47,7 +50,7 @@ func (m *Rocket) Close() {
 
 // String 字符
 func (m *Rocket) String() string {
-	return "rocket"
+	return m.accessId
 }
 
 // PublishOnQueue 发布消息
@@ -79,7 +82,7 @@ func (m *Rocket) PublishOnQueue(queueName string, body string, tag string) error
 
 func (m *Rocket) SubscribeToQueue(queueName string, consumerName string, tag string, handlerFunc message.AmqpConsumerFunc) error {
 	defer func() {
-		panic("消费者终止")
+		panic("Rocket consumer stop")
 	}()
 
 	var err error

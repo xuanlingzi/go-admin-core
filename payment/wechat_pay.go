@@ -20,7 +20,7 @@ import (
 	"time"
 )
 
-var _wechat_pay *core.Client
+var _wechatPay *core.Client
 
 type WeChatPay struct {
 	client         *core.Client
@@ -34,15 +34,15 @@ type WeChatPay struct {
 
 // GetWeChatPayClient 获取BlockChain客户端
 func GetWeChatPayClient() *core.Client {
-	return _wechat_pay
+	return _wechatPay
 }
 
-func NewWeChatPay(client *core.Client, merchantId string, appId string, apiKey string, serialNo string, privateKeyPath string, certPath string) (*WeChatPay, error) {
+func NewWeChatPay(client *core.Client, merchantId string, appId string, apiKey string, serialNo string, privateKeyPath string, certPath string) *WeChatPay {
 	ctx := context.Background()
 	if client == nil {
 		privateKey, err := utils.LoadPrivateKeyWithPath(privateKeyPath)
 		if err != nil {
-			return nil, err
+			panic(fmt.Sprintf("WeChat Pay init error %v", err))
 		}
 
 		client, err = core.NewClient(
@@ -54,8 +54,9 @@ func NewWeChatPay(client *core.Client, merchantId string, appId string, apiKey s
 			),
 		)
 		if err != nil {
-			return nil, err
+			panic(fmt.Sprintf("WeChat Pay init error %v", err))
 		}
+		_wechatPay = client
 	}
 
 	c := &WeChatPay{
@@ -67,7 +68,7 @@ func NewWeChatPay(client *core.Client, merchantId string, appId string, apiKey s
 		privateKeyPath: privateKeyPath,
 		certPath:       certPath,
 	}
-	return c, nil
+	return c
 }
 
 // Close 关闭连接
@@ -78,8 +79,8 @@ func (m *WeChatPay) Close() {
 	}
 }
 
-func (*WeChatPay) String() string {
-	return "wechat_pay"
+func (m *WeChatPay) String() string {
+	return m.appId
 }
 
 func (m *WeChatPay) GetPrivateKey() (*rsa.PrivateKey, error) {

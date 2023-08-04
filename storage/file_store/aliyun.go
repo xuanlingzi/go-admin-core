@@ -2,6 +2,7 @@ package file_store
 
 import (
 	"context"
+	"fmt"
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
 )
 
@@ -12,8 +13,9 @@ func GetAliyunFileClient() *oss.Client {
 }
 
 type AliyunFileClient struct {
-	client *oss.Client
-	bucket string
+	client   *oss.Client
+	accessId string
+	bucket   string
 }
 
 func NewAliyunFile(client *oss.Client, accessId, accessSecret, bucket, endpoint string) *AliyunFileClient {
@@ -21,19 +23,21 @@ func NewAliyunFile(client *oss.Client, accessId, accessSecret, bucket, endpoint 
 	if client == nil {
 		client, err = oss.New(endpoint, accessId, accessSecret)
 		if err != nil {
-			panic(err)
+			panic(fmt.Sprintf("Aliyun file store init error: %s", err.Error()))
 		}
+		_aliyunFile = client
 	}
 
 	r := &AliyunFileClient{
-		client: client,
-		bucket: bucket,
+		client:   client,
+		accessId: accessId,
+		bucket:   bucket,
 	}
 	return r
 }
 
 func (m *AliyunFileClient) String() string {
-	return "aliyun_file"
+	return m.accessId
 }
 
 func (m *AliyunFileClient) Check() bool {

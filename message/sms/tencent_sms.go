@@ -8,6 +8,13 @@ import (
 	sms "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/sms/v20210111"
 )
 
+var _tencentSms *sms.Client
+
+// GetTencentSmsClient 获取sms客户端
+func GetTencentSmsClient() *sms.Client {
+	return _tencentSms
+}
+
 type TencentCloudSMS struct {
 	client    *sms.Client
 	appId     string
@@ -44,8 +51,9 @@ func NewTencentSms(client *sms.Client, secretId, secretKey, appId, addr, region,
 		 * 第二个参数是地域信息，可以直接填写字符串ap-guangzhou，或者引用预设的常量 */
 		client, err = sms.NewClient(credential, region, cpf)
 		if err != nil {
-			panic("Failed to setup TencentCloudSMS client.")
+			panic(fmt.Sprintf("Tencent SMS init error: %v", err))
 		}
+		_tencentSms = client
 	}
 	c := &TencentCloudSMS{
 		client:    client,

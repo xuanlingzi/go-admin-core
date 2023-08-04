@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/huaweicloud/huaweicloud-sdk-go-obs/obs"
-	"github.com/xuanlingzi/go-admin-core/logger"
 )
 
 var _huaweiFile *obs.ObsClient
@@ -14,8 +13,10 @@ func GetHuaweiFileClient() *obs.ObsClient {
 }
 
 type HuaweiFileClient struct {
-	client *obs.ObsClient
-	bucket string
+	client   *obs.ObsClient
+	accessId string
+	bucket   string
+	endpoint string
 }
 
 func NewHuaweiFile(client *obs.ObsClient, accessKey, secretKey, bucket, endpoint string) *HuaweiFileClient {
@@ -23,20 +24,23 @@ func NewHuaweiFile(client *obs.ObsClient, accessKey, secretKey, bucket, endpoint
 	if client == nil {
 		client, err = obs.New(accessKey, secretKey, endpoint)
 		if err != nil {
-			panic(err)
+			panic(fmt.Sprintf("Huawei file store init error: %s", err.Error()))
 		}
+		_huaweiFile = client
 	}
 
 	r := &HuaweiFileClient{
-		client: client,
-		bucket: bucket,
+		client:   client,
+		accessId: accessKey,
+		bucket:   bucket,
+		endpoint: endpoint,
 	}
 
 	return r
 }
 
 func (rc *HuaweiFileClient) String() string {
-	return "huawei_file"
+	return rc.accessId
 }
 
 func (rc *HuaweiFileClient) Check() bool {
@@ -52,16 +56,15 @@ func (rc *HuaweiFileClient) Upload(ctx context.Context, name, fileLocation strin
 	input.Bucket = rc.bucket
 	input.Key = name
 	input.SourceFile = fileLocation
-	response, err := rc.client.PutFile(&input)
+	_, err := rc.client.PutFile(&input)
 	if err != nil {
 		if obsError, ok := err.(obs.ObsError); ok {
 			return fileLocation, fmt.Errorf("OBS Upload Error: %v, %v", obsError.StatusCode, obsError.Message)
 		}
 		return fileLocation, fmt.Errorf("OBS Upload Error: %v", err)
 	}
-	logger.Infof("OBS Upload Response: %v", response)
 
-	return response.ObjectUrl, nil
+	return fmt.Sprintf("https://%s.%s/%s", rc.bucket, rc.endpoint, name), nil
 }
 
 // GetClient 暴露原生client

@@ -8,13 +8,14 @@
 package queue
 
 import (
-	"github.com/xuanlingzi/go-admin-core/storage"
+	"fmt"
 	json "github.com/json-iterator/go"
 	"github.com/nsqio/go-nsq"
+	"github.com/xuanlingzi/go-admin-core/storage"
 )
 
 // NewNSQ nsq模式 只能监听一个channel
-func NewNSQ(addresses []string, cfg *nsq.Config, channelPrefix string) (*NSQ, error) {
+func NewNSQ(addresses []string, cfg *nsq.Config, channelPrefix string) *NSQ {
 	n := &NSQ{
 		addresses:     addresses,
 		cfg:           cfg,
@@ -22,7 +23,10 @@ func NewNSQ(addresses []string, cfg *nsq.Config, channelPrefix string) (*NSQ, er
 	}
 	var err error
 	n.producer, err = n.newProducer()
-	return n, err
+	if err != nil {
+		panic(fmt.Sprintf("NSQ queue producer init error %s", err.Error()))
+	}
+	return n
 }
 
 type NSQ struct {
@@ -34,7 +38,7 @@ type NSQ struct {
 }
 
 // String 字符串类型
-func (NSQ) String() string {
+func (n *NSQ) String() string {
 	return "nsq"
 }
 

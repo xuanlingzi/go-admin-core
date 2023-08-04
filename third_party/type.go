@@ -8,8 +8,8 @@ import (
 
 // Wechat
 const (
-	WECHAT_ACCESS_TOKEN          = "WECHAT_ACCESS_TOKEN"
-	WECHAT_JSAPI_TICKET          = "WECHAT_JSAPI_TICKET"
+	WECHAT_ACCESS_TOKEN_KEY      = "WECHAT_ACCESS_TOKEN:%s"
+	WECHAT_JSAPI_TICKET_KEY      = "WECHAT_JSAPI_TICKET:%s"
 	WECHAT_STATE_KEY             = "WECHAT_STATE:%v"
 	WECHAT_PLATFORM_KEY          = "WECHAT_PLATFORM:%v"
 	WECHAT_REDIRECT_KEY          = "WECHAT_REDIRECT:%v"
@@ -43,7 +43,7 @@ type AdapterThirdParty interface {
 	GetJSApiTicket(accessToken string) (string, int, error)
 	GetUserAccessToken(code, state string) (string, error)
 	RefreshUserToken(refreshToken string, appId string) (string, error)
-	GetUserInfo(accessToken, openId string) (string, error)
+	GetUserInfo(userAccessToken, openId string) (string, error)
 	SendTemplateMessage(accessToken, openId, templateId, url string, data []byte) (string, error)
 }
 

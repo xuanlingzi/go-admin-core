@@ -27,10 +27,12 @@ func GetSmtpClient() *smtp.Client {
 
 func NewSmtpClient(client *smtp.Client, addr string, username, password, from string) *SmtpClient {
 	var err error
+	// client
+	// smtp每次发送邮件时重新初始化http连接
 
 	host, port, err := net.SplitHostPort(addr)
 	if err != nil {
-		return nil
+		panic(fmt.Sprintf("SMTP init error: %v", err))
 	}
 
 	auth := smtp.PlainAuth("", username, password, host)

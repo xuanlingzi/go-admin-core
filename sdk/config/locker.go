@@ -3,6 +3,7 @@ package config
 import (
 	"github.com/redis/go-redis/v9"
 	"github.com/xuanlingzi/go-admin-core/storage"
+	"github.com/xuanlingzi/go-admin-core/storage/cache"
 	"github.com/xuanlingzi/go-admin-core/storage/locker"
 )
 
@@ -18,18 +19,14 @@ func (e Locker) Empty() bool {
 }
 
 // Setup 启用顺序 redis > 其他 > memory
-func (e Locker) Setup() (storage.AdapterLocker, error) {
+func (e Locker) Setup() storage.AdapterLocker {
 	if e.Redis != nil {
-		client := GetRedisClient()
+		client := cache.GetRedisClient()
 		if client == nil {
-			options, err := e.Redis.GetRedisOptions()
-			if err != nil {
-				return nil, err
-			}
+			options := e.Redis.GetRedisOptions()
 			client = redis.NewClient(options)
-			_redis = client
 		}
-		return locker.NewRedis(client), nil
+		return locker.NewRedis(client)
 	}
-	return nil, nil
+	return nil
 }

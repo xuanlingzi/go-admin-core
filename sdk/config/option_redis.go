@@ -1,28 +1,12 @@
 package config
 
 import (
-	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
 	"github.com/redis/go-redis/v9"
 	"os"
 )
-
-var _redis *redis.Client
-
-// GetRedisClient 获取redis客户端
-func GetRedisClient() *redis.Client {
-	return _redis
-}
-
-// SetRedisClient 设置redis客户端
-func SetRedisClient(c *redis.Client) {
-	if _redis != nil && _redis != c {
-		_redis.Shutdown(context.TODO())
-	}
-	_redis = c
-}
 
 type RedisConnectOptions struct {
 	Network    string `yaml:"network" json:"network"`
@@ -41,7 +25,7 @@ type Tls struct {
 	Ca   string `yaml:"ca" json:"ca"`
 }
 
-func (e RedisConnectOptions) GetRedisOptions() (*redis.Options, error) {
+func (e RedisConnectOptions) GetRedisOptions() *redis.Options {
 	r := &redis.Options{
 		Network:    e.Network,
 		Addr:       e.Addr,
@@ -53,7 +37,10 @@ func (e RedisConnectOptions) GetRedisOptions() (*redis.Options, error) {
 	}
 	var err error
 	r.TLSConfig, err = getTLS(e.Tls)
-	return r, err
+	if err != nil {
+		panic(fmt.Sprintf("Redis cache init error %s", err.Error()))
+	}
+	return r
 }
 
 func getTLS(c *Tls) (*tls.Config, error) {

@@ -26,13 +26,21 @@ func GetPulsarClient() pulsar.Client {
 }
 
 // NewPulsar redis模式
-func NewPulsar(client pulsar.Client, options *pulsar.ClientOptions, appId, namespace string) (*Pulsar, error) {
+func NewPulsar(client pulsar.Client, appId, secretKey, addr, namespace string) *Pulsar {
 	var err error
 	if client == nil {
+		options := &pulsar.ClientOptions{
+			URL:               addr,
+			OperationTimeout:  30 * time.Second,
+			ConnectionTimeout: 30 * time.Second,
+			Authentication:    pulsar.NewAuthenticationToken(secretKey),
+		}
+
 		client, err = pulsar.NewClient(*options)
-	}
-	if err != nil {
-		return nil, err
+		if err != nil {
+			panic(fmt.Sprintf("Pulsar init error: %v", err))
+		}
+		_pulsar = client
 	}
 	r := &Pulsar{
 		conn:      client,
@@ -40,7 +48,7 @@ func NewPulsar(client pulsar.Client, options *pulsar.ClientOptions, appId, names
 		appId:     appId,
 		namespace: namespace,
 	}
-	return r, nil
+	return r
 }
 
 // Close 关闭连接
@@ -53,7 +61,7 @@ func (m *Pulsar) Close() {
 
 // String 字符
 func (m *Pulsar) String() string {
-	return "pulsar"
+	return m.appId
 }
 
 func (m *Pulsar) InitProducer(queueName string) (pulsar.Producer, error) {
@@ -85,7 +93,7 @@ func (m *Pulsar) PublishOnQueue(queueName string, body string, tag string) error
 	var err error
 	var producer pulsar.Producer
 	if producer, err = m.InitProducer(queueName); err != nil {
-		panic(err.Error())
+		panic(fmt.Sprintf("Pulsar producer init error: %v", err))
 	}
 
 	_, err = producer.Send(context.Background(), &pulsar.ProducerMessage{
@@ -121,7 +129,7 @@ func (m *Pulsar) InitSubscribe(queueName, consumerName string) (pulsar.Consumer,
 
 func (m *Pulsar) SubscribeToQueue(queueName string, consumerName string, tag string, handlerFunc message.AmqpConsumerFunc) error {
 	defer func() {
-		panic("消费者终止")
+		panic("Pulsar consumer stop")
 	}()
 
 	var err error

@@ -9,6 +9,14 @@ type Moderation struct {
 	moderation moderation.AdapterModeration
 }
 
+// NewModeration 创建对应上下文缓存
+func NewModeration(prefix string, moderation moderation.AdapterModeration) moderation.AdapterModeration {
+	return &Moderation{
+		prefix:     prefix,
+		moderation: moderation,
+	}
+}
+
 // String string输出
 func (e *Moderation) String() string {
 	if e.moderation == nil {
@@ -18,18 +26,23 @@ func (e *Moderation) String() string {
 }
 
 // AuditText 文本审核
-func (e *Moderation) AuditText(content string, suggestion *string, label *string, detail *string) error {
-	return e.moderation.AuditText(content, suggestion, label, detail)
+func (e *Moderation) AuditText(content string, result *int, label *string, detail *string) error {
+	return e.moderation.AuditText(content, result, label, detail)
 }
 
-// AuditImage 文本审核
-func (e *Moderation) AuditImage(url string, suggestion *string, label *string, detail *string) error {
-	return e.moderation.AuditImage(url, suggestion, label, detail)
+// AuditImage 图片审核
+func (e *Moderation) AuditImage(url string, result *int, label *string, detail *string) error {
+	return e.moderation.AuditImage(url, result, label, detail)
 }
 
-// AuditVideo 文本审核
-func (e *Moderation) AuditVideo(url string, frame int32) error {
-	return e.moderation.AuditVideo(url, frame)
+// AuditVideo 视频审核
+func (e *Moderation) AuditVideo(url string, frame int32, jobId *string) error {
+	return e.moderation.AuditVideo(url, frame, jobId)
+}
+
+// AuditResult 审核结果
+func (e *Moderation) AuditResult(body []byte, result *int, label *string, detail *string, jobId *string) error {
+	return e.moderation.AuditResult(body, result, label, detail, jobId)
 }
 
 func (e *Moderation) GetClient() interface{} {

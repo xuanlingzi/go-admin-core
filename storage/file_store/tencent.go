@@ -2,6 +2,7 @@ package file_store
 
 import (
 	"context"
+	"fmt"
 	"github.com/tencentyun/cos-go-sdk-v5"
 	"net/http"
 	"net/url"
@@ -14,18 +15,19 @@ func GetTencentFileClient() *cos.Client {
 }
 
 type TencentFileClient struct {
-	client *cos.Client
+	client   *cos.Client
+	accessId string
 }
 
 func NewTencentFile(client *cos.Client, accessKey, secretKey, cosUrl, ciUrl string) *TencentFileClient {
 	if client == nil {
 		cosURL, err := url.Parse(cosUrl)
 		if err != nil {
-			panic(err)
+			panic(fmt.Sprintf("Tencent file store init error: %s", err.Error()))
 		}
 		ciURL, err := url.Parse(ciUrl)
 		if err != nil {
-			panic(err)
+			panic(fmt.Sprintf("Tencent file store init error: %s", err.Error()))
 		}
 		base := &cos.BaseURL{
 			BucketURL: cosURL,
@@ -34,20 +36,23 @@ func NewTencentFile(client *cos.Client, accessKey, secretKey, cosUrl, ciUrl stri
 		transport := &cos.AuthorizationTransport{
 			SecretID:  accessKey,
 			SecretKey: secretKey,
+			Transport: &http.Transport{},
 		}
 		client = cos.NewClient(base, &http.Client{
 			Transport: transport,
 		})
+		_tencentFile = client
 	}
 
 	r := &TencentFileClient{
-		client: client,
+		client:   client,
+		accessId: accessKey,
 	}
 	return r
 }
 
 func (rc *TencentFileClient) String() string {
-	return "tencent_file"
+	return rc.accessId
 }
 
 func (rc *TencentFileClient) Check() bool {

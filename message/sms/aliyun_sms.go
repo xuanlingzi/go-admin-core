@@ -1,12 +1,20 @@
 package sms
 
 import (
+	"fmt"
 	openapi "github.com/alibabacloud-go/darabonba-openapi/v2/client"
 	dysmsapi20170525 "github.com/alibabacloud-go/dysmsapi-20170525/v3/client"
 	util "github.com/alibabacloud-go/tea-utils/v2/service"
 	"github.com/alibabacloud-go/tea/tea"
 	"github.com/tidwall/sjson"
 )
+
+var _aliyunSms *dysmsapi20170525.Client
+
+// GetAliyunSmsClient 获取smtp客户端
+func GetAliyunSmsClient() *dysmsapi20170525.Client {
+	return _aliyunSms
+}
 
 type AliyunSMS struct {
 	client    *dysmsapi20170525.Client
@@ -31,8 +39,9 @@ func NewAliyunSms(client *dysmsapi20170525.Client, accessId, accessSecret, regio
 		client = &dysmsapi20170525.Client{}
 		client, err = dysmsapi20170525.NewClient(config)
 		if err != nil {
-			panic("Failed to setup Aliyun SMS client.")
+			panic(fmt.Sprintf("Aliyun SMS init error: %v", err))
 		}
+		_aliyunSms = client
 	}
 	c := &AliyunSMS{
 		client:    client,
