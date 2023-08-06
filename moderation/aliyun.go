@@ -47,12 +47,12 @@ func (m *AliyunAuditClient) Close() {
 
 }
 
-func (rc *AliyunAuditClient) AuditText(content string, result *int, label *string, detail *string) error {
+func (rc *AliyunAuditClient) AuditText(content string, result *int, label *string, score *int, detail *string) error {
 
 	return nil
 }
 
-func (rc *AliyunAuditClient) AuditImage(url string, result *int, label *string, detail *string) error {
+func (rc *AliyunAuditClient) AuditImage(url string, result *int, label *string, score *int, detail *string) error {
 
 	return nil
 }
@@ -62,7 +62,7 @@ func (rc *AliyunAuditClient) AuditVideo(url string, frame int32, jobId *string) 
 	return nil
 }
 
-func (rc *AliyunAuditClient) AuditResult(body []byte, result *int, label *string, detail *string, jobId *string) error {
+func (rc *AliyunAuditClient) AuditResult(body *[]byte, result *int, label *string, score *int, detail *string, jobId *string) error {
 
 	return nil
 }

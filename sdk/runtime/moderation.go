@@ -26,13 +26,13 @@ func (e *Moderation) String() string {
 }
 
 // AuditText 文本审核
-func (e *Moderation) AuditText(content string, result *int, label *string, detail *string) error {
-	return e.moderation.AuditText(content, result, label, detail)
+func (e *Moderation) AuditText(content string, result *int, label *string, score *int, detail *string) error {
+	return e.moderation.AuditText(content, result, label, score, detail)
 }
 
 // AuditImage 图片审核
-func (e *Moderation) AuditImage(url string, result *int, label *string, detail *string) error {
-	return e.moderation.AuditImage(url, result, label, detail)
+func (e *Moderation) AuditImage(url string, result *int, label *string, score *int, detail *string) error {
+	return e.moderation.AuditImage(url, result, label, score, detail)
 }
 
 // AuditVideo 视频审核
@@ -41,8 +41,8 @@ func (e *Moderation) AuditVideo(url string, frame int32, jobId *string) error {
 }
 
 // AuditResult 审核结果
-func (e *Moderation) AuditResult(body []byte, result *int, label *string, detail *string, jobId *string) error {
-	return e.moderation.AuditResult(body, result, label, detail, jobId)
+func (e *Moderation) AuditResult(body *[]byte, result *int, label *string, score *int, detail *string, jobId *string) error {
+	return e.moderation.AuditResult(body, result, label, score, detail, jobId)
 }
 
 func (e *Moderation) GetClient() interface{} {

@@ -73,7 +73,7 @@ func (rc *TencentAuditClient) Close() {
 
 }
 
-func (rc *TencentAuditClient) AuditText(content string, result *int, label *string, detail *string) error {
+func (rc *TencentAuditClient) AuditText(content string, result *int, label *string, score *int, detail *string) error {
 
 	bString := base64.StdEncoding.EncodeToString([]byte(content))
 	opt := cos.PutTextAuditingJobOptions{
@@ -99,7 +99,7 @@ func (rc *TencentAuditClient) AuditText(content string, result *int, label *stri
 	return nil
 }
 
-func (rc *TencentAuditClient) AuditImage(url string, result *int, label *string, detail *string) error {
+func (rc *TencentAuditClient) AuditImage(url string, result *int, label *string, score *int, detail *string) error {
 
 	_, filename := filepath.Split(url)
 
@@ -162,13 +162,13 @@ func (rc *TencentAuditClient) AuditVideo(url string, frame int32, jobId *string)
 	return nil
 }
 
-func (rc *TencentAuditClient) AuditResult(body []byte, result *int, label *string, detail *string, jobId *string) error {
+func (rc *TencentAuditClient) AuditResult(body *[]byte, result *int, label *string, score *int, detail *string, jobId *string) error {
 
-	*jobId = gjson.GetBytes(body, "JobsDetail.JobId").String()
-	*label = gjson.GetBytes(body, "JobsDetail.Label").String()
-	*result = cast.ToInt(gjson.GetBytes(body, "JobsDetail.Result").Int())
+	*jobId = gjson.GetBytes(*body, "JobsDetail.JobId").String()
+	*label = gjson.GetBytes(*body, "JobsDetail.Label").String()
+	*result = cast.ToInt(gjson.GetBytes(*body, "JobsDetail.Result").Int())
 
-	*detail = gjson.GetBytes(body, "JobsDetail").String()
+	*detail = gjson.GetBytes(*body, "JobsDetail").String()
 
 	return nil
 }
