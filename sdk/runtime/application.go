@@ -1,18 +1,18 @@
 package runtime
 
 import (
+	"net/http"
+	"sync"
+
+	"github.com/casbin/casbin/v2"
 	"github.com/gin-gonic/gin"
-	"github.com/xuanlingzi/go-admin-core/block_chain"
+	"github.com/robfig/cron/v3"
 	"github.com/xuanlingzi/go-admin-core/lbs"
 	"github.com/xuanlingzi/go-admin-core/message"
 	"github.com/xuanlingzi/go-admin-core/moderation"
 	"github.com/xuanlingzi/go-admin-core/payment"
 	"github.com/xuanlingzi/go-admin-core/third_party"
-	"net/http"
-	"sync"
 
-	"github.com/casbin/casbin/v2"
-	"github.com/robfig/cron/v3"
 	"github.com/xuanlingzi/go-admin-core/logger"
 	"github.com/xuanlingzi/go-admin-core/storage"
 	"github.com/xuanlingzi/go-admin-core/storage/queue"
@@ -36,7 +36,6 @@ type Application struct {
 	mail        map[string]message.AdapterMail
 	amqp        map[string]message.AdapterAmqp
 	thirdParty  map[string]third_party.AdapterThirdParty
-	blockChain  map[string]block_chain.AdapterBroker
 	lbs         map[string]lbs.AdapterLocationBasedService
 	payment     map[string]payment.AdapterPaymentService
 	handler     map[string][]func(r *gin.RouterGroup, hand ...*gin.HandlerFunc)
@@ -148,7 +147,6 @@ func NewConfig() *Application {
 		mail:        make(map[string]message.AdapterMail),
 		amqp:        make(map[string]message.AdapterAmqp),
 		thirdParty:  make(map[string]third_party.AdapterThirdParty),
-		blockChain:  make(map[string]block_chain.AdapterBroker),
 		lbs:         make(map[string]lbs.AdapterLocationBasedService),
 		payment:     make(map[string]payment.AdapterPaymentService),
 		handler:     make(map[string][]func(r *gin.RouterGroup, hand ...*gin.HandlerFunc)),
@@ -207,12 +205,12 @@ func (e *Application) SetCacheAdapter(c storage.AdapterCache) {
 
 // GetCacheAdapter 获取缓存
 func (e *Application) GetCacheAdapter() storage.AdapterCache {
-	return NewCache("", e.cache, "")
+	return NewCache("", e.cache)
 }
 
 // GetCachePrefix 获取带租户标记的cache
 func (e *Application) GetCachePrefix(key string) storage.AdapterCache {
-	return NewCache(key, e.cache, "")
+	return NewCache(key, e.cache)
 }
 
 // SetQueueAdapter 设置队列适配器
@@ -394,30 +392,6 @@ func (e *Application) GetThirdPartyKey(key string) third_party.AdapterThirdParty
 	e.mux.Lock()
 	defer e.mux.Unlock()
 	return e.thirdParty[key]
-}
-
-// SetBlockChainAdapter 设置缓存
-func (e *Application) SetBlockChainAdapter(key string, c block_chain.AdapterBroker) {
-	e.mux.Lock()
-	defer e.mux.Unlock()
-	e.blockChain[key] = c
-}
-
-// GetBlockChainAdapter 获取缓存
-func (e *Application) GetBlockChainAdapter() block_chain.AdapterBroker {
-	return e.GetBlockChainKey("*")
-}
-
-// GetBlockChainAdapters 获取缓存
-func (e *Application) GetBlockChainAdapters() map[string]block_chain.AdapterBroker {
-	return e.blockChain
-}
-
-// GetBlockChainKey 获取带租户标记
-func (e *Application) GetBlockChainKey(key string) block_chain.AdapterBroker {
-	e.mux.Lock()
-	defer e.mux.Unlock()
-	return e.blockChain[key]
 }
 
 // SetLocationBasedServiceAdapter 设置LBS

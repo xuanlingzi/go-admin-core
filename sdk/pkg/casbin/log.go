@@ -11,6 +11,11 @@ type Logger struct {
 	enable int32
 }
 
+// LogError implements log.Logger.
+func (*Logger) LogError(err error, msg ...string) {
+	panic("unimplemented")
+}
+
 // EnableLog controls whether print the message.
 func (l *Logger) EnableLog(enable bool) {
 	i := 0

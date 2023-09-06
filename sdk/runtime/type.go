@@ -1,14 +1,14 @@
 package runtime
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
-	"github.com/xuanlingzi/go-admin-core/block_chain"
 	"github.com/xuanlingzi/go-admin-core/lbs"
 	"github.com/xuanlingzi/go-admin-core/message"
 	"github.com/xuanlingzi/go-admin-core/moderation"
 	"github.com/xuanlingzi/go-admin-core/payment"
 	"github.com/xuanlingzi/go-admin-core/third_party"
-	"net/http"
 
 	"github.com/casbin/casbin/v2"
 	"github.com/robfig/cron/v3"
@@ -100,11 +100,6 @@ type Runtime interface {
 	GetPaymentServiceAdapter() payment.AdapterPaymentService
 	GetPaymentServiceAdapters() map[string]payment.AdapterPaymentService
 	GetPaymentServiceKey(string) payment.AdapterPaymentService
-
-	SetBlockChainAdapter(string, block_chain.AdapterBroker)
-	GetBlockChainAdapter() block_chain.AdapterBroker
-	GetBlockChainAdapters() map[string]block_chain.AdapterBroker
-	GetBlockChainKey(key string) block_chain.AdapterBroker
 
 	SetHandler(key string, routerGroup func(r *gin.RouterGroup, hand ...*gin.HandlerFunc))
 	GetHandler() map[string][]func(r *gin.RouterGroup, hand ...*gin.HandlerFunc)

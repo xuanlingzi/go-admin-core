@@ -5,8 +5,7 @@ go 1.19
 require (
 	github.com/bsm/redislock v0.9.4
 	github.com/bytedance/go-tagexpr/v2 v2.7.12
-	github.com/casbin/casbin/v2 v2.73.0
-	github.com/chanxuehong/wechat v0.0.0-20230222024006-36f0325263cd
+	github.com/casbin/casbin/v2 v2.77.1
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-playground/locales v0.14.1
 	github.com/go-playground/universal-translator v0.18.1
@@ -21,7 +20,7 @@ require (
 	github.com/shamsher31/goimgext v1.0.0
 	github.com/slok/go-http-metrics v0.9.0
 	github.com/smartystreets/goconvey v1.6.4
-	github.com/xuanlingzi/go-admin-core v1.4.15
+	github.com/xuanlingzi/go-admin-core v1.4.16
 	github.com/xuanlingzi/go-admin-core/plugins/logger/zap v1.4.15
 	github.com/xuanlingzi/gorm-adapter/v3 v3.2.4
 	github.com/xuanlingzi/redis-watcher/v2 v2.0.0-20230303150028-d12653e6562a
@@ -43,7 +42,6 @@ require (
 	github.com/bitly/go-simplejson v0.5.0 // indirect
 	github.com/bytedance/sonic v1.10.0-rc3 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
-	github.com/chanxuehong/rand v0.0.0-20211009035549-2f07823e8e99 // indirect
 	github.com/chenzhuoyu/base64x v0.0.0-20230717121745-296ad89f973d // indirect
 	github.com/chenzhuoyu/iasm v0.9.0 // indirect
 	github.com/clbanning/mxj v1.8.4 // indirect
@@ -123,9 +121,8 @@ require (
 	github.com/xuri/excelize/v2 v2.6.1 // indirect
 	github.com/xuri/nfp v0.0.0-20230802015359-2d5eeba905e9 // indirect
 	go.mongodb.org/mongo-driver v1.12.1 // indirect
-	go.uber.org/atomic v1.10.0 // indirect
-	go.uber.org/multierr v1.9.0 // indirect
-	go.uber.org/zap v1.24.0 // indirect
+	go.uber.org/multierr v1.11.0 // indirect
+	go.uber.org/zap v1.25.0 // indirect
 	golang.org/x/arch v0.4.0 // indirect
 	golang.org/x/image v0.5.0 // indirect
 	golang.org/x/mod v0.12.0 // indirect
@@ -144,8 +141,8 @@ require (
 	gorm.io/plugin/dbresolver v1.4.0 // indirect
 )
 
-//replace (
-//	github.com/xuanlingzi/go-admin-core => ../
-//	github.com/xuanlingzi/go-admin-core/plugins/logger/logrus => ../plugins/logger/logrus
-//	github.com/xuanlingzi/go-admin-core/plugins/logger/zap => ../plugins/logger/zap
-//)
+// replace (
+// 	github.com/xuanlingzi/go-admin-core => ../
+// 	github.com/xuanlingzi/go-admin-core/plugins/logger/logrus => ../plugins/logger/logrus
+// 	github.com/xuanlingzi/go-admin-core/plugins/logger/zap => ../plugins/logger/zap
+// )

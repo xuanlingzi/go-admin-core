@@ -1,10 +1,7 @@
 package runtime
 
 import (
-	"encoding/json"
 	"time"
-
-	"github.com/chanxuehong/wechat/oauth2"
 
 	"github.com/xuanlingzi/go-admin-core/storage"
 )
@@ -14,21 +11,16 @@ const (
 )
 
 // NewCache 创建对应上下文缓存
-func NewCache(prefix string, store storage.AdapterCache, wxTokenStoreKey string) storage.AdapterCache {
-	if wxTokenStoreKey == "" {
-		wxTokenStoreKey = "wx_token_store_key"
-	}
+func NewCache(prefix string, store storage.AdapterCache) storage.AdapterCache {
 	return &Cache{
-		prefix:          prefix,
-		store:           store,
-		wxTokenStoreKey: wxTokenStoreKey,
+		prefix: prefix,
+		store:  store,
 	}
 }
 
 type Cache struct {
-	prefix          string
-	store           storage.AdapterCache
-	wxTokenStoreKey string
+	prefix string
+	store  storage.AdapterCache
 }
 
 // String string输出
@@ -110,26 +102,6 @@ func (e Cache) Decrease(key string) error {
 
 func (e Cache) Expire(key string, dur time.Duration) error {
 	return e.store.Expire(e.prefix+intervalTenant+key, dur)
-}
-
-// Token 获取微信oauth2 token
-func (e Cache) Token() (token *oauth2.Token, err error) {
-	var str string
-	str, err = e.store.Get(e.prefix + intervalTenant + e.wxTokenStoreKey)
-	if err != nil {
-		return
-	}
-	err = json.Unmarshal([]byte(str), token)
-	return
-}
-
-// PutToken 设置微信oauth2 token
-func (e Cache) PutToken(token *oauth2.Token) error {
-	rb, err := json.Marshal(token)
-	if err != nil {
-		return err
-	}
-	return e.store.Set(e.prefix+intervalTenant+e.wxTokenStoreKey, string(rb), int(token.ExpiresIn)-200)
 }
 
 func (e Cache) GetClient() interface{} {

@@ -5,4 +5,5 @@ type TencentFile struct {
 	SecretKey string `json:"secret_key" yaml:"secret_key"`
 	CosUrl    string `json:"cos_url" yaml:"cos_url"`
 	CiUrl     string `json:"ci_url" yaml:"ci_url"`
+	Region    string `json:"region" yaml:"region"`
 }

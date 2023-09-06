@@ -121,7 +121,6 @@ func (r *Redis) HashDelPattern(hk, pattern string) error {
 	return r.client.HDel(context.Background(), hk, delKeys...).Err()
 }
 
-// Increase
 func (r *Redis) Increase(key string) error {
 	return r.client.Incr(context.TODO(), key).Err()
 }

@@ -5,4 +5,5 @@ type HuaweiFile struct {
 	SecretKey string `json:"secret_key" yaml:"secret_key"`
 	Bucket    string `json:"bucket" yaml:"bucket"`
 	Endpoint  string `json:"endpoint" yaml:"endpoint"`
+	Region    string `json:"region" yaml:"region"`
 }
