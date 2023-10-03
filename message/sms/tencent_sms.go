@@ -2,6 +2,8 @@ package sms
 
 import (
 	"fmt"
+
+	"github.com/spf13/cast"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/errors"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
@@ -78,8 +80,11 @@ func (m *TencentCloudSMS) Send(phones []string, templateId string, params map[st
 	}
 
 	var values []string
-	for _, v := range params {
-		values = append(values, v)
+	for i := 1; i <= len(params); i++ {
+		key := cast.ToString(i)
+		if v, ok := params[key]; ok {
+			values = append(values, v)
+		}
 	}
 
 	/* 实例化一个请求对象，根据调用的接口和实际情况，可以进一步设置请求参数
