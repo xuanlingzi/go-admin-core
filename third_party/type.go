@@ -44,7 +44,7 @@ type AdapterThirdParty interface {
 	GetUserAccessToken(code, state string) (string, error)
 	RefreshUserToken(refreshToken string, appId string) (string, error)
 	GetUserInfo(userAccessToken, openId string) (string, error)
-	SendTemplateMessage(accessToken, openId, templateId, url string, data []byte) (string, error)
+	SendTemplateMessage(accessToken, openId, templateId, url string, data []byte, rootData []byte) (string, error)
 }
 
 func httpGet(url string) (string, error) {

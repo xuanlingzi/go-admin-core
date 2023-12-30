@@ -20,7 +20,7 @@ require (
 	github.com/shamsher31/goimgext v1.0.0
 	github.com/slok/go-http-metrics v0.9.0
 	github.com/smartystreets/goconvey v1.6.4
-	github.com/xuanlingzi/go-admin-core v1.4.18
+	github.com/xuanlingzi/go-admin-core v1.4.19
 	github.com/xuanlingzi/go-admin-core/plugins/logger/zap v1.4.15
 	github.com/xuanlingzi/gorm-adapter/v3 v3.2.4
 	github.com/xuanlingzi/redis-watcher/v2 v2.0.0-20230303150028-d12653e6562a

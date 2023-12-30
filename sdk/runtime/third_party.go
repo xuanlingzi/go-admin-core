@@ -103,7 +103,7 @@ func (e *ThirdParty) GetUserInfo(userAccessToken, openId string) (string, error)
 }
 
 // SendTemplateMessage 发送模板消息
-func (e *ThirdParty) SendTemplateMessage(cache storage.AdapterCache, openId, templateId, url string, data []byte) (string, error) {
+func (e *ThirdParty) SendTemplateMessage(cache storage.AdapterCache, openId, templateId, url string, data []byte, rootData []byte) (string, error) {
 	if e.thirdParty == nil {
 		return "", nil
 	}
@@ -113,5 +113,5 @@ func (e *ThirdParty) SendTemplateMessage(cache storage.AdapterCache, openId, tem
 		return "", err
 	}
 
-	return e.thirdParty.SendTemplateMessage(accessToken, openId, templateId, url, data)
+	return e.thirdParty.SendTemplateMessage(accessToken, openId, templateId, url, data, rootData)
 }
