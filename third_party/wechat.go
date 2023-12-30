@@ -214,7 +214,7 @@ func (m *WeChatClient) GetUserInfo(userAccessToken, openId string) (string, erro
 	return body, nil
 }
 
-func (m *WeChatClient) SendTemplateMessage(accessToken, openId, templateId, redirectUrl string, data []byte) (string, error) {
+func (m *WeChatClient) SendTemplateMessage(accessToken, openId, templateId, redirectUrl string, data []byte, rootData []byte) (string, error) {
 
 	if strings.EqualFold(m.appType, "open") {
 		return "", errors.New("WeChat open app not support send template message")
@@ -258,6 +258,9 @@ func (m *WeChatClient) SendTemplateMessage(accessToken, openId, templateId, redi
 	sendTemplateUrl := fmt.Sprintf("%v?access_token=%v", WeChatTemplateMessageAddr, accessToken)
 
 	var body []byte
+	if rootData != nil {
+		body = rootData
+	}
 	body, _ = sjson.SetBytes(body, "touser", openId)
 	body, _ = sjson.SetBytes(body, "template_id", templateId)
 	body, _ = sjson.SetBytes(body, "url", redirectUrl)

@@ -21,7 +21,7 @@ type AliyunSMS struct {
 	signature string
 }
 
-func NewAliyunSms(client *dysmsapi20170525.Client, accessId, accessSecret, region, signature string) *AliyunSMS {
+func NewAliyunSms(client *dysmsapi20170525.Client, accessId, accessSecret, region, endpoint, signature string) *AliyunSMS {
 	if client == nil {
 		var err error
 
@@ -30,8 +30,10 @@ func NewAliyunSms(client *dysmsapi20170525.Client, accessId, accessSecret, regio
 			AccessKeyId: tea.String(accessId),
 			// 必填，您的 AccessKey Secret
 			AccessKeySecret: tea.String(accessSecret),
+			// 区域
+			RegionId: tea.String(region),
 			// 访问的域名
-			Endpoint: tea.String(region),
+			Endpoint: tea.String(endpoint),
 		}
 
 		/* 实例化要请求产品(以sms为例)的client对象
