@@ -27,11 +27,12 @@ var (
 	WeChatAccessTokenAddr = "https://api.weixin.qq.com/cgi-bin/token"
 	WeChatJSApiTicketAddr = "https://api.weixin.qq.com/cgi-bin/ticket/getticket"
 
-	WeChatQRConnectAddr        = "https://open.weixin.qq.com/connect/qrconnect"
-	WeChatAppConnectAddr       = "https://open.weixin.qq.com/connect/oauth2/authorize"
-	WeChatUserAccessTokenAddr  = "https://api.weixin.qq.com/sns/oauth2/access_token"
-	WeChatRefreshUserTokenAddr = "https://api.weixin.qq.com/sns/oauth2/refresh_token"
-	WeChatUserInfoAddr         = "https://api.weixin.qq.com/sns/userinfo"
+	WeChatQRConnectAddr         = "https://open.weixin.qq.com/connect/qrconnect"
+	WeChatAppConnectAddr        = "https://open.weixin.qq.com/connect/oauth2/authorize"
+	WeChatUserAccessTokenAddr   = "https://api.weixin.qq.com/sns/oauth2/access_token"
+	WeChatRefreshUserTokenAddr  = "https://api.weixin.qq.com/sns/oauth2/refresh_token"
+	WeChatUserInfoAddr          = "https://api.weixin.qq.com/sns/userinfo"
+	WeChatSubscribeUserInfoAddr = "https://api.weixin.qq.com/cgi-bin/user/info"
 
 	WeChatTemplateMessageAddr = "https://api.weixin.qq.com/cgi-bin/message/template/send"
 )
@@ -44,7 +45,9 @@ type AdapterThirdParty interface {
 	GetUserAccessToken(code, state string) (string, error)
 	RefreshUserToken(refreshToken string, appId string) (string, error)
 	GetUserInfo(userAccessToken, openId string) (string, error)
+	GetSubscribeUserInfo(userAccessToken, openId string) (string, error)
 	SendTemplateMessage(accessToken, openId, templateId, url string, data []byte, rootData []byte) (string, error)
+	GetClient() interface{}
 }
 
 func httpGet(url string) (string, error) {

@@ -52,11 +52,11 @@ func rad(d float64) float64 {
 // EarthRadius 赤道半径
 const EarthRadius float64 = 6378137
 
-func GetDistance(lon1, lat1, lon2, lat2 float64) float64 {
-	radLat1 := rad(lat1)
-	radLat2 := rad(lat2)
-	a := radLat1 - radLat2
-	b := rad(lon1) - rad(lon2)
-	s := 2 * math.Asin(math.Sqrt(math.Pow(math.Sin(a/2), 2)+math.Cos(radLat1)*math.Cos(radLat2)*math.Pow(math.Sin(b/2), 2)))
+func GetDistance(srcLongitude, srcLatitude, dstLongitude, dstLatitude float64) float64 {
+	srcRadLatitude := rad(srcLatitude)
+	dstRadLatitude := rad(dstLatitude)
+	a := srcRadLatitude - dstRadLatitude
+	b := rad(srcLongitude) - rad(dstLongitude)
+	s := 2 * math.Asin(math.Sqrt(math.Pow(math.Sin(a/2), 2)+math.Cos(srcRadLatitude)*math.Cos(dstRadLatitude)*math.Pow(math.Sin(b/2), 2)))
 	return s * EarthRadius
 }

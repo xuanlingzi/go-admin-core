@@ -214,6 +214,28 @@ func (m *WeChatClient) GetUserInfo(userAccessToken, openId string) (string, erro
 	return body, nil
 }
 
+func (m *WeChatClient) GetSubscribeUserInfo(accessToken, openId string) (string, error) {
+
+	/*
+		https://api.weixin.qq.com/cgi-bin/user/info
+		?access_token=%s
+		&openid=%s
+		&lang=zh_CN
+	*/
+	userInfoUrl := fmt.Sprintf("%v?access_token=%v&openid=%v&lang=zh_CN",
+		WeChatSubscribeUserInfoAddr,
+		accessToken,
+		openId,
+	)
+
+	body, err := httpGet(userInfoUrl)
+	if err != nil {
+		return "", err
+	}
+
+	return body, nil
+}
+
 func (m *WeChatClient) SendTemplateMessage(accessToken, openId, templateId, redirectUrl string, data []byte, rootData []byte) (string, error) {
 
 	if strings.EqualFold(m.appType, "open") {
