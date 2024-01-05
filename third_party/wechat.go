@@ -297,6 +297,6 @@ func (m *WeChatClient) SendTemplateMessage(accessToken, openId, templateId, redi
 }
 
 // GetClient 暴露原生client
-func (m *WeChatClient) GetClient() *http.Client {
+func (m *WeChatClient) GetClient() interface{} {
 	return m.conn
 }
