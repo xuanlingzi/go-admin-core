@@ -20,12 +20,12 @@ require (
 	github.com/shamsher31/goimgext v1.0.0
 	github.com/slok/go-http-metrics v0.9.0
 	github.com/smartystreets/goconvey v1.6.4
-	github.com/xuanlingzi/go-admin-core v1.4.21
+	github.com/xuanlingzi/go-admin-core v1.4.22
 	github.com/xuanlingzi/go-admin-core/plugins/logger/zap v1.4.15
 	github.com/xuanlingzi/gorm-adapter/v3 v3.2.4
 	github.com/xuanlingzi/redis-watcher/v2 v2.0.0-20230303150028-d12653e6562a
 	github.com/xuanlingzi/redisqueue/v2 v2.0.1
-	golang.org/x/crypto v0.12.0
+	golang.org/x/crypto v0.18.0
 	gorm.io/gorm v1.25.2
 )
 
@@ -127,9 +127,9 @@ require (
 	golang.org/x/image v0.13.0 // indirect
 	golang.org/x/mod v0.12.0 // indirect
 	golang.org/x/net v0.14.0 // indirect
-	golang.org/x/sys v0.11.0 // indirect
-	golang.org/x/term v0.11.0 // indirect
-	golang.org/x/text v0.13.0 // indirect
+	golang.org/x/sys v0.16.0 // indirect
+	golang.org/x/term v0.16.0 // indirect
+	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/tools v0.11.1 // indirect
 	google.golang.org/grpc v1.57.0 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect

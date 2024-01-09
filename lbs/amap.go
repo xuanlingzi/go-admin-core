@@ -146,6 +146,50 @@ func (m *Amap) GetCoordinate(keyword string) (longitude float32, latitude float3
 	return
 }
 
+func (m *Amap) GetPosition(imei, network, ac, ci, snr string, result *map[string]interface{}) error {
+	/*
+		http://apilocate.amap.com/position?output=JSON
+		&key=%v
+		&accesstype=0
+		&imei=" + imei + "
+		&cdma=0
+		&network=" + network + "
+		&bts=460,0," + tac + "," + cellId + "," + snr
+	*/
+
+	url := fmt.Sprintf("%v/position?output=JSON&key=%v&accesstype=0&imei=%v&cdma=0&network=%v&bts=460,0,%v,%v,%v",
+		m.addr,
+		m.secretKey,
+		imei,
+		network,
+		ac,
+		ci,
+		snr,
+	)
+
+	addressInfo, err := utils.HttpGet(url)
+	if err != nil {
+		return fmt.Errorf("GetPosition error %v", err)
+	}
+
+	if gjson.GetBytes(addressInfo, "info").Exists() {
+		status := gjson.GetBytes(addressInfo, "info").String()
+		if strings.EqualFold(status, "OK") == false {
+			return fmt.Errorf("GetPosition error %v", addressInfo)
+		}
+	}
+
+	if gjson.GetBytes(addressInfo, "geocodes.#").Int() > 0 {
+		(*result)["address"] = gjson.GetBytes(addressInfo, "result.desc").String()
+
+		loc := gjson.GetBytes(addressInfo, "result.location").String()
+		(*result)["longitude"] = cast.ToFloat32(loc[:strings.Index(loc, ",")])
+		(*result)["latitude"] = cast.ToFloat32(loc[strings.Index(loc, ",")+1:])
+	}
+
+	return nil
+}
+
 // GetClient 暴露原生client
 func (m *Amap) GetClient() interface{} {
 	return m.conn
