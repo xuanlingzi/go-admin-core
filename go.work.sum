@@ -421,7 +421,7 @@ github.com/xdg-go/stringprep v1.0.4 h1:XLI/Ng3O1Atzq0oBs3TWm+5ZVgkq2aqdlvP9JtoZ6
 github.com/xuanlingzi/go-admin-core v1.4.1/go.mod h1:gSoYY/FcmACGok03KEcOzZru/RTwwEwoau4iDvYBjco=
 github.com/xuanlingzi/go-admin-core v1.4.18/go.mod h1:WxXrxY0Eic8nRw54yokzGEdpwU9R23QYuU1hVa7kU1E=
 github.com/xuanlingzi/go-admin-core v1.4.20/go.mod h1:WxXrxY0Eic8nRw54yokzGEdpwU9R23QYuU1hVa7kU1E=
-github.com/xuanlingzi/go-admin-core v1.4.21/go.mod h1:WxXrxY0Eic8nRw54yokzGEdpwU9R23QYuU1hVa7kU1E=
+github.com/xuanlingzi/go-admin-core v1.4.22/go.mod h1:zpE3o5A5ZGaLTeKv0bI7dU20nzgrxaISDMfX3N4hiE4=
 github.com/youmark/pkcs8 v0.0.0-20181117223130-1be2e3e5546d h1:splanxYIlg+5LfHAM6xpdFEAYOk8iySO56hMFq6uLyA=
 github.com/yuin/goldmark v1.4.13 h1:fVcFKWvrslecOb/tg+Cc05dkeYx540o0FuFt3nUVDoE=
 github.com/zeebo/xxh3 v1.0.2 h1:xZmwmqxHZA8AI603jOQ0tMqmBr9lPeFwGg6d+xy9DC0=

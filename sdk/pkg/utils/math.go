@@ -44,19 +44,3 @@ func DivisibleBy2(x float64) int {
 		return tx + 1
 	}
 }
-
-func rad(d float64) float64 {
-	return d * math.Pi / 100
-}
-
-// EarthRadius 赤道半径
-const EarthRadius float64 = 6378137
-
-func GetDistance(srcLongitude, srcLatitude, dstLongitude, dstLatitude float64) float64 {
-	srcRadLatitude := rad(srcLatitude)
-	dstRadLatitude := rad(dstLatitude)
-	a := srcRadLatitude - dstRadLatitude
-	b := rad(srcLongitude) - rad(dstLongitude)
-	s := 2 * math.Asin(math.Sqrt(math.Pow(math.Sin(a/2), 2)+math.Cos(srcRadLatitude)*math.Cos(dstRadLatitude)*math.Pow(math.Sin(b/2), 2)))
-	return s * EarthRadius
-}
