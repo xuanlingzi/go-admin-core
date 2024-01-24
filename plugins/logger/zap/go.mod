@@ -5,7 +5,7 @@ go 1.21
 toolchain go1.21.6
 
 require (
-	github.com/xuanlingzi/go-admin-core v1.5.4
+	github.com/xuanlingzi/go-admin-core v1.5.5
 	go.uber.org/zap v1.26.0
 )
 

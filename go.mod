@@ -10,7 +10,7 @@ require (
 	github.com/alibabacloud-go/dysmsapi-20170525/v3 v3.0.6
 	github.com/alibabacloud-go/tea v1.2.2
 	github.com/alibabacloud-go/tea-utils/v2 v2.0.4
-	github.com/aliyun/alibaba-cloud-sdk-go v1.62.665
+	github.com/aliyun/alibaba-cloud-sdk-go v1.62.666
 	github.com/aliyun/aliyun-oss-go-sdk v3.0.2+incompatible
 	github.com/aliyunmq/mq-http-go-sdk v1.0.3
 	github.com/apache/pulsar-client-go v0.11.1
@@ -182,4 +182,9 @@ require (
 	k8s.io/utils v0.0.0-20240102154912-e7106e64919e // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
+)
+
+replace (
+	github.com/imdario/mergo v1.0.0 => dario.cat/mergo v1.0.0
+	github.com/smartystreets/assertions v1.15.1 => github.com/smarty/assertions v1.15.1
 )
