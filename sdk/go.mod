@@ -22,8 +22,8 @@ require (
 	github.com/shamsher31/goimgext v1.0.0
 	github.com/slok/go-http-metrics v0.11.0
 	github.com/smartystreets/goconvey v1.6.4
-	github.com/xuanlingzi/go-admin-core v1.5.3
-	github.com/xuanlingzi/go-admin-core/plugins/logger/zap v1.4.15
+	github.com/xuanlingzi/go-admin-core v1.5.4
+	github.com/xuanlingzi/go-admin-core/plugins/logger/zap v1.5.4
 	github.com/xuanlingzi/gorm-adapter/v3 v3.2.4
 	github.com/xuanlingzi/redis-watcher/v2 v2.0.0-20230303150028-d12653e6562a
 	github.com/xuanlingzi/redisqueue/v2 v2.0.1
@@ -141,8 +141,8 @@ require (
 	gorm.io/plugin/dbresolver v1.5.0 // indirect
 )
 
-replace (
-	//github.com/xuanlingzi/go-admin-core v1.4.23 => ../
-	//github.com/xuanlingzi/go-admin-core/plugins/logger/logrus => ../plugins/logger/logrus
-	//github.com/xuanlingzi/go-admin-core/plugins/logger/zap v1.4.15 => ../plugins/logger/zap
-)
+//replace (
+//github.com/xuanlingzi/go-admin-core v1.4.23 => ../
+//github.com/xuanlingzi/go-admin-core/plugins/logger/logrus => ../plugins/logger/logrus
+//github.com/xuanlingzi/go-admin-core/plugins/logger/zap v1.4.15 => ../plugins/logger/zap
+//)
