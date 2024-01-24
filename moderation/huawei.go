@@ -61,12 +61,13 @@ func (rc *HuaweiAuditClient) Close() {
 
 func (rc *HuaweiAuditClient) AuditText(content string, result *int, label *string, score *int, detail *string) error {
 
+	eventType := "article"
 	requestData := model.TextDetectionDataReq{
 		Text: content,
 	}
 	textReq := model.TextDetectionReq{
 		Data:      &requestData,
-		EventType: "comment",
+		EventType: &eventType,
 	}
 	request := model.RunTextModerationRequest{}
 	request.Body = &textReq
@@ -107,6 +108,8 @@ func (rc *HuaweiAuditClient) AuditText(content string, result *int, label *strin
 
 func (rc *HuaweiAuditClient) AuditImage(url string, result *int, label *string, score *int, detail *string) error {
 
+	eventType := "article"
+
 	var imageCategories = []string{
 		"porn",
 		"politics",
@@ -114,8 +117,8 @@ func (rc *HuaweiAuditClient) AuditImage(url string, result *int, label *string, 
 	}
 	imageReq := model.ImageDetectionReq{
 		Url:        &url,
-		Categories: imageCategories,
-		EventType:  "album",
+		Categories: &imageCategories,
+		EventType:  &eventType,
 	}
 	request := model.CheckImageModerationRequest{}
 	request.Body = &imageReq
@@ -154,6 +157,8 @@ func (rc *HuaweiAuditClient) AuditImage(url string, result *int, label *string, 
 
 func (rc *HuaweiAuditClient) AuditVideo(url string, frame int32, jobId *string) error {
 
+	eventType := model.GetVideoCreateRequestEventTypeEnum().DEFAULT
+
 	var audioCategories = []model.VideoCreateRequestAudioCategories{
 		model.GetVideoCreateRequestAudioCategoriesEnum().PORN,
 		model.GetVideoCreateRequestAudioCategoriesEnum().POLITICS,
@@ -173,8 +178,8 @@ func (rc *HuaweiAuditClient) AuditVideo(url string, frame int32, jobId *string) 
 	videoReq := model.VideoCreateRequest{
 		Callback:        &rc.callbackUrl,
 		AudioCategories: &audioCategories,
-		ImageCategories: imageCategories,
-		EventType:       model.GetVideoCreateRequestEventTypeEnum().DEFAULT,
+		ImageCategories: &imageCategories,
+		EventType:       &eventType,
 		Data:            &requestData,
 	}
 

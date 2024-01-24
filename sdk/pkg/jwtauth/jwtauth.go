@@ -555,7 +555,7 @@ func (mw *GinJWTMiddleware) authorized(c *gin.Context, data interface{}) {
 		)
 	}
 
-	mw.AntdLoginResponse(c, 0, tokenString, expire)
+	mw.AntdLoginResponse(c, http.StatusOK, tokenString, expire)
 }
 
 func (mw *GinJWTMiddleware) signedString(token *jwt.Token) (string, error) {
