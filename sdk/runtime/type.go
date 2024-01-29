@@ -53,9 +53,10 @@ type Runtime interface {
 	GetCachePrefix(string) storage.AdapterCache
 
 	GetMemoryQueue(string) storage.AdapterQueue
-	SetQueueAdapter(storage.AdapterQueue)
+	SetQueueAdapter(string, storage.AdapterQueue)
 	GetQueueAdapter() storage.AdapterQueue
-	GetQueuePrefix(string) storage.AdapterQueue
+	GetQueueKey(string) storage.AdapterQueue
+	GetQueuePrefix(string, string) storage.AdapterQueue
 
 	SetLockerAdapter(storage.AdapterLocker)
 	GetLockerAdapter() storage.AdapterLocker

@@ -22,7 +22,7 @@ require (
 	github.com/shamsher31/goimgext v1.0.0
 	github.com/slok/go-http-metrics v0.11.0
 	github.com/smartystreets/goconvey v1.6.4
-	github.com/xuanlingzi/go-admin-core v1.5.5
+	github.com/xuanlingzi/go-admin-core v1.5.6
 	github.com/xuanlingzi/go-admin-core/plugins/logger/zap v1.5.5
 	github.com/xuanlingzi/gorm-adapter/v3 v3.2.4
 	github.com/xuanlingzi/redis-watcher/v2 v2.0.0-20230303150028-d12653e6562a
@@ -141,10 +141,7 @@ require (
 	gorm.io/plugin/dbresolver v1.5.0 // indirect
 )
 
-replace (
-	github.com/imdario/mergo v1.0.0 => dario.cat/mergo v1.0.0
-	github.com/smartystreets/assertions v1.15.1 => github.com/smarty/assertions v1.15.1
-)
+replace github.com/imdario/mergo => github.com/imdario/mergo v0.3.16
 
 //replace (
 //github.com/xuanlingzi/go-admin-core v1.4.23 => ../

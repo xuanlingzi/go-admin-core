@@ -1,6 +1,7 @@
 package runtime
 
 import (
+	"github.com/xuanlingzi/go-admin-core/sdk/pkg/utils"
 	"net/http"
 	"sync"
 
@@ -27,7 +28,7 @@ type Application struct {
 	mux         sync.RWMutex
 	middlewares map[string]interface{}
 	cache       storage.AdapterCache
-	queue       storage.AdapterQueue
+	queues      map[string]storage.AdapterQueue
 	locker      storage.AdapterLocker
 	memoryQueue storage.AdapterQueue
 	fileStores  map[string]storage.AdapterFileStore
@@ -140,6 +141,7 @@ func NewConfig() *Application {
 		casbins:     make(map[string]*casbin.SyncedEnforcer),
 		crontab:     make(map[string]*cron.Cron),
 		middlewares: make(map[string]interface{}),
+		queues:      make(map[string]storage.AdapterQueue),
 		memoryQueue: queue.NewMemory(10000),
 		fileStores:  make(map[string]storage.AdapterFileStore),
 		moderation:  make(map[string]moderation.AdapterModeration),
@@ -214,18 +216,29 @@ func (e *Application) GetCachePrefix(key string) storage.AdapterCache {
 }
 
 // SetQueueAdapter 设置队列适配器
-func (e *Application) SetQueueAdapter(c storage.AdapterQueue) {
-	e.queue = c
+func (e *Application) SetQueueAdapter(key string, c storage.AdapterQueue) {
+	e.mux.Lock()
+	defer e.mux.Unlock()
+	if utils.StringIsEmpty(key) {
+		key = "*"
+	}
+	e.queues[key] = c
 }
 
 // GetQueueAdapter 获取队列适配器
 func (e *Application) GetQueueAdapter() storage.AdapterQueue {
-	return NewQueue("", e.queue)
+	return e.GetQueueKey("*")
+}
+
+func (e *Application) GetQueueKey(key string) storage.AdapterQueue {
+	e.mux.Lock()
+	defer e.mux.Unlock()
+	return e.queues[key]
 }
 
 // GetQueuePrefix 获取带租户标记的queue
-func (e *Application) GetQueuePrefix(key string) storage.AdapterQueue {
-	return NewQueue(key, e.queue)
+func (e *Application) GetQueuePrefix(key string, prefix string) storage.AdapterQueue {
+	return NewQueue(prefix, e.GetQueueKey(key))
 }
 
 // SetLockerAdapter 设置分布式锁

@@ -184,7 +184,4 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 )
 
-replace (
-	github.com/imdario/mergo v1.0.0 => dario.cat/mergo v1.0.0
-	github.com/smartystreets/assertions v1.15.1 => github.com/smarty/assertions v1.15.1
-)
+replace github.com/imdario/mergo => github.com/imdario/mergo v0.3.16
