@@ -1,6 +1,7 @@
 package amqp
 
 import (
+	"encoding/json"
 	"fmt"
 	mq_http_sdk "github.com/aliyunmq/mq-http-go-sdk"
 	"github.com/gogap/errors"
@@ -54,7 +55,7 @@ func (m *Rocket) String() string {
 }
 
 // PublishOnQueue 发布消息
-func (m *Rocket) PublishOnQueue(queueName string, body string, tag string) error {
+func (m *Rocket) PublishOnQueue(exchangeName, exchangeType, queueName, key, tag string, body interface{}) error {
 
 	var err error
 	// Topic所属的实例ID，在消息队列RocketMQ版控制台创建。
@@ -65,8 +66,19 @@ func (m *Rocket) PublishOnQueue(queueName string, body string, tag string) error
 	}
 	producer := m.conn.GetProducer(instanceId, queueName)
 
+	var b []byte
+	switch body.(type) {
+	case string:
+		b = []byte(body.(string))
+	default:
+		b, err = json.Marshal(body)
+		if err != nil {
+			return err
+		}
+	}
+
 	msg := mq_http_sdk.PublishMessageRequest{
-		MessageBody: body,
+		MessageBody: string(b),
 		MessageTag:  tag,
 		Properties:  map[string]string{},
 	}
@@ -80,7 +92,7 @@ func (m *Rocket) PublishOnQueue(queueName string, body string, tag string) error
 	return err
 }
 
-func (m *Rocket) SubscribeToQueue(queueName string, consumerName string, tag string, handlerFunc message.AmqpConsumerFunc) error {
+func (m *Rocket) SubscribeToQueue(exchangeName, exchangeType, queueName, consumerName string, tag string, handlerFunc message.AmqpConsumerFunc) error {
 	defer func() {
 		panic("Rocket consumer stop")
 	}()
@@ -112,7 +124,7 @@ func (m *Rocket) SubscribeToQueue(queueName string, consumerName string, tag str
 							v.MessageId, v.PublishTime, v.MessageTag, v.ConsumedTimes,
 							v.FirstConsumeTime, v.NextConsumeTime, v.MessageBody, v.Properties)
 
-						err = handlerFunc(v.MessageBody)
+						err = handlerFunc([]byte(v.MessageBody))
 					}
 
 					// NextConsumeTime前若不确认消息消费成功，则消息会重复消费

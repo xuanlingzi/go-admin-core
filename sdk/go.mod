@@ -22,7 +22,7 @@ require (
 	github.com/shamsher31/goimgext v1.0.0
 	github.com/slok/go-http-metrics v0.11.0
 	github.com/smartystreets/goconvey v1.6.4
-	github.com/xuanlingzi/go-admin-core v1.5.6
+	github.com/xuanlingzi/go-admin-core v1.5.7
 	github.com/xuanlingzi/go-admin-core/plugins/logger/zap v1.5.5
 	github.com/xuanlingzi/gorm-adapter/v3 v3.2.4
 	github.com/xuanlingzi/redis-watcher/v2 v2.0.0-20230303150028-d12653e6562a
@@ -122,6 +122,7 @@ require (
 	github.com/xuri/excelize/v2 v2.8.0 // indirect
 	github.com/xuri/nfp v0.0.0-20230919160717-d98342af3f05 // indirect
 	go.mongodb.org/mongo-driver v1.13.1 // indirect
+	go.uber.org/goleak v1.2.1 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.26.0 // indirect
 	golang.org/x/arch v0.7.0 // indirect
@@ -143,8 +144,4 @@ require (
 
 replace github.com/imdario/mergo => github.com/imdario/mergo v0.3.16
 
-//replace (
-//github.com/xuanlingzi/go-admin-core v1.4.23 => ../
-//github.com/xuanlingzi/go-admin-core/plugins/logger/logrus => ../plugins/logger/logrus
-//github.com/xuanlingzi/go-admin-core/plugins/logger/zap v1.4.15 => ../plugins/logger/zap
-//)
+//replace github.com/xuanlingzi/go-admin-core v1.5.7 => ../

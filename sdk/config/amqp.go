@@ -1,8 +1,8 @@
 package config
 
 type Amqp struct {
-	Pulsar *Pulsar `json:"pulsar,omitempty" yaml:"pulsar"`
 	Rocket *Rocket `json:"rocket,omitempty" yaml:"rocket"`
+	Rabbit *Rabbit `json:"rabbit,omitempty" yaml:"rabbit"`
 }
 
 var AmqpConfig = new(Amqp)

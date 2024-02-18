@@ -18,11 +18,11 @@ func (e *Amqp) String() string {
 }
 
 // PublishOnQueue 发送消息
-func (e *Amqp) PublishOnQueue(queueName string, body string, tag string) error {
-	return e.amqp.PublishOnQueue(queueName, body, tag)
+func (e *Amqp) PublishOnQueue(exchangeName, exchangeType, queueName, key, body string, tag string) error {
+	return e.amqp.PublishOnQueue(exchangeName, exchangeType, queueName, key, tag, body)
 }
 
 // SubscribeToQueue 消费消息
-func (e *Amqp) SubscribeToQueue(queueName string, consumerName string, tag string, f message.AmqpConsumerFunc) error {
-	return e.amqp.SubscribeToQueue(queueName, consumerName, tag, f)
+func (e *Amqp) SubscribeToQueue(exchangeName, exchangeType, queueName, key, tag string, f message.AmqpConsumerFunc) error {
+	return e.amqp.SubscribeToQueue(exchangeName, exchangeType, queueName, key, tag, f)
 }

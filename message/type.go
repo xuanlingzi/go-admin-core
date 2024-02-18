@@ -18,8 +18,8 @@ type AdapterSms interface {
 
 type AdapterAmqp interface {
 	String() string
-	PublishOnQueue(queueName string, body string, tag string) error
-	SubscribeToQueue(queueName string, consumerName string, tag string, handlerFunc AmqpConsumerFunc) error
+	PublishOnQueue(exchangeName, exchangeType, queueName, key, tag string, body interface{}) error
+	SubscribeToQueue(exchangeName, exchangeType, queueName, key, tag string, handlerFunc AmqpConsumerFunc) error
 }
 
-type AmqpConsumerFunc func(string) error
+type AmqpConsumerFunc func([]byte) error
