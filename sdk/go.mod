@@ -22,7 +22,7 @@ require (
 	github.com/shamsher31/goimgext v1.0.0
 	github.com/slok/go-http-metrics v0.11.0
 	github.com/smartystreets/goconvey v1.6.4
-	github.com/xuanlingzi/go-admin-core v1.5.7
+	github.com/xuanlingzi/go-admin-core v1.5.8
 	github.com/xuanlingzi/go-admin-core/plugins/logger/zap v1.5.5
 	github.com/xuanlingzi/gorm-adapter/v3 v3.2.4
 	github.com/xuanlingzi/redis-watcher/v2 v2.0.0-20230303150028-d12653e6562a
@@ -144,4 +144,4 @@ require (
 
 replace github.com/imdario/mergo => github.com/imdario/mergo v0.3.16
 
-//replace github.com/xuanlingzi/go-admin-core v1.5.7 => ../
+//replace github.com/xuanlingzi/go-admin-core v1.5.8 => ../

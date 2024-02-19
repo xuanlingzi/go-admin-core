@@ -23,7 +23,6 @@ func NewRabbit(addr, accessKey, secretKey, vhost string) *Rabbit {
 		Properties: rabbitmq.NewConnectionProperties(),
 		Heartbeat:  30 * time.Second,
 	}
-	config.Vhost = "/"
 
 	endpoint := fmt.Sprintf("amqp://%v:%v@%v", accessKey, secretKey, addr)
 	publishConn, err := rabbitmq.DialConfig(endpoint, config)
