@@ -182,6 +182,7 @@ func (rc *TencentAuditClient) AuditResult(body *[]byte, result *int, label *stri
 	if len(*body) > 0 { // 从回调返回内容
 
 		*jobId = gjson.GetBytes(*body, "JobsDetail.JobId").String()
+		*score = cast.ToInt(gjson.GetBytes(*body, "JobsDetail.Score").Int())
 		*label = gjson.GetBytes(*body, "JobsDetail.Label").String()
 		*result = cast.ToInt(gjson.GetBytes(*body, "JobsDetail.Result").Int())
 		*body = []byte(gjson.GetBytes(*body, "JobsDetail").String())
