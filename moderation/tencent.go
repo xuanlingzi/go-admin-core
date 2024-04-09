@@ -235,34 +235,12 @@ func (rc *TencentAuditClient) AuditResult(body *[]byte, result *int, label *stri
 			*label = gjson.GetBytes(*body, "Label").String()
 		}
 
-		if gjson.GetBytes(*body, "Result").Exists() {
-			*result = cast.ToInt(gjson.GetBytes(*body, "Result").Int())
+		if gjson.GetBytes(*body, "Score").Exists() {
+			*score = cast.ToInt(gjson.GetBytes(*body, "Score").Int())
 		}
 
-		var scoreVal int
-		if gjson.GetBytes(*body, "PornInfo").Exists() {
-			scoreVal = cast.ToInt(gjson.GetBytes(*body, "PornInfo.Score").Int())
-			if scoreVal > *score {
-				*score = scoreVal
-			}
-		}
-		if gjson.GetBytes(*body, "PoliticsInfo").Exists() {
-			scoreVal = cast.ToInt(gjson.GetBytes(*body, "PoliticsInfo.Score").Int())
-			if scoreVal > *score {
-				*score = scoreVal
-			}
-		}
-		if gjson.GetBytes(*body, "TerrorismInfo").Exists() {
-			scoreVal = cast.ToInt(gjson.GetBytes(*body, "TerrorismInfo.Score").Int())
-			if scoreVal > *score {
-				*score = scoreVal
-			}
-		}
-		if gjson.GetBytes(*body, "TerroristInfo").Exists() {
-			scoreVal = cast.ToInt(gjson.GetBytes(*body, "TerroristInfo.Score").Int())
-			if scoreVal > *score {
-				*score = scoreVal
-			}
+		if gjson.GetBytes(*body, "Result").Exists() {
+			*result = cast.ToInt(gjson.GetBytes(*body, "Result").Int())
 		}
 	}
 
