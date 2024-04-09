@@ -22,7 +22,7 @@ require (
 	github.com/shamsher31/goimgext v1.0.0
 	github.com/slok/go-http-metrics v0.11.0
 	github.com/smartystreets/goconvey v1.8.1
-	github.com/xuanlingzi/go-admin-core v1.5.9
+	github.com/xuanlingzi/go-admin-core v1.6.0
 	github.com/xuanlingzi/go-admin-core/plugins/logger/zap v1.5.6
 	github.com/xuanlingzi/gorm-adapter/v3 v3.2.4
 	github.com/xuanlingzi/redis-watcher/v2 v2.0.0-20240403100358-344726cffd00
@@ -105,7 +105,6 @@ require (
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect
 	github.com/smarty/assertions v1.15.1 // indirect
-	github.com/smartystreets/assertions v1.15.1 // indirect
 	github.com/spf13/cast v1.6.0 // indirect
 	github.com/tencentyun/cos-go-sdk-v5 v0.7.47 // indirect
 	github.com/tidwall/gjson v1.17.1 // indirect
@@ -124,7 +123,6 @@ require (
 	github.com/xuri/excelize/v2 v2.8.1 // indirect
 	github.com/xuri/nfp v0.0.0-20240318013403-ab9948c2c4a7 // indirect
 	go.mongodb.org/mongo-driver v1.14.0 // indirect
-	go.uber.org/goleak v1.3.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/arch v0.7.0 // indirect
@@ -149,4 +147,4 @@ replace (
 	github.com/smartystreets/assertions => github.com/smarty/assertions v1.1.0
 )
 
-//replace github.com/xuanlingzi/go-admin-core v1.5.8 => ../
+//replace github.com/xuanlingzi/go-admin-core v1.5.9 => ../

@@ -26,13 +26,13 @@ func (e *Moderation) String() string {
 }
 
 // AuditText 文本审核
-func (e *Moderation) AuditText(content string, result *int, label *string, score *int, detail *string) error {
-	return e.moderation.AuditText(content, result, label, score, detail)
+func (e *Moderation) AuditText(content string, result *int, label *string, score *int, detail *string, jobId *string) error {
+	return e.moderation.AuditText(content, result, label, score, detail, jobId)
 }
 
 // AuditImage 图片审核
-func (e *Moderation) AuditImage(url string, result *int, label *string, score *int, detail *string) error {
-	return e.moderation.AuditImage(url, result, label, score, detail)
+func (e *Moderation) AuditImage(url string, result *int, label *string, score *int, detail *string, jobId *string) error {
+	return e.moderation.AuditImage(url, result, label, score, detail, jobId)
 }
 
 // AuditVideo 视频审核

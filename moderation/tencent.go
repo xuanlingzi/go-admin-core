@@ -11,7 +11,6 @@ import (
 	"github.com/tidwall/sjson"
 	"net/http"
 	"net/url"
-	"path/filepath"
 	"strings"
 )
 
@@ -73,54 +72,68 @@ func (rc *TencentAuditClient) Close() {
 
 }
 
-func (rc *TencentAuditClient) AuditText(content string, result *int, label *string, score *int, detail *string) error {
+func (rc *TencentAuditClient) AuditText(content string, result *int, label *string, score *int, detail *string, jobId *string) error {
+
+	job := cos.TextAuditingJobConf{
+		DetectType: "Porn,Terrorism,Politics,Illegal,Abuse", // Teenager
+	}
 
 	bString := base64.StdEncoding.EncodeToString([]byte(content))
 	opt := cos.PutTextAuditingJobOptions{
 		InputContent: bString,
-		Conf: &cos.TextAuditingJobConf{
-			DetectType: "Porn,Terrorism,Politics,Teenager,Illegal,Abuse",
-		},
+		Conf:         &job,
 	}
 	response, _, err := rc.client.CI.PutTextAuditingJob(context.TODO(), &opt)
 	if err != nil {
 		return err
 	}
+	if response.JobsDetail == nil {
+		return nil
+	}
 
+	*jobId = response.JobsDetail.JobId
 	*result = response.JobsDetail.Result
 	*label = strings.ToLower(response.JobsDetail.Label)
-	if response.JobsDetail != nil {
-		b, err := json.Marshal(response.JobsDetail)
-		if err == nil {
-			*detail = string(b)
-		}
+	if response.JobsDetail.PornInfo != nil {
+		*score = response.JobsDetail.PornInfo.Score
+	}
+	b, err := json.Marshal(response.JobsDetail)
+	if err == nil {
+		*detail = string(b)
 	}
 
 	return nil
 }
 
-func (rc *TencentAuditClient) AuditImage(url string, result *int, label *string, score *int, detail *string) error {
+func (rc *TencentAuditClient) AuditImage(url string, result *int, label *string, score *int, detail *string, jobId *string) error {
 
-	_, filename := filepath.Split(url)
-
-	opt := &cos.ImageRecognitionOptions{
+	opt := cos.ImageRecognitionOptions{
 		CIProcess:  "sensitive-content-recognition",
-		DetectType: "porn,terrorist,politics,terrorism,teenager",
+		DetectType: "porn,terrorist,politics,terrorism", //teenager",
+		DetectUrl:  url,
 		Interval:   5,
 		MaxFrames:  100,
+		Callback:   rc.callbackUrl,
 	}
-	response, _, err := rc.client.CI.ImageAuditing(context.TODO(), filename, opt)
+
+	response, _, err := rc.client.CI.ImageAuditing(context.TODO(), "", &opt)
 	if err != nil {
 		return err
 	}
+	if response == nil {
+		return nil
+	}
 
+	*jobId = response.JobId
 	*result = response.Result
 	*label = strings.ToLower(response.Label)
-	if response != nil {
-		b, err := json.Marshal(response)
-		if err == nil {
-			*detail = string(b)
-		}
+	if response.PornInfo != nil {
+		*score = response.PornInfo.Score
+	}
+
+	b, err := json.Marshal(response)
+	if err == nil {
+		*detail = string(b)
 	}
 
 	return nil
@@ -128,30 +141,32 @@ func (rc *TencentAuditClient) AuditImage(url string, result *int, label *string,
 
 func (rc *TencentAuditClient) AuditVideo(url string, frame int32, jobId *string) error {
 
-	_, filename := filepath.Split(url)
+	job := cos.PutVideoAuditingJobSnapshot{
+		/*
+			截帧模式，默认值为Interval。
+			Interval 表示间隔模式；
+			Average 表示平均模式；
+			Fps 表示固定帧率模式。
+			Interval 模式：TimeInterval，Count 参数生效。当设置 Count，未设置 TimeInterval 时，表示截取所有帧，共 Count 张图片。
+			Average 模式：Count 参数生效。表示整个视频，按平均间隔截取共 Count 张图片。
+			Fps 模式：TimeInterval 表示每秒截取多少帧，未设置 TimeInterval 时，表示截取所有帧，Count 表示共截取多少帧。
+		*/
+		Mode:         "Fps",
+		TimeInterval: cast.ToFloat32(frame),
+		Count:        10000,
+	}
+
+	conf := cos.VideoAuditingJobConf{
+		DetectType:      "Porn,Terrorism,Politics", //Teenager, Terrorist",
+		Snapshot:        &job,
+		Callback:        rc.callbackUrl,
+		CallbackVersion: "Detail", // Simple（回调内容包含基本信息）、Detail（回调内容包含详细信息）。默认为 Simple
+		DetectContent:   1,        // 当值为0时：表示只审核视频画面截图；值为1时：表示同时审核视频画面截图和视频声音。默认值为0
+	}
 
 	opt := &cos.PutVideoAuditingJobOptions{
-		InputObject: filename,
-		Conf: &cos.VideoAuditingJobConf{
-			DetectType: "Porn,Terrorism,Politics,Teenager", //Terrorist",
-			Snapshot: &cos.PutVideoAuditingJobSnapshot{
-				/*
-					截帧模式，默认值为Interval。
-					Interval 表示间隔模式；
-					Average 表示平均模式；
-					Fps 表示固定帧率模式。
-					Interval 模式：TimeInterval，Count 参数生效。当设置 Count，未设置 TimeInterval 时，表示截取所有帧，共 Count 张图片。
-					Average 模式：Count 参数生效。表示整个视频，按平均间隔截取共 Count 张图片。
-					Fps 模式：TimeInterval 表示每秒截取多少帧，未设置 TimeInterval 时，表示截取所有帧，Count 表示共截取多少帧。
-				*/
-				Mode:         "Fps",
-				TimeInterval: cast.ToFloat32(frame),
-				Count:        10000,
-			},
-			Callback:        rc.callbackUrl,
-			CallbackVersion: "Detail", // Simple（回调内容包含基本信息）、Detail（回调内容包含详细信息）。默认为 Simple
-			DetectContent:   1,        // 当值为0时：表示只审核视频画面截图；值为1时：表示同时审核视频画面截图和视频声音。默认值为0
-		},
+		InputUrl: url,
+		Conf:     &conf,
 	}
 	response, _, err := rc.client.CI.PutVideoAuditingJob(context.TODO(), opt)
 	if err != nil {
@@ -164,11 +179,100 @@ func (rc *TencentAuditClient) AuditVideo(url string, frame int32, jobId *string)
 
 func (rc *TencentAuditClient) AuditResult(body *[]byte, result *int, label *string, score *int, detail *string, jobId *string) error {
 
-	*jobId = gjson.GetBytes(*body, "JobsDetail.JobId").String()
-	*label = gjson.GetBytes(*body, "JobsDetail.Label").String()
-	*result = cast.ToInt(gjson.GetBytes(*body, "JobsDetail.Result").Int())
+	if len(*body) > 0 { // 从回调返回内容
 
-	*detail = gjson.GetBytes(*body, "JobsDetail").String()
+		*jobId = gjson.GetBytes(*body, "JobsDetail.JobId").String()
+		*label = gjson.GetBytes(*body, "JobsDetail.Label").String()
+		*result = cast.ToInt(gjson.GetBytes(*body, "JobsDetail.Result").Int())
+		*body = []byte(gjson.GetBytes(*body, "JobsDetail").String())
+
+	} else if jobId != nil { // 用SDK调用查询结果
+
+		if strings.HasPrefix(*jobId, "av") {
+
+			response, _, err := rc.client.CI.GetVideoAuditingJob(context.TODO(), *jobId)
+			if err != nil {
+				return fmt.Errorf("tencent Audit error: %s", err.Error())
+			}
+
+			*body, err = json.Marshal(response.JobsDetail)
+			if err != nil {
+				return nil
+			}
+
+		} else if strings.HasPrefix(*jobId, "si") {
+
+			response, _, err := rc.client.CI.GetImageAuditingJob(context.TODO(), *jobId)
+			if err != nil {
+				return fmt.Errorf("tencent Audit error: %s", err.Error())
+			}
+
+			*body, err = json.Marshal(response.JobsDetail)
+			if err != nil {
+				return nil
+			}
+
+		} else {
+
+			response, _, err := rc.client.CI.GetTextAuditingJob(context.TODO(), *jobId)
+			if err != nil {
+				return fmt.Errorf("tencent Audit error: %s", err.Error())
+			}
+
+			*body, err = json.Marshal(response.JobsDetail)
+			if err != nil {
+				return nil
+			}
+		}
+
+		state := gjson.GetBytes(*body, "State").String()
+		if !strings.EqualFold(state, "SUCCESS") && !strings.EqualFold(state, "FAILED") {
+			*body = []byte{}
+			return nil
+		}
+
+		if gjson.GetBytes(*body, "Label").Exists() {
+			*label = gjson.GetBytes(*body, "Label").String()
+		}
+
+		if gjson.GetBytes(*body, "Result").Exists() {
+			*result = cast.ToInt(gjson.GetBytes(*body, "Result").Int())
+		}
+
+		var scoreVal int
+		if gjson.GetBytes(*body, "PornInfo").Exists() {
+			scoreVal = cast.ToInt(gjson.GetBytes(*body, "PornInfo.Score").Int())
+			if scoreVal > *score {
+				*score = scoreVal
+			}
+		}
+		if gjson.GetBytes(*body, "PoliticsInfo").Exists() {
+			scoreVal = cast.ToInt(gjson.GetBytes(*body, "PoliticsInfo.Score").Int())
+			if scoreVal > *score {
+				*score = scoreVal
+			}
+		}
+		if gjson.GetBytes(*body, "TerrorismInfo").Exists() {
+			scoreVal = cast.ToInt(gjson.GetBytes(*body, "TerrorismInfo.Score").Int())
+			if scoreVal > *score {
+				*score = scoreVal
+			}
+		}
+		if gjson.GetBytes(*body, "TerroristInfo").Exists() {
+			scoreVal = cast.ToInt(gjson.GetBytes(*body, "TerroristInfo.Score").Int())
+			if scoreVal > *score {
+				*score = scoreVal
+			}
+		}
+	}
+
+	if gjson.GetBytes(*body, "Snapshot").Exists() {
+		*body, _ = sjson.DeleteBytes(*body, "Snapshot")
+	}
+	if gjson.GetBytes(*body, "AudioSection").Exists() {
+		*body, _ = sjson.DeleteBytes(*body, "AudioSection")
+	}
+	*detail = string(*body)
 
 	return nil
 }
@@ -176,21 +280,4 @@ func (rc *TencentAuditClient) AuditResult(body *[]byte, result *int, label *stri
 // GetClient 暴露原生client
 func (rc *TencentAuditClient) GetClient() interface{} {
 	return rc.client
-}
-
-func genInfo(info *cos.RecognitionInfo) string {
-
-	result := "{}"
-	if info != nil {
-		result, _ = sjson.Set(result, "code", info.Code)
-		result, _ = sjson.Set(result, "msg", info.Msg)
-		result, _ = sjson.Set(result, "hit_flag", info.HitFlag)
-		result, _ = sjson.Set(result, "score", info.Score)
-		result, _ = sjson.Set(result, "label", info.Label)
-		result, _ = sjson.Set(result, "sub_label", info.SubLabel)
-		result, _ = sjson.Set(result, "count", info.Count)
-		result, _ = sjson.Set(result, "keywords", strings.Join(info.Keywords, ","))
-	}
-
-	return result
 }

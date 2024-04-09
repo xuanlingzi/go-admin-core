@@ -153,7 +153,7 @@ func (m *Rabbit) SubscribeToQueue(exchangeName, exchangeType, queueName, key, ta
 			err = handlerFunc(d.Body)
 			if err != nil {
 				logger.Errorf("Error to handle message: %v", err.Error())
-				err = d.Ack(false)
+				err = d.Nack(true, true)
 			} else {
 				err = d.Ack(true)
 				if err != nil {
