@@ -7,13 +7,18 @@ import (
 	rabbitmq "github.com/rabbitmq/amqp091-go"
 	"github.com/xuanlingzi/go-admin-core/logger"
 	"github.com/xuanlingzi/go-admin-core/message"
+	"sync"
 	"time"
 )
 
 type Rabbit struct {
-	publishConn   *rabbitmq.Connection
-	subscribeConn *rabbitmq.Connection
-	endpoint      string
+	config   rabbitmq.Config
+	endpoint string
+
+	conn       *rabbitmq.Connection
+	connNotify chan *rabbitmq.Error
+
+	channels sync.Map
 }
 
 // NewRabbit redis模式
@@ -25,58 +30,73 @@ func NewRabbit(addr, accessKey, secretKey, vhost string) *Rabbit {
 	}
 
 	endpoint := fmt.Sprintf("amqp://%v:%v@%v", accessKey, secretKey, addr)
-	publishConn, err := rabbitmq.DialConfig(endpoint, config)
-	if err != nil {
-		logger.Errorf("Error to connect to RabbitMQ: %v", err.Error())
-	}
-
-	subscribeConn, err := rabbitmq.DialConfig(endpoint, config)
+	conn, err := rabbitmq.DialConfig(endpoint, config)
 	if err != nil {
 		logger.Errorf("Error to connect to RabbitMQ: %v", err.Error())
 	}
 
 	r := &Rabbit{
-		publishConn:   publishConn,
-		subscribeConn: subscribeConn,
-		endpoint:      endpoint,
+		config:     config,
+		endpoint:   endpoint,
+		conn:       conn,
+		connNotify: make(chan *rabbitmq.Error),
 	}
+
+	go r.reconnect()
+
 	return r
+}
+
+func (m *Rabbit) reconnect() {
+	for {
+		select {
+		case errNotify := <-m.connNotify:
+
+			logger.Errorf("RabbitMQ connection closed: %v", errNotify.Error())
+			conn, err := rabbitmq.DialConfig(m.endpoint, m.config)
+			if err != nil {
+				panic(fmt.Sprintf("Error to reconnect to RabbitMQ: %v", err.Error()))
+			}
+			m.conn = conn
+		}
+
+		if m.conn.IsClosed() == false {
+			m.channels.Range(func(k, v interface{}) bool {
+				ch, ok := v.(*rabbitmq.Channel)
+				if ok {
+					err := ch.Close()
+					if err != nil {
+						logger.Errorf("Error to close channel: %v", err.Error())
+						return false
+					}
+				}
+				return true
+			})
+		}
+
+		for err := range m.connNotify {
+			logger.Errorf("RabbitMQ connection closed: %v", err.Error())
+		}
+	}
 }
 
 // Close 关闭连接
 func (m *Rabbit) Close() {
-	if m.publishConn != nil {
-		ch, err := m.publishConn.Channel()
-		if err != nil {
-			logger.Errorf("Error to open a channel: %v", err.Error())
-		}
-		if ch != nil {
-			err = ch.Close()
+	m.channels.Range(func(k, v interface{}) bool {
+		ch, ok := v.(*rabbitmq.Channel)
+		if ok {
+			err := ch.Close()
 			if err != nil {
 				logger.Errorf("Error to close channel: %v", err.Error())
+				return false
 			}
 		}
-
-		err = m.publishConn.Close()
+		return true
+	})
+	if m.conn != nil {
+		err := m.conn.Close()
 		if err != nil {
 			logger.Errorf("Error to close publish connection: %v", err.Error())
-		}
-	}
-	if m.subscribeConn != nil {
-		ch, err := m.subscribeConn.Channel()
-		if err != nil {
-			logger.Errorf("Error to open a channel: %v", err.Error())
-		}
-		if ch != nil {
-			err = ch.Close()
-			if err != nil {
-				logger.Errorf("Error to close channel: %v", err.Error())
-			}
-		}
-
-		err = m.subscribeConn.Close()
-		if err != nil {
-			logger.Errorf("Error to close subscribe connection: %v", err.Error())
 		}
 	}
 }
@@ -85,15 +105,31 @@ func (m *Rabbit) Close() {
 func (m *Rabbit) PublishOnQueue(exchangeName, exchangeType, queueName, key, tag string, body interface{}) error {
 	var err error
 
-	channel, err := m.publishConn.Channel()
-	if err != nil {
-		logger.Errorf("Error to open a channel: %v", err.Error())
+	if m.conn.IsClosed() {
+		return fmt.Errorf("RabbitMQ connection is closed")
 	}
-	defer channel.Close()
+
+	var channel *rabbitmq.Channel
+	ch, ok := m.channels.Load(exchangeName)
+	if ok {
+		channel = ch.(*rabbitmq.Channel)
+		if channel == nil || channel.IsClosed() {
+			channel = nil
+		}
+	}
+	if channel == nil {
+		channel, err = m.conn.Channel()
+		if err != nil {
+			channel.Close()
+			return err
+		}
+
+		m.channels.Store(exchangeName, channel)
+	}
 
 	err = channel.ExchangeDeclare(exchangeName, exchangeType, true, false, false, false, nil)
 	if err != nil {
-		logger.Errorf("Error to declare a exchange: %v", err.Error())
+		return err
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -120,48 +156,43 @@ func (m *Rabbit) PublishOnQueue(exchangeName, exchangeType, queueName, key, tag 
 
 func (m *Rabbit) SubscribeToQueue(exchangeName, exchangeType, queueName, key, tag string, handlerFunc message.AmqpConsumerFunc) error {
 	var err error
-	channel, err := m.subscribeConn.Channel()
+	channel, err := m.conn.Channel()
 	if err != nil {
-		logger.Errorf("Error to open a channel: %v", err.Error())
+		return err
 	}
 	defer channel.Close()
 
 	err = channel.ExchangeDeclare(exchangeName, exchangeType, true, false, false, false, nil)
 	if err != nil {
-		logger.Errorf("Error to declare a exchange: %v", err.Error())
+		return err
 	}
 
 	queue, err := channel.QueueDeclare("", false, false, true, false, nil)
 	if err != nil {
-		logger.Errorf("Error to declare a queue: %v", err.Error())
+		return err
 	}
 
 	err = channel.QueueBind(queue.Name, key, exchangeName, false, nil)
 	if err != nil {
-		logger.Errorf("Error to bind a queue: %v", err.Error())
+		return err
 	}
 
 	deliver, err := channel.Consume(queue.Name, "", false, true, false, false, nil)
 	if err != nil {
-		logger.Errorf("Error to consumer a queue: %v", err.Error())
+		return err
 	}
 
 	var forever chan struct{}
 
-	go func() {
-		for d := range deliver {
-			err = handlerFunc(d.Body)
-			if err != nil {
-				logger.Errorf("Error to handle message: %v", err.Error())
-				err = d.Nack(true, true)
-			} else {
-				err = d.Ack(true)
-				if err != nil {
-					logger.Errorf("Error to ack message: %v", err.Error())
-				}
-			}
+	for d := range deliver {
+		err = handlerFunc(d.Body)
+		if err != nil {
+			err = d.Nack(true, true)
+		} else {
+			err = d.Ack(true)
 		}
-	}()
+		return err
+	}
 
 	<-forever
 
