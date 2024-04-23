@@ -49,6 +49,7 @@ func (m *Rabbit) reconnect() {
 	if err != nil {
 		panic(fmt.Sprintf("Error to reconnect to RabbitMQ: %v", err.Error()))
 	}
+	m.connNotify = m.conn.NotifyClose(make(chan *rabbitmq.Error))
 }
 
 func (m *Rabbit) keepAlive() {
@@ -93,12 +94,6 @@ func (m *Rabbit) Close() {
 		}
 		return true
 	})
-	if m.conn != nil {
-		err := m.conn.Close()
-		if err != nil {
-			logger.Errorf("Error to close publish connection: %v", err.Error())
-		}
-	}
 }
 
 // PublishOnQueue 发布消息
@@ -155,17 +150,22 @@ func (m *Rabbit) PublishOnQueue(exchangeName, exchangeType, queueName, key, tag 
 }
 
 func (m *Rabbit) SubscribeToQueue(exchangeName, exchangeType, queueName, key, tag string, handlerFunc message.AmqpConsumerFunc) error {
-	var err error
 
-	if m.conn.IsClosed() {
-		m.reconnect()
+	conn, err := rabbitmq.DialConfig(m.endpoint, m.config)
+	if err != nil {
+		panic(fmt.Sprintf("Error to reconnect to RabbitMQ: %v", err.Error()))
 	}
 
-	channel, err := m.conn.Channel()
+	channel, err := conn.Channel()
 	if err != nil {
+		_ = channel.Close()
+		_ = conn.Close()
 		return err
 	}
-	defer channel.Close()
+	defer func() {
+		_ = channel.Close()
+		_ = conn.Close()
+	}()
 
 	err = channel.ExchangeDeclare(exchangeName, exchangeType, true, false, false, false, nil)
 	if err != nil {
