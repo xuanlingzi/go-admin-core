@@ -30,34 +30,34 @@ func NewRabbit(addr, accessKey, secretKey, vhost string) *Rabbit {
 	}
 
 	endpoint := fmt.Sprintf("amqp://%v:%v@%v", accessKey, secretKey, addr)
-	conn, err := rabbitmq.DialConfig(endpoint, config)
-	if err != nil {
-		logger.Errorf("Error to connect to RabbitMQ: %v", err.Error())
-	}
 
 	r := &Rabbit{
 		config:     config,
 		endpoint:   endpoint,
-		conn:       conn,
 		connNotify: make(chan *rabbitmq.Error),
 	}
 
-	go r.reconnect()
+	r.reconnect()
+	go r.keepAlive()
 
 	return r
 }
 
 func (m *Rabbit) reconnect() {
+	var err error
+	m.conn, err = rabbitmq.DialConfig(m.endpoint, m.config)
+	if err != nil {
+		panic(fmt.Sprintf("Error to reconnect to RabbitMQ: %v", err.Error()))
+	}
+}
+
+func (m *Rabbit) keepAlive() {
 	for {
 		select {
 		case errNotify := <-m.connNotify:
 
 			logger.Errorf("RabbitMQ connection closed: %v", errNotify.Error())
-			conn, err := rabbitmq.DialConfig(m.endpoint, m.config)
-			if err != nil {
-				panic(fmt.Sprintf("Error to reconnect to RabbitMQ: %v", err.Error()))
-			}
-			m.conn = conn
+			m.reconnect()
 		}
 
 		if m.conn.IsClosed() == false {
@@ -106,7 +106,7 @@ func (m *Rabbit) PublishOnQueue(exchangeName, exchangeType, queueName, key, tag 
 	var err error
 
 	if m.conn.IsClosed() {
-		return fmt.Errorf("RabbitMQ connection is closed")
+		m.reconnect()
 	}
 
 	var channel *rabbitmq.Channel
@@ -156,6 +156,11 @@ func (m *Rabbit) PublishOnQueue(exchangeName, exchangeType, queueName, key, tag 
 
 func (m *Rabbit) SubscribeToQueue(exchangeName, exchangeType, queueName, key, tag string, handlerFunc message.AmqpConsumerFunc) error {
 	var err error
+
+	if m.conn.IsClosed() {
+		m.reconnect()
+	}
+
 	channel, err := m.conn.Channel()
 	if err != nil {
 		return err
@@ -182,8 +187,6 @@ func (m *Rabbit) SubscribeToQueue(exchangeName, exchangeType, queueName, key, ta
 		return err
 	}
 
-	var forever chan struct{}
-
 	for d := range deliver {
 		err = handlerFunc(d.Body)
 		if err != nil {
@@ -193,8 +196,6 @@ func (m *Rabbit) SubscribeToQueue(exchangeName, exchangeType, queueName, key, ta
 		}
 		return err
 	}
-
-	<-forever
 
 	return err
 }
