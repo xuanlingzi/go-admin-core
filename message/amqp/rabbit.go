@@ -158,6 +158,8 @@ func (m *Rabbit) SubscribeToQueue(exchangeName, exchangeType, queueName, key, ta
 		return err
 	}
 
+	<-make(chan struct{})
+
 	return err
 }
 
