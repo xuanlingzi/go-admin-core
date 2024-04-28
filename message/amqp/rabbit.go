@@ -7,7 +7,6 @@ import (
 	rabbitmq "github.com/rabbitmq/amqp091-go"
 	"github.com/xuanlingzi/go-admin-core/logger"
 	"github.com/xuanlingzi/go-admin-core/message"
-	"sync"
 	"time"
 )
 
@@ -17,8 +16,6 @@ type Rabbit struct {
 
 	conn       *rabbitmq.Connection
 	connNotify chan *rabbitmq.Error
-
-	channels sync.Map
 }
 
 // NewRabbit redis模式
@@ -61,20 +58,6 @@ func (m *Rabbit) keepAlive() {
 			m.reconnect()
 		}
 
-		if m.conn.IsClosed() == false {
-			m.channels.Range(func(k, v interface{}) bool {
-				ch, ok := v.(*rabbitmq.Channel)
-				if ok {
-					err := ch.Close()
-					if err != nil {
-						logger.Errorf("Error to close channel: %v", err.Error())
-						return false
-					}
-				}
-				return true
-			})
-		}
-
 		for err := range m.connNotify {
 			logger.Errorf("RabbitMQ connection closed: %v", err.Error())
 		}
@@ -83,18 +66,6 @@ func (m *Rabbit) keepAlive() {
 
 // Close 关闭连接
 func (m *Rabbit) Close() {
-	m.channels.Range(func(k, v interface{}) bool {
-		ch, ok := v.(*rabbitmq.Channel)
-		if ok {
-			err := ch.Close()
-			if err != nil {
-				logger.Errorf("Error to close channel: %v", err.Error())
-				return false
-			}
-		}
-		return true
-	})
-
 	_ = m.conn.Close()
 }
 
@@ -107,22 +78,12 @@ func (m *Rabbit) PublishOnQueue(exchangeName, exchangeType, queueName, key, tag 
 	}
 
 	var channel *rabbitmq.Channel
-	ch, ok := m.channels.Load(exchangeName)
-	if ok {
-		channel = ch.(*rabbitmq.Channel)
-		if channel == nil || channel.IsClosed() {
-			channel = nil
-		}
+	channel, err = m.conn.Channel()
+	if err != nil {
+		channel.Close()
+		return err
 	}
-	if channel == nil {
-		channel, err = m.conn.Channel()
-		if err != nil {
-			channel.Close()
-			return err
-		}
-
-		m.channels.Store(exchangeName, channel)
-	}
+	defer channel.Close()
 
 	err = channel.ExchangeDeclare(exchangeName, exchangeType, true, false, false, false, nil)
 	if err != nil {
