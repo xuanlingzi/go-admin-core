@@ -80,10 +80,23 @@ func (m *Rabbit) PublishOnQueue(exchangeName, exchangeType, queueName, key, tag 
 	var channel *rabbitmq.Channel
 	channel, err = m.conn.Channel()
 	if err != nil {
-		channel.Close()
+		if channel != nil {
+			err = channel.Close()
+			if err != nil {
+				logger.Errorf("RabbitMQ channel close error: %v", err.Error())
+			}
+		}
 		return err
 	}
-	defer channel.Close()
+	defer func() {
+		// 关闭 AMQP 通道，注意在关闭前检查是否为 nil
+		if channel != nil {
+			err = channel.Close()
+			if err != nil {
+				logger.Errorf("RabbitMQ channel close error: %v", err.Error())
+			}
+		}
+	}()
 
 	err = channel.ExchangeDeclare(exchangeName, exchangeType, true, false, false, false, nil)
 	if err != nil {
@@ -121,13 +134,33 @@ func (m *Rabbit) SubscribeToQueue(exchangeName, exchangeType, queueName, key, ta
 
 	channel, err := conn.Channel()
 	if err != nil {
-		_ = channel.Close()
-		_ = conn.Close()
+		if channel != nil {
+			err = channel.Close()
+			if err != nil {
+				logger.Errorf("RabbitMQ channel close error: %v", err.Error())
+			}
+		}
+		if conn != nil {
+			err = conn.Close()
+			if err != nil {
+				logger.Errorf("RabbitMQ connection close error: %v", err.Error())
+			}
+		}
 		return err
 	}
 	defer func() {
-		_ = channel.Close()
-		_ = conn.Close()
+		if channel != nil {
+			err = channel.Close()
+			if err != nil {
+				logger.Errorf("RabbitMQ channel close error: %v", err.Error())
+			}
+		}
+		if conn != nil {
+			err = conn.Close()
+			if err != nil {
+				logger.Errorf("RabbitMQ connection close error: %v", err.Error())
+			}
+		}
 	}()
 
 	err = channel.ExchangeDeclare(exchangeName, exchangeType, true, false, false, false, nil)
