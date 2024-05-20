@@ -1,8 +1,9 @@
 package config
 
 type WeChat struct {
-	Open *WeChatOption `json:"open,omitempty" yaml:"open"`
-	Mp   *WeChatOption `json:"mp,omitempty" yaml:"mp"`
+	Open        *WeChatOption `json:"open,omitempty" yaml:"open"`
+	Mp          *WeChatOption `json:"mp,omitempty" yaml:"mp"`
+	MiniProgram *WeChatOption `json:"mini_program,omitempty" yaml:"mini_program"`
 }
 
 var WeChatConfig = new(WeChat)
