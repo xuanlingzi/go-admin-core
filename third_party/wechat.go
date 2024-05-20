@@ -103,7 +103,15 @@ func (m *WeChatClient) GetJSApiTicket(accessToken string) (string, int, error) {
 	return ticket, expiresIn, nil
 }
 
-func (m *WeChatClient) GetConnectUrl(state, scope string, popUp bool) (string, error) {
+func (m *WeChatClient) GetConnectUrl(state, scope string, popUp bool, redirectPath string) (string, error) {
+
+	if strings.HasSuffix(m.callbackAddr, "/") {
+		m.callbackAddr = m.callbackAddr[:len(m.callbackAddr)-1]
+	}
+
+	if strings.HasPrefix(redirectPath, "/") == false {
+		redirectPath = fmt.Sprintf("/%s", redirectPath)
+	}
 
 	var connectUrl string
 	if strings.EqualFold(m.appType, "open") {
@@ -120,7 +128,7 @@ func (m *WeChatClient) GetConnectUrl(state, scope string, popUp bool) (string, e
 		connectUrl = fmt.Sprintf("%v?appid=%v&redirect_uri=%v&response_type=code&scope=%v&state=%v&forcePopup=%v#wechat_redirect",
 			WeChatQRConnectAddr,
 			m.appId,
-			m.callbackAddr,
+			url.QueryEscape(fmt.Sprintf("%s%s", m.callbackAddr, redirectPath)),
 			scope,
 			state,
 			popUp,
@@ -139,7 +147,7 @@ func (m *WeChatClient) GetConnectUrl(state, scope string, popUp bool) (string, e
 		connectUrl = fmt.Sprintf("%v?appid=%v&redirect_uri=%v&response_type=code&scope=%v&state=%v&forcePopup=%v#wechat_redirect",
 			WeChatAppConnectAddr,
 			m.appId,
-			url.QueryEscape(m.callbackAddr),
+			url.QueryEscape(fmt.Sprintf("%s%s", m.callbackAddr, redirectPath)),
 			scope,
 			state,
 			popUp,
