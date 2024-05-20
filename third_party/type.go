@@ -39,7 +39,7 @@ var (
 
 type AdapterThirdParty interface {
 	String() string
-	GetConnectUrl(state, scope string, popUp bool) (string, error)
+	GetConnectUrl(state, scope string, popUp bool, redirectPath string) (string, error)
 	GetAccessToken() (string, int, error)
 	GetJSApiTicket(accessToken string) (string, int, error)
 	GetUserAccessToken(code, state string) (string, error)

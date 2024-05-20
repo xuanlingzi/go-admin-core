@@ -73,11 +73,11 @@ func (e *ThirdParty) GetJSApiTicket(cache storage.AdapterCache) (string, error) 
 	return ticket, err
 }
 
-func (e *ThirdParty) GetConnectUrl(state, scope string, popUp bool) (string, error) {
+func (e *ThirdParty) GetConnectUrl(state, scope string, popUp bool, redirectPath string) (string, error) {
 	if e.thirdParty == nil {
 		return "", errors.New("third party not initialized")
 	}
-	return e.thirdParty.GetConnectUrl(state, scope, popUp)
+	return e.thirdParty.GetConnectUrl(state, scope, popUp, redirectPath)
 }
 
 func (e *ThirdParty) GetUserAccessToken(code, state string) (string, error) {
