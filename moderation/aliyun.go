@@ -52,7 +52,7 @@ func (rc *AliyunAuditClient) AuditText(content string, result *int, label *strin
 	return nil
 }
 
-func (rc *AliyunAuditClient) AuditImage(url string, result *int, label *string, score *int, detail *string, jobId *string) error {
+func (rc *AliyunAuditClient) AuditImage(url string, fileSize int, result *int, label *string, score *int, detail *string, jobId *string) error {
 
 	return nil
 }

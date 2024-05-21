@@ -106,7 +106,7 @@ func (rc *HuaweiAuditClient) AuditText(content string, result *int, label *strin
 	return nil
 }
 
-func (rc *HuaweiAuditClient) AuditImage(url string, result *int, label *string, score *int, detail *string, jobId *string) error {
+func (rc *HuaweiAuditClient) AuditImage(url string, fileSize int, result *int, label *string, score *int, detail *string, jobId *string) error {
 
 	eventType := "article"
 

@@ -105,7 +105,7 @@ func (rc *TencentAuditClient) AuditText(content string, result *int, label *stri
 	return nil
 }
 
-func (rc *TencentAuditClient) AuditImage(url string, result *int, label *string, score *int, detail *string, jobId *string) error {
+func (rc *TencentAuditClient) AuditImage(url string, fileSize int, result *int, label *string, score *int, detail *string, jobId *string) error {
 
 	opt := cos.ImageRecognitionOptions{
 		CIProcess:  "sensitive-content-recognition",
@@ -114,6 +114,10 @@ func (rc *TencentAuditClient) AuditImage(url string, result *int, label *string,
 		Interval:   5,
 		MaxFrames:  100,
 		Callback:   rc.callbackUrl,
+	}
+
+	if fileSize >= 5*1024*1024 {
+		opt.LargeImageDetect = 1
 	}
 
 	response, _, err := rc.client.CI.ImageAuditing(context.TODO(), "", &opt)

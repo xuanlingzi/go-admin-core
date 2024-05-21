@@ -31,8 +31,8 @@ func (e *Moderation) AuditText(content string, result *int, label *string, score
 }
 
 // AuditImage 图片审核
-func (e *Moderation) AuditImage(url string, result *int, label *string, score *int, detail *string, jobId *string) error {
-	return e.moderation.AuditImage(url, result, label, score, detail, jobId)
+func (e *Moderation) AuditImage(url string, fileSize int, result *int, label *string, score *int, detail *string, jobId *string) error {
+	return e.moderation.AuditImage(url, fileSize, result, label, score, detail, jobId)
 }
 
 // AuditVideo 视频审核
