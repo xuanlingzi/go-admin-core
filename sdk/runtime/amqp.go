@@ -23,6 +23,6 @@ func (e *Amqp) PublishOnQueue(exchangeName, exchangeType, queueName, key, body s
 }
 
 // SubscribeToQueue 消费消息
-func (e *Amqp) SubscribeToQueue(exchangeName, exchangeType, queueName, key, tag string, f message.AmqpConsumerFunc) error {
-	return e.amqp.SubscribeToQueue(exchangeName, exchangeType, queueName, key, tag, f)
+func (e *Amqp) SubscribeToQueue(exchangeName, exchangeType, queueName, key, tag string, durableQueue bool, consumerExclusive bool, f message.AmqpConsumerFunc) error {
+	return e.amqp.SubscribeToQueue(exchangeName, exchangeType, queueName, key, tag, durableQueue, consumerExclusive, f)
 }

@@ -92,7 +92,7 @@ func (m *Rocket) PublishOnQueue(exchangeName, exchangeType, queueName, key, tag 
 	return err
 }
 
-func (m *Rocket) SubscribeToQueue(exchangeName, exchangeType, queueName, consumerName string, tag string, handlerFunc message.AmqpConsumerFunc) error {
+func (m *Rocket) SubscribeToQueue(exchangeName, exchangeType, queueName, consumerName string, tag string, durableQueue bool, consumerExclusive bool, handlerFunc message.AmqpConsumerFunc) error {
 	defer func() {
 		panic("Rocket consumer stop")
 	}()

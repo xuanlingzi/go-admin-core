@@ -118,14 +118,15 @@ func (m *Rabbit) PublishOnQueue(exchangeName, exchangeType, queueName, key, tag 
 	}
 
 	err = channel.PublishWithContext(ctx, exchangeName, key, false, false, rabbitmq.Publishing{
-		ContentType: "application/json",
-		Body:        b,
+		DeliveryMode: rabbitmq.Persistent,
+		ContentType:  "application/json",
+		Body:         b,
 	})
 
 	return err
 }
 
-func (m *Rabbit) SubscribeToQueue(exchangeName, exchangeType, queueName, key, tag string, handlerFunc message.AmqpConsumerFunc) error {
+func (m *Rabbit) SubscribeToQueue(exchangeName, exchangeType, queueName, key, tag string, durableQueue bool, consumerExclusive bool, handlerFunc message.AmqpConsumerFunc) error {
 
 	conn, err := rabbitmq.DialConfig(m.endpoint, m.config)
 	if err != nil {
@@ -163,12 +164,28 @@ func (m *Rabbit) SubscribeToQueue(exchangeName, exchangeType, queueName, key, ta
 		}
 	}()
 
-	err = channel.ExchangeDeclare(exchangeName, exchangeType, true, false, false, false, nil)
+	/*
+		Exchange 的 Durable：
+		持久化 exchange 在 RabbitMQ 重启后仍然存在。
+		持久化 exchange 本身不会保存消息，它们只是消息路由的定义。
+	*/
+	err = channel.ExchangeDeclare(exchangeName, exchangeType, durableQueue, false, false, false, nil)
 	if err != nil {
 		return err
 	}
 
-	queue, err := channel.QueueDeclare("", false, false, true, false, nil)
+	/*
+		Queue 的 Exclusive 属性指定队列是否是独占队列，独占队列有以下特性：
+		仅限当前连接：队列仅对声明它的连接可见。其他连接无法访问该队列。
+		自动删除：当声明该队列的连接关闭时，队列会被自动删除。
+		使用场景：独占队列通常用于临时性的、单个客户端使用的场景，比如临时RPC响应队列。
+
+		Queue 的 Durable：
+		持久化 queue 在 RabbitMQ 重启后仍然存在。
+		持久化 queue 可以保存持久化的消息，使这些消息在 RabbitMQ 重启后也能继续存在。
+		注意：要确保消息在重启后不丢失，消息本身也需要被标记为持久化的（将 deliveryMode 设置为 2）。
+	*/
+	queue, err := channel.QueueDeclare("", durableQueue, false, false, false, nil)
 	if err != nil {
 		return err
 	}
@@ -178,7 +195,13 @@ func (m *Rabbit) SubscribeToQueue(exchangeName, exchangeType, queueName, key, ta
 		return err
 	}
 
-	deliver, err := channel.Consume(queue.Name, "", false, true, false, false, nil)
+	/*
+		Consume 的 Exclusive 属性指定消费者是否是独占消费者，独占消费者有以下特性：
+		独占访问：队列仅能有一个独占消费者。如果已经有一个独占消费者，其他消费者（无论是否独占）都无法消费该队列。
+		优先级高：独占消费者比普通消费者优先级高，确保其唯一的消息消费权。
+		使用场景：独占消费者通常用于确保某个消费者独享队列消息的场景，比如在主备模式中，主节点需要独占消息消费权。
+	*/
+	deliver, err := channel.Consume(queue.Name, "", false, consumerExclusive, false, false, nil)
 	if err != nil {
 		return err
 	}
