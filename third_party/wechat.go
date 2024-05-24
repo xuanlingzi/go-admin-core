@@ -146,7 +146,7 @@ func (m *WeChatClient) GetConnectUrl(state, scope string, popUp bool, redirectPa
 			#wechat_redirect
 		*/
 		connectUrl = fmt.Sprintf("%s?appid=%s&redirect_uri=%s&response_type=code&scope=%s&state=%s&forcePopup=%v#wechat_redirect",
-			fmt.Sprintf("%s/connect/oauth2/authorize", WeChatAPIAddr),
+			fmt.Sprintf("%s/connect/oauth2/authorize", WeChatOpenAPIAddr),
 			m.appId,
 			url.QueryEscape(fmt.Sprintf("%s%s", m.callbackAddr, redirectPath)),
 			scope,
