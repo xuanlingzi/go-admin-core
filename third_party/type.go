@@ -18,23 +18,15 @@ const (
 )
 
 var (
-	WeChatQRLogin  = "snsapi_login"
-	WeChatUserInfo = "snsapi_userinfo"
-	WeChatBase     = "snsapi_base"
+	WeChatQRLogin     = "snsapi_login"
+	WeChatUserInfo    = "snsapi_userinfo"
+	WeChatBase        = "snsapi_base"
+	WeChatMiniProgram = "mini_program"
 )
 
 var (
-	WeChatAccessTokenAddr = "https://api.weixin.qq.com/cgi-bin/token"
-	WeChatJSApiTicketAddr = "https://api.weixin.qq.com/cgi-bin/ticket/getticket"
-
-	WeChatQRConnectAddr         = "https://open.weixin.qq.com/connect/qrconnect"
-	WeChatAppConnectAddr        = "https://open.weixin.qq.com/connect/oauth2/authorize"
-	WeChatUserAccessTokenAddr   = "https://api.weixin.qq.com/sns/oauth2/access_token"
-	WeChatRefreshUserTokenAddr  = "https://api.weixin.qq.com/sns/oauth2/refresh_token"
-	WeChatUserInfoAddr          = "https://api.weixin.qq.com/sns/userinfo"
-	WeChatSubscribeUserInfoAddr = "https://api.weixin.qq.com/cgi-bin/user/info"
-
-	WeChatTemplateMessageAddr = "https://api.weixin.qq.com/cgi-bin/message/template/send"
+	WeChatAPIAddr     = "https://api.weixin.qq.com"
+	WeChatOpenAPIAddr = "https://open.weixin.qq.com"
 )
 
 type AdapterThirdParty interface {
@@ -42,7 +34,7 @@ type AdapterThirdParty interface {
 	GetConnectUrl(state, scope string, popUp bool, redirectPath string) (string, error)
 	GetAccessToken() (string, int, error)
 	GetJSApiTicket(accessToken string) (string, int, error)
-	GetUserAccessToken(code, state string) (string, error)
+	GetUserAccessToken(code string) (string, error)
 	RefreshUserToken(refreshToken string, appId string) (string, error)
 	GetUserInfo(userAccessToken, openId string) (string, error)
 	GetSubscribeUserInfo(userAccessToken, openId string) (string, error)

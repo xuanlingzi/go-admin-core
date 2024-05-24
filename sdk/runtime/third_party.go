@@ -80,11 +80,11 @@ func (e *ThirdParty) GetConnectUrl(state, scope string, popUp bool, redirectPath
 	return e.thirdParty.GetConnectUrl(state, scope, popUp, redirectPath)
 }
 
-func (e *ThirdParty) GetUserAccessToken(code, state string) (string, error) {
+func (e *ThirdParty) GetUserAccessToken(code string) (string, error) {
 	if e.thirdParty == nil {
 		return "", errors.New("third party not initialized")
 	}
-	return e.thirdParty.GetUserAccessToken(code, state)
+	return e.thirdParty.GetUserAccessToken(code)
 }
 
 func (e *ThirdParty) RefreshUserToken(refreshToken string, appId string) (string, error) {

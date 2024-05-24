@@ -1,14 +1,14 @@
 package config
 
 type WeChat struct {
-	Open        *WeChatOption `json:"open,omitempty" yaml:"open"`
-	Mp          *WeChatOption `json:"mp,omitempty" yaml:"mp"`
-	MiniProgram *WeChatOption `json:"mini_program,omitempty" yaml:"mini_program"`
+	Platforms *[]WeChatOption `json:"platforms" yaml:"platforms"`
 }
 
 var WeChatConfig = new(WeChat)
 
 type WeChatOption struct {
+	Scope        string `json:"scope" yaml:"scope"`
+	Addr         string `json:"addr" yaml:"addr"`
 	AppId        string `json:"app_id" yaml:"app_id"`
 	AppSecret    string `json:"app_secret" yaml:"app_secret"`
 	AesKey       string `json:"aes_key" yaml:"aes_key"`

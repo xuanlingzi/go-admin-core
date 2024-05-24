@@ -17,7 +17,7 @@ type WeChatClient struct {
 	conn         *http.Client
 	appId        string
 	appSecret    string
-	appType      string
+	scope        string
 	callbackAddr string
 }
 
@@ -25,7 +25,7 @@ func GetWeChatClient(appId string) *http.Client {
 	return _wechatClient[appId]
 }
 
-func NewWeChatClient(client *http.Client, appId, appSecret, callbackAddr, appType string) *WeChatClient {
+func NewWeChatClient(client *http.Client, appId, appSecret, callbackAddr, scope string) *WeChatClient {
 	if client == nil {
 		client = &http.Client{
 			Transport: &http.Transport{},
@@ -36,7 +36,7 @@ func NewWeChatClient(client *http.Client, appId, appSecret, callbackAddr, appTyp
 		conn:         client,
 		appId:        appId,
 		appSecret:    appSecret,
-		appType:      appType,
+		scope:        scope,
 		callbackAddr: callbackAddr,
 	}
 	return c
@@ -64,8 +64,8 @@ func (m *WeChatClient) GetAccessToken() (string, int, error) {
 		&appid=APPID
 		&secret=APPSECRET
 	*/
-	accessTokenUrl := fmt.Sprintf("%v?appid=%v&secret=%v&grant_type=client_credential",
-		WeChatAccessTokenAddr,
+	accessTokenUrl := fmt.Sprintf("%s?appid=%s&secret=%s&grant_type=client_credential",
+		fmt.Sprintf("%s/cgi-bin/token", WeChatAPIAddr),
 		m.appId,
 		m.appSecret,
 	)
@@ -87,8 +87,8 @@ func (m *WeChatClient) GetJSApiTicket(accessToken string) (string, int, error) {
 		access_token=ACCESS_TOKEN
 		&type=jsapi
 	*/
-	ticketUrl := fmt.Sprintf("%v?type=%v&access_token=%v",
-		WeChatJSApiTicketAddr,
+	ticketUrl := fmt.Sprintf("%s?type=%s&access_token=%s",
+		fmt.Sprintf("%s/cgi-bin/ticket/getticket", WeChatAPIAddr),
 		"jsapi",
 		accessToken,
 	)
@@ -114,7 +114,8 @@ func (m *WeChatClient) GetConnectUrl(state, scope string, popUp bool, redirectPa
 	}
 
 	var connectUrl string
-	if strings.EqualFold(m.appType, "open") {
+	switch m.scope {
+	case WeChatQRLogin:
 		/*
 			url?
 			appid=APPID
@@ -125,15 +126,15 @@ func (m *WeChatClient) GetConnectUrl(state, scope string, popUp bool, redirectPa
 			&forcePopup=FORCE_POPUP
 			#wechat_redirect
 		*/
-		connectUrl = fmt.Sprintf("%v?appid=%v&redirect_uri=%v&response_type=code&scope=%v&state=%v&forcePopup=%v#wechat_redirect",
-			WeChatQRConnectAddr,
+		connectUrl = fmt.Sprintf("%s?appid=%s&redirect_uri=%s&response_type=code&scope=%s&state=%s&forcePopup=%v#wechat_redirect",
+			fmt.Sprintf("%s/connect/qrconnect", WeChatOpenAPIAddr),
 			m.appId,
 			url.QueryEscape(fmt.Sprintf("%s%s", m.callbackAddr, redirectPath)),
 			scope,
 			state,
 			popUp,
 		)
-	} else {
+	default:
 		/*
 			url?
 			appid=APPID
@@ -144,8 +145,8 @@ func (m *WeChatClient) GetConnectUrl(state, scope string, popUp bool, redirectPa
 			&forcePopup=FORCE_POPUP
 			#wechat_redirect
 		*/
-		connectUrl = fmt.Sprintf("%v?appid=%v&redirect_uri=%v&response_type=code&scope=%v&state=%v&forcePopup=%v#wechat_redirect",
-			WeChatAppConnectAddr,
+		connectUrl = fmt.Sprintf("%s?appid=%s&redirect_uri=%s&response_type=code&scope=%s&state=%s&forcePopup=%v#wechat_redirect",
+			fmt.Sprintf("%s/connect/oauth2/authorize", WeChatAPIAddr),
 			m.appId,
 			url.QueryEscape(fmt.Sprintf("%s%s", m.callbackAddr, redirectPath)),
 			scope,
@@ -156,20 +157,33 @@ func (m *WeChatClient) GetConnectUrl(state, scope string, popUp bool, redirectPa
 	return connectUrl, nil
 }
 
-func (m *WeChatClient) GetUserAccessToken(code, scope string) (string, error) {
-	/*
-		https://api.weixin.qq.com/sns/oauth2/access_token?
-		appid=APPID
-		&secret=SECRET
-		&code=CODE
-		&grant_type=authorization_code
-	*/
-	userAccessTokenUrl := fmt.Sprintf("%v?appid=%v&secret=%v&code=%v&grant_type=authorization_code",
-		WeChatUserAccessTokenAddr,
-		m.appId,
-		m.appSecret,
-		code,
-	)
+func (m *WeChatClient) GetUserAccessToken(code string) (string, error) {
+	var userAccessTokenUrl string
+	switch m.scope {
+	case WeChatMiniProgram:
+		/*
+			https://api.weixin.qq.com/sns/jscode2session?appid=APPID&secret=SECRET&js_code=JSCODE&grant_type=authorization_code
+		*/
+		userAccessTokenUrl = fmt.Sprintf("%s?appid=%s&secret=%s&js_code=%s&grant_type=authorization_code",
+			fmt.Sprintf("%s/sns/jscode2session", WeChatAPIAddr),
+			m.appId,
+			m.appSecret,
+			code)
+	default:
+		/*
+			https://api.weixin.qq.com/sns/oauth2/access_token?
+			appid=APPID
+			&secret=SECRET
+			&code=CODE
+			&grant_type=authorization_code
+		*/
+		userAccessTokenUrl = fmt.Sprintf("%s?appid=%s&secret=%s&code=%s&grant_type=authorization_code",
+			fmt.Sprintf("%s/sns/oauth2/access_token", WeChatAPIAddr),
+			m.appId,
+			m.appSecret,
+			code,
+		)
+	}
 
 	body, err := httpGet(userAccessTokenUrl)
 	if err != nil {
@@ -186,8 +200,8 @@ func (m *WeChatClient) RefreshUserToken(refreshToken string, appId string) (stri
 		&grant_type=refresh_token
 		&refresh_token=REFRESH_TOKEN
 	*/
-	refreshUserTokenUrl := fmt.Sprintf("%v?appid=%v&refresh_token=%v&grant_type=refresh_token",
-		WeChatRefreshUserTokenAddr,
+	refreshUserTokenUrl := fmt.Sprintf("%s?appid=%s&refresh_token=%s&grant_type=refresh_token",
+		fmt.Sprintf("%s/sns/oauth2/refresh_token", WeChatAPIAddr),
 		appId,
 		refreshToken,
 	)
@@ -208,8 +222,8 @@ func (m *WeChatClient) GetUserInfo(userAccessToken, openId string) (string, erro
 		&openid=OPENID
 		&lang=zh_CN
 	*/
-	userInfoUrl := fmt.Sprintf("%v?access_token=%v&openid=%v&lang=zh_CN",
-		WeChatUserInfoAddr,
+	userInfoUrl := fmt.Sprintf("%s?access_token=%s&openid=%s&lang=zh_CN",
+		fmt.Sprintf("%s/sns/userinfo", WeChatAPIAddr),
 		userAccessToken,
 		openId,
 	)
@@ -230,8 +244,8 @@ func (m *WeChatClient) GetSubscribeUserInfo(accessToken, openId string) (string,
 		&openid=%s
 		&lang=zh_CN
 	*/
-	userInfoUrl := fmt.Sprintf("%v?access_token=%v&openid=%v&lang=zh_CN",
-		WeChatSubscribeUserInfoAddr,
+	userInfoUrl := fmt.Sprintf("%s?access_token=%s&openid=%s&lang=zh_CN",
+		fmt.Sprintf("%s/cgi-bin/user/info", WeChatAPIAddr),
 		accessToken,
 		openId,
 	)
@@ -246,7 +260,7 @@ func (m *WeChatClient) GetSubscribeUserInfo(accessToken, openId string) (string,
 
 func (m *WeChatClient) SendTemplateMessage(accessToken, openId, templateId, redirectUrl string, data []byte, rootData []byte) (string, error) {
 
-	if strings.EqualFold(m.appType, "open") {
+	if strings.EqualFold(m.scope, "open") {
 		return "", errors.New("WeChat open app not support send template message")
 	}
 
@@ -285,7 +299,7 @@ func (m *WeChatClient) SendTemplateMessage(accessToken, openId, templateId, redi
 			   }
 		   }
 	*/
-	sendTemplateUrl := fmt.Sprintf("%v?access_token=%v", WeChatTemplateMessageAddr, accessToken)
+	sendTemplateUrl := fmt.Sprintf("%s/cgi-bin/message/template/send?access_token=%s", WeChatAPIAddr, accessToken)
 
 	var body []byte
 	if rootData != nil {
