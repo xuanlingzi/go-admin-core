@@ -168,6 +168,7 @@ func (m *Rabbit) SubscribeToQueue(exchangeName, exchangeType, queueName, key, ta
 		Exchange 的 Durable：
 		持久化 exchange 在 RabbitMQ 重启后仍然存在。
 		持久化 exchange 本身不会保存消息，它们只是消息路由的定义。
+		autoDelete 自动删除，当没有消费者连接到队列时，队列会被自动删除
 	*/
 	err = channel.ExchangeDeclare(exchangeName, exchangeType, durableQueue, false, false, false, nil)
 	if err != nil {
@@ -184,8 +185,9 @@ func (m *Rabbit) SubscribeToQueue(exchangeName, exchangeType, queueName, key, ta
 		持久化 queue 在 RabbitMQ 重启后仍然存在。
 		持久化 queue 可以保存持久化的消息，使这些消息在 RabbitMQ 重启后也能继续存在。
 		注意：要确保消息在重启后不丢失，消息本身也需要被标记为持久化的（将 deliveryMode 设置为 2）。
+		autoDelete 自动删除，当没有消费者连接到队列时，队列会被自动删除
 	*/
-	queue, err := channel.QueueDeclare("", durableQueue, false, false, false, nil)
+	queue, err := channel.QueueDeclare(queueName, durableQueue, false, false, false, nil)
 	if err != nil {
 		return err
 	}
