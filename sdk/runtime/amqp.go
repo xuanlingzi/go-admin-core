@@ -18,8 +18,8 @@ func (e *Amqp) String() string {
 }
 
 // PublishOnQueue 发送消息
-func (e *Amqp) PublishOnQueue(exchangeName, exchangeType, queueName, key, body string, tag string) error {
-	return e.amqp.PublishOnQueue(exchangeName, exchangeType, queueName, key, tag, body)
+func (e *Amqp) PublishOnQueue(exchangeName, exchangeType, queueName, key, tag string, durableQueue bool, body interface{}) error {
+	return e.amqp.PublishOnQueue(exchangeName, exchangeType, queueName, key, tag, durableQueue, body)
 }
 
 // SubscribeToQueue 消费消息

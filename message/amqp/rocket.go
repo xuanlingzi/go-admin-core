@@ -55,7 +55,7 @@ func (m *Rocket) String() string {
 }
 
 // PublishOnQueue 发布消息
-func (m *Rocket) PublishOnQueue(exchangeName, exchangeType, queueName, key, tag string, body interface{}) error {
+func (m *Rocket) PublishOnQueue(exchangeName, exchangeType, queueName, key, tag string, durableQueue bool, body interface{}) error {
 
 	var err error
 	// Topic所属的实例ID，在消息队列RocketMQ版控制台创建。

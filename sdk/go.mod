@@ -22,7 +22,7 @@ require (
 	github.com/shamsher31/goimgext v1.0.0
 	github.com/slok/go-http-metrics v0.11.0
 	github.com/smartystreets/goconvey v1.8.1
-	github.com/xuanlingzi/go-admin-core v1.7.8
+	github.com/xuanlingzi/go-admin-core v1.7.9
 	github.com/xuanlingzi/go-admin-core/plugins/logger/zap v1.5.6
 	github.com/xuanlingzi/gorm-adapter/v3 v3.2.4
 	github.com/xuanlingzi/redis-watcher/v2 v2.0.0-20240403100358-344726cffd00
@@ -147,4 +147,4 @@ replace (
 	github.com/smartystreets/assertions => github.com/smarty/assertions v1.1.0
 )
 
-//replace github.com/xuanlingzi/go-admin-core v1.7.5 => ../
+//replace github.com/xuanlingzi/go-admin-core v1.7.9 => ../

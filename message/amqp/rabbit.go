@@ -70,7 +70,7 @@ func (m *Rabbit) Close() {
 }
 
 // PublishOnQueue 发布消息
-func (m *Rabbit) PublishOnQueue(exchangeName, exchangeType, queueName, key, tag string, body interface{}) error {
+func (m *Rabbit) PublishOnQueue(exchangeName, exchangeType, queueName, key, tag string, durableQueue bool, body interface{}) error {
 	var err error
 
 	if m.conn.IsClosed() {
@@ -98,7 +98,7 @@ func (m *Rabbit) PublishOnQueue(exchangeName, exchangeType, queueName, key, tag 
 		}
 	}()
 
-	err = channel.ExchangeDeclare(exchangeName, exchangeType, true, false, false, false, nil)
+	err = channel.ExchangeDeclare(exchangeName, exchangeType, durableQueue, false, false, false, nil)
 	if err != nil {
 		return err
 	}
