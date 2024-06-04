@@ -7,6 +7,8 @@ import (
 	rabbitmq "github.com/rabbitmq/amqp091-go"
 	"github.com/xuanlingzi/go-admin-core/logger"
 	"github.com/xuanlingzi/go-admin-core/message"
+	"github.com/xuanlingzi/go-admin-core/sdk/pkg/utils"
+	"strings"
 	"time"
 )
 
@@ -73,6 +75,10 @@ func (m *Rabbit) Close() {
 func (m *Rabbit) PublishOnQueue(exchangeName, exchangeType, queueName, key, tag string, durableQueue bool, body interface{}) error {
 	var err error
 
+	if strings.EqualFold(exchangeType, "topic") && utils.StringIsEmpty(queueName) {
+		queueName = exchangeName
+	}
+
 	if m.conn.IsClosed() {
 		m.reconnect()
 	}
@@ -127,6 +133,13 @@ func (m *Rabbit) PublishOnQueue(exchangeName, exchangeType, queueName, key, tag 
 }
 
 func (m *Rabbit) SubscribeToQueue(exchangeName, exchangeType, queueName, key, tag string, durableQueue bool, consumerExclusive bool, handlerFunc message.AmqpConsumerFunc) error {
+
+	if utils.StringIsEmpty(queueName) {
+		queueName = exchangeName
+	}
+	if utils.StringIsEmpty(key) {
+		key = exchangeName
+	}
 
 	conn, err := rabbitmq.DialConfig(m.endpoint, m.config)
 	if err != nil {
