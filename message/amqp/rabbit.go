@@ -78,6 +78,9 @@ func (m *Rabbit) PublishOnQueue(exchangeName, exchangeType, queueName, key, tag 
 	if strings.EqualFold(exchangeType, "topic") && utils.StringIsEmpty(queueName) {
 		queueName = exchangeName
 	}
+	if utils.StringIsEmpty(key) {
+		key = exchangeName
+	}
 
 	if m.conn.IsClosed() {
 		m.reconnect()
