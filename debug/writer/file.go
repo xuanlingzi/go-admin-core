@@ -34,11 +34,7 @@ func NewFileWriter(opts ...Option) (*FileWriter, error) {
 	var filename string
 	var err error
 	for {
-		if p.opts.filename != "" {
-			filename = filepath.Join(fmt.Sprintf("%s/%s", p.opts.path, p.opts.filename))
-		} else {
-			filename = p.getFilename()
-		}
+		filename = p.getFilename()
 		_, err := os.Stat(filename)
 		if err != nil {
 			if os.IsNotExist(err) {
@@ -115,6 +111,9 @@ func (p *FileWriter) Write(data []byte) (n int, err error) {
 func (p *FileWriter) getFilename() string {
 	if p.FilenameFunc != nil {
 		return p.FilenameFunc(p)
+	}
+	if p.opts.filename != "" {
+		return filepath.Join(fmt.Sprintf("%s/%s", p.opts.path, p.opts.filename))
 	}
 	if p.opts.cap == 0 {
 		return filepath.Join(p.opts.path,
