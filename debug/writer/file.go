@@ -34,7 +34,11 @@ func NewFileWriter(opts ...Option) (*FileWriter, error) {
 	var filename string
 	var err error
 	for {
-		filename = p.getFilename()
+		if p.opts.filename != "" {
+			filename = filepath.Join(fmt.Sprintf("%s/%s", p.opts.path, p.opts.filename))
+		} else {
+			filename = p.getFilename()
+		}
 		_, err := os.Stat(filename)
 		if err != nil {
 			if os.IsNotExist(err) {

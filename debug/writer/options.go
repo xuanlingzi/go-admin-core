@@ -9,9 +9,10 @@ package writer
 
 // Options 可配置参数
 type Options struct {
-	path   string
-	suffix string //文件扩展名
-	cap    uint
+	path     string
+	filename string
+	suffix   string //文件扩展名
+	cap      uint
 }
 
 func setDefault() Options {
@@ -28,6 +29,13 @@ type Option func(*Options)
 func WithPath(s string) Option {
 	return func(o *Options) {
 		o.path = s
+	}
+}
+
+// WithFilename set path
+func WithFilename(s string) Option {
+	return func(o *Options) {
+		o.filename = s
 	}
 }
 

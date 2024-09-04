@@ -10,11 +10,12 @@ package logger
 type Option func(*options)
 
 type options struct {
-	driver string
-	path   string
-	level  string
-	stdout string
-	cap    uint
+	driver   string
+	filename string
+	path     string
+	level    string
+	stdout   string
+	cap      uint
 }
 
 func setDefault() options {
@@ -29,6 +30,12 @@ func setDefault() options {
 func WithType(s string) Option {
 	return func(o *options) {
 		o.driver = s
+	}
+}
+
+func WithFilename(s string) Option {
+	return func(o *options) {
+		o.filename = s
 	}
 }
 

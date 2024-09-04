@@ -4,6 +4,7 @@ import "github.com/xuanlingzi/go-admin-core/sdk/pkg/logger"
 
 type Logger struct {
 	Type      string `json:"type,omitempty" yaml:"type"`
+	Filename  string `json:"filename,omitempty" yaml:"filename"`
 	Path      string `json:"path,omitempty" yaml:"path"`
 	Level     string `json:"level,omitempty" yaml:"level"`
 	Stdout    string `json:"stdout,omitempty" yaml:"stdout"`
@@ -15,6 +16,7 @@ type Logger struct {
 func (e Logger) Setup() {
 	logger.SetupLogger(
 		logger.WithType(e.Type),
+		logger.WithFilename(e.Filename),
 		logger.WithPath(e.Path),
 		logger.WithLevel(e.Level),
 		logger.WithStdout(e.Stdout),

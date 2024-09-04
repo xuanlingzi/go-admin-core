@@ -30,6 +30,7 @@ func SetupLogger(opts ...Option) logger.Logger {
 	case "file":
 		output, err = writer.NewFileWriter(
 			writer.WithPath(op.path),
+			writer.WithFilename(op.filename),
 			writer.WithCap(op.cap<<10),
 		)
 		if err != nil {
