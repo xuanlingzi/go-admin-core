@@ -20,10 +20,11 @@ type AdapterCache interface {
 	HashKeys(hk string) ([]string, error)
 	HashGet(hk, key string) (string, error)
 	HashSet(hk, key string, val interface{}, expire int) error
+	HashIncrease(hk, key string, val interface{}) (int64, error)
 	HashDel(hk string, key ...string) error
 	HashDelPattern(hk, pattern string) error
-	Increase(key string) error
-	Decrease(key string) error
+	Increase(key string, val interface{}) (int64, error)
+	Decrease(key string, val interface{}) (int64, error)
 	Expire(key string, dur time.Duration) error
 	GetClient() interface{}
 }

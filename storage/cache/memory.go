@@ -2,7 +2,6 @@ package cache
 
 import (
 	"fmt"
-	"strconv"
 	"sync"
 	"time"
 
@@ -133,6 +132,14 @@ func (m *Memory) HashSet(hk, key string, val interface{}, expire int) error {
 	return m.setItem(hk+key, item)
 }
 
+func (m *Memory) HashIncrease(hk, key string, val interface{}) (int64, error) {
+	s, err := cast.ToInt64E(val)
+	if err != nil {
+		return 0, err
+	}
+	return m.calculate(hk+key, s)
+}
+
 func (m *Memory) HashDel(hk string, key ...string) error {
 	var err error
 	for _, k := range key {
@@ -148,34 +155,34 @@ func (m *Memory) HashDelPattern(hk, pattern string) error {
 	return m.DelPattern(hk + pattern)
 }
 
-func (m *Memory) Increase(key string) error {
-	return m.calculate(key, 1)
+func (m *Memory) Increase(key string, val interface{}) (int64, error) {
+	return m.calculate(key, cast.ToInt64(val))
 }
 
-func (m *Memory) Decrease(key string) error {
-	return m.calculate(key, -1)
+func (m *Memory) Decrease(key string, val interface{}) (int64, error) {
+	return m.calculate(key, cast.ToInt64(val))
 }
 
-func (m *Memory) calculate(key string, num int) error {
+func (m *Memory) calculate(key string, num int64) (int64, error) {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
 	item, err := m.getItem(key)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	if item == nil {
 		err = fmt.Errorf("%s not exist", key)
-		return err
+		return 0, err
 	}
-	var n int
-	n, err = cast.ToIntE(item.Value)
+	var n int64
+	n, err = cast.ToInt64E(item.Value)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	n += num
-	item.Value = strconv.Itoa(n)
-	return m.setItem(key, item)
+	item.Value = cast.ToString(n)
+	return n, m.setItem(key, item)
 }
 
 func (m *Memory) Expire(key string, dur time.Duration) error {

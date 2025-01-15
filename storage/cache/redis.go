@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/redis/go-redis/v9"
+	"github.com/spf13/cast"
 	"strings"
 	"time"
 )
@@ -93,9 +94,14 @@ func (r *Redis) HashGet(hk, key string) (string, error) {
 	return r.client.HGet(context.TODO(), hk, key).Result()
 }
 
-// HashSet delete key in specify redis's hashtable
+// HashSet set key in specify redis's hashtable
 func (r *Redis) HashSet(hk, key string, val interface{}, _ int) error {
 	return r.client.HSet(context.TODO(), hk, key, val).Err()
+}
+
+// HashIncrease increase key in specify redis's hashtable
+func (r *Redis) HashIncrease(hk, key string, val interface{}) (int64, error) {
+	return r.client.HIncrBy(context.TODO(), hk, key, cast.ToInt64(val)).Result()
 }
 
 // HashDel delete key in specify redis's hashtable
@@ -121,15 +127,15 @@ func (r *Redis) HashDelPattern(hk, pattern string) error {
 	return r.client.HDel(context.Background(), hk, delKeys...).Err()
 }
 
-func (r *Redis) Increase(key string) error {
-	return r.client.Incr(context.TODO(), key).Err()
+func (r *Redis) Increase(key string, val interface{}) (int64, error) {
+	return r.client.IncrBy(context.TODO(), key, cast.ToInt64(val)).Result()
 }
 
-func (r *Redis) Decrease(key string) error {
-	return r.client.Decr(context.TODO(), key).Err()
+func (r *Redis) Decrease(key string, val interface{}) (int64, error) {
+	return r.client.DecrBy(context.TODO(), key, cast.ToInt64(val)).Result()
 }
 
-// Set ttl
+// Expire Set ttl
 func (r *Redis) Expire(key string, dur time.Duration) error {
 	return r.client.Expire(context.TODO(), key, dur).Err()
 }

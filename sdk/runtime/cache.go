@@ -81,6 +81,10 @@ func (e Cache) HashSet(hk, key string, val interface{}, expire int) error {
 	return e.store.HashSet(e.prefix+intervalTenant+hk, key, val, expire)
 }
 
+func (e Cache) HashIncrease(hk, key string, val interface{}) (int64, error) {
+	return e.store.HashIncrease(e.prefix+intervalTenant+hk, key, val)
+}
+
 // HashDel delete one key:value pair in hashtable cache
 func (e Cache) HashDel(hk string, key ...string) error {
 	return e.store.HashDel(e.prefix+intervalTenant+hk, key...)
@@ -92,12 +96,12 @@ func (e Cache) HashDelPattern(hk, pattern string) error {
 }
 
 // Increase value
-func (e Cache) Increase(key string) error {
-	return e.store.Increase(e.prefix + intervalTenant + key)
+func (e Cache) Increase(key string, val interface{}) (int64, error) {
+	return e.store.Increase(e.prefix+intervalTenant+key, val)
 }
 
-func (e Cache) Decrease(key string) error {
-	return e.store.Decrease(e.prefix + intervalTenant + key)
+func (e Cache) Decrease(key string, val interface{}) (int64, error) {
+	return e.store.Decrease(e.prefix+intervalTenant+key, val)
 }
 
 func (e Cache) Expire(key string, dur time.Duration) error {
