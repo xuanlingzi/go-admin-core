@@ -6,6 +6,10 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
+	"time"
+
 	"github.com/wechatpay-apiv3/wechatpay-go/core"
 	"github.com/wechatpay-apiv3/wechatpay-go/core/cipher/decryptors"
 	"github.com/wechatpay-apiv3/wechatpay-go/core/cipher/encryptors"
@@ -15,9 +19,6 @@ import (
 	"github.com/wechatpay-apiv3/wechatpay-go/services/refunddomestic"
 	"github.com/wechatpay-apiv3/wechatpay-go/utils"
 	log "github.com/xuanlingzi/go-admin-core/logger"
-	"os"
-	"path/filepath"
-	"time"
 )
 
 var _wechatPay *core.Client
@@ -178,6 +179,24 @@ func (m *WeChatPay) Refund(orderId string, transactionId string, refundId string
 
 	jsonString, err := json.Marshal(resp)
 	log.Infof("微信支付退款成功, %s", *resp)
+
+	return string(jsonString), nil
+}
+
+func (m *WeChatPay) QueryOrder(orderId string) (string, error) {
+	api := jsapi.JsapiApiService{Client: m.client}
+	req := jsapi.QueryOrderByOutTradeNoRequest{
+		Mchid:      core.String(m.merchantId),
+		OutTradeNo: core.String(orderId),
+	}
+	resp, _, err := api.QueryOrderByOutTradeNo(context.Background(), req)
+	if err != nil {
+		e := err.(*core.APIError)
+		return "", fmt.Errorf("微信支付查询订单错误, %s", e.Message)
+	}
+
+	jsonString, err := json.Marshal(resp)
+	log.Infof("微信支付查询订单成功, %s", *resp)
 
 	return string(jsonString), nil
 }
