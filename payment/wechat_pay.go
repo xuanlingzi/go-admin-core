@@ -202,6 +202,6 @@ func (m *WeChatPay) QueryOrder(orderId string) (string, error) {
 }
 
 // GetClient 暴露原生client
-func (m *WeChatPay) GetClient() *core.Client {
+func (m *WeChatPay) GetClient() interface{} {
 	return m.client
 }

@@ -23,7 +23,7 @@ require (
 	github.com/slok/go-http-metrics v0.13.0
 	github.com/smartystreets/goconvey v1.8.1
 	github.com/spf13/cast v1.7.1
-	github.com/xuanlingzi/go-admin-core v1.7.15
+	github.com/xuanlingzi/go-admin-core v1.7.16
 	github.com/xuanlingzi/go-admin-core/plugins/logger/zap v1.7.14
 	github.com/xuanlingzi/gorm-adapter/v3 v3.2.4
 	github.com/xuanlingzi/redis-watcher/v2 v2.0.0-20240403100358-344726cffd00
