@@ -3,11 +3,12 @@ package jwtauth
 import (
 	"crypto/rsa"
 	"errors"
-	"github.com/xuanlingzi/go-admin-core/sdk/pkg/utils"
 	"net/http"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/xuanlingzi/go-admin-core/sdk/pkg/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
@@ -43,17 +44,17 @@ type GinJWTMiddleware struct {
 	// Callback function that should perform the authentication of the user based on login info.
 	// Must return user data as user identifier, it will be stored in Claim Array. Required.
 	// Check error (e) to determine the appropriate error message.
-	Authenticator func(c *gin.Context) (interface{}, error)
+	Authenticator func(c *gin.Context) (interface{}, int, error)
 
 	// Callback function that should perform the authentication of the user based on WeChat auth info.
 	// Must return user data as user identifier, it will be stored in Claim Array. Required.
 	// Check error (e) to determine the appropriate error message.
-	WeChatAuthenticator func(c *gin.Context) (interface{}, error)
+	WeChatAuthenticator func(c *gin.Context) (interface{}, int, error)
 
 	// Callback function that should perform the authentication of the user based on two factor auth info.
 	// Must return user data as user identifier, it will be stored in Claim Array. Required.
 	// Check error (e) to determine the appropriate error message.
-	TwoFactorAuthenticator func(c *gin.Context) (interface{}, error)
+	TwoFactorAuthenticator func(c *gin.Context) (interface{}, int, error)
 
 	// Callback function that should perform the authorization of the authenticated user. Called
 	// only after an authentication success. Must return true on success, false on failure.
@@ -420,17 +421,17 @@ func (mw *GinJWTMiddleware) MiddlewareFunc() gin.HandlerFunc {
 func (mw *GinJWTMiddleware) middlewareImpl(c *gin.Context) {
 	claims, err := mw.GetClaimsFromJWT(c)
 	if err != nil {
-		mw.unauthorized(c, http.StatusUnauthorized, mw.HTTPStatusMessageFunc(err, c))
+		mw.unauthorized(c, http.StatusUnauthorized, mw.HTTPStatusMessageFunc(err, c), nil)
 		return
 	}
 
 	exp, err := claims.Exp()
 	if err != nil {
-		mw.unauthorized(c, http.StatusBadRequest, mw.HTTPStatusMessageFunc(err, c))
+		mw.unauthorized(c, http.StatusBadRequest, mw.HTTPStatusMessageFunc(err, c), nil)
 		return
 	}
 	if exp < mw.TimeFunc().Unix() {
-		mw.unauthorized(c, 6401, mw.HTTPStatusMessageFunc(ErrExpiredToken, c))
+		mw.unauthorized(c, 6401, mw.HTTPStatusMessageFunc(ErrExpiredToken, c), nil)
 		return
 	}
 
@@ -442,7 +443,7 @@ func (mw *GinJWTMiddleware) middlewareImpl(c *gin.Context) {
 	}
 
 	if !mw.Authorizator(identity, c) {
-		mw.unauthorized(c, http.StatusForbidden, mw.HTTPStatusMessageFunc(ErrForbidden, c))
+		mw.unauthorized(c, http.StatusForbidden, mw.HTTPStatusMessageFunc(ErrForbidden, c), nil)
 		return
 	}
 
@@ -471,17 +472,12 @@ func (mw *GinJWTMiddleware) GetClaimsFromJWT(c *gin.Context) (MapClaims, error) 
 // Reply will be of the form {"token": "TOKEN"}.
 func (mw *GinJWTMiddleware) LoginHandler(c *gin.Context) {
 	if mw.Authenticator == nil {
-		mw.unauthorized(c, http.StatusInternalServerError, mw.HTTPStatusMessageFunc(ErrMissingAuthenticatorFunc, c))
+		mw.unauthorized(c, http.StatusInternalServerError, mw.HTTPStatusMessageFunc(ErrMissingAuthenticatorFunc, c), nil)
 		return
 	}
-	data, err := mw.Authenticator(c)
+	data, statusCode, err := mw.Authenticator(c)
 	if err != nil {
-		if errors.Is(err, ErrInvalidOver3Times) || errors.Is(err, ErrInvalidNeedTFA) || errors.Is(err, ErrInvalidVerificationCode) {
-			mw.tfaUauthorized(c, 0, err.Error(), data)
-			return
-		}
-
-		mw.unauthorized(c, 400, mw.HTTPStatusMessageFunc(err, c))
+		mw.unauthorized(c, statusCode, mw.HTTPStatusMessageFunc(err, c), data)
 		return
 	}
 
@@ -493,12 +489,12 @@ func (mw *GinJWTMiddleware) LoginHandler(c *gin.Context) {
 // Reply will be of the form {"token": "TOKEN"}.
 func (mw *GinJWTMiddleware) WeChatLoginHandler(c *gin.Context) {
 	if mw.WeChatAuthenticator == nil {
-		mw.unauthorized(c, http.StatusInternalServerError, mw.HTTPStatusMessageFunc(ErrMissingAuthenticatorFunc, c))
+		mw.unauthorized(c, http.StatusInternalServerError, mw.HTTPStatusMessageFunc(ErrMissingAuthenticatorFunc, c), nil)
 		return
 	}
-	data, err := mw.WeChatAuthenticator(c)
+	data, statusCode, err := mw.WeChatAuthenticator(c)
 	if err != nil {
-		mw.unauthorized(c, 400, mw.HTTPStatusMessageFunc(err, c))
+		mw.unauthorized(c, statusCode, mw.HTTPStatusMessageFunc(err, c), data)
 		return
 	}
 
@@ -510,12 +506,12 @@ func (mw *GinJWTMiddleware) WeChatLoginHandler(c *gin.Context) {
 // Reply will be of the form {"token": "TOKEN"}.
 func (mw *GinJWTMiddleware) TwoFactorAuthHandler(c *gin.Context) {
 	if mw.TwoFactorAuthenticator == nil {
-		mw.unauthorized(c, http.StatusInternalServerError, mw.HTTPStatusMessageFunc(ErrMissingAuthenticatorFunc, c))
+		mw.unauthorized(c, http.StatusInternalServerError, mw.HTTPStatusMessageFunc(ErrMissingAuthenticatorFunc, c), nil)
 		return
 	}
-	data, err := mw.TwoFactorAuthenticator(c)
+	data, statusCode, err := mw.TwoFactorAuthenticator(c)
 	if err != nil {
-		mw.unauthorized(c, 400, mw.HTTPStatusMessageFunc(err, c))
+		mw.unauthorized(c, statusCode, mw.HTTPStatusMessageFunc(err, c), data)
 		return
 	}
 
@@ -537,7 +533,7 @@ func (mw *GinJWTMiddleware) authorized(c *gin.Context, data interface{}) {
 	tokenString, err := mw.signedString(token)
 
 	if err != nil {
-		mw.unauthorized(c, http.StatusOK, mw.HTTPStatusMessageFunc(ErrFailedTokenCreation, c))
+		mw.unauthorized(c, http.StatusOK, mw.HTTPStatusMessageFunc(ErrFailedTokenCreation, c), nil)
 		return
 	}
 
@@ -575,7 +571,7 @@ func (mw *GinJWTMiddleware) signedString(token *jwt.Token) (string, error) {
 func (mw *GinJWTMiddleware) RefreshHandler(c *gin.Context) {
 	tokenString, expire, err := mw.RefreshToken(c)
 	if err != nil {
-		mw.unauthorized(c, http.StatusUnauthorized, mw.HTTPStatusMessageFunc(err, c))
+		mw.unauthorized(c, http.StatusUnauthorized, mw.HTTPStatusMessageFunc(err, c), nil)
 		return
 	}
 
@@ -775,22 +771,13 @@ func (mw *GinJWTMiddleware) ParseTokenString(token string) (*jwt.Token, error) {
 	})
 }
 
-func (mw *GinJWTMiddleware) tfaUauthorized(c *gin.Context, code int, message string, data interface{}) {
+func (mw *GinJWTMiddleware) unauthorized(c *gin.Context, code int, message string, data interface{}) {
 	c.Header("WWW-Authenticate", "JWT realm="+mw.Realm)
 	if !mw.DisabledAbort {
 		c.Abort()
 	}
 
 	mw.Unauthorized(c, code, message, data)
-}
-
-func (mw *GinJWTMiddleware) unauthorized(c *gin.Context, code int, message string) {
-	c.Header("WWW-Authenticate", "JWT realm="+mw.Realm)
-	if !mw.DisabledAbort {
-		c.Abort()
-	}
-
-	mw.Unauthorized(c, code, message, nil)
 }
 
 // ExtractClaims help to extract the JWT claims
