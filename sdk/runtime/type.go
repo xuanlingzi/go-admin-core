@@ -87,6 +87,11 @@ type Runtime interface {
 	GetAmqpAdapters() map[string]message.AdapterAmqp
 	GetAmqpKey(key string) message.AdapterAmqp
 
+	SetMqttAdapter(string, message.AdapterMqtt)
+	GetMqttAdapter() message.AdapterMqtt
+	GetMqttAdapters() map[string]message.AdapterMqtt
+	GetMqttKey(key string) message.AdapterMqtt
+
 	SetThirdPartyAdapter(string, third_party.AdapterThirdParty)
 	GetThirdPartyAdapter() third_party.AdapterThirdParty
 	GetThirdPartyAdapters() map[string]third_party.AdapterThirdParty

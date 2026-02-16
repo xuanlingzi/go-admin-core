@@ -1,5 +1,7 @@
 package message
 
+import mqtt "github.com/eclipse/paho.mqtt.golang"
+
 const (
 	PrefixKey = "__host"
 )
@@ -23,3 +25,13 @@ type AdapterAmqp interface {
 }
 
 type AmqpConsumerFunc func([]byte) error
+
+type AdapterMqtt interface {
+	String() string
+	Subscribe(topic string, handlerFunc MqttConsumerFunc) error
+	Publish(topic string, payload interface{}) error
+	Close()
+}
+
+// MqttConsumerFunc defines mqtt subscribe callback.
+type MqttConsumerFunc func(client mqtt.Client, msg mqtt.Message)

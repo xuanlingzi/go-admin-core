@@ -1,9 +1,10 @@
 package runtime
 
 import (
-	"github.com/xuanlingzi/go-admin-core/sdk/pkg/utils"
 	"net/http"
 	"sync"
+
+	"github.com/xuanlingzi/go-admin-core/sdk/pkg/utils"
 
 	"github.com/casbin/casbin/v2"
 	"github.com/gin-gonic/gin"
@@ -36,6 +37,7 @@ type Application struct {
 	sms         map[string]message.AdapterSms
 	mail        map[string]message.AdapterMail
 	amqp        map[string]message.AdapterAmqp
+	mqtt        map[string]message.AdapterMqtt
 	thirdParty  map[string]third_party.AdapterThirdParty
 	lbs         map[string]lbs.AdapterLocationBasedService
 	payment     map[string]payment.AdapterPaymentService
@@ -148,6 +150,7 @@ func NewConfig() *Application {
 		sms:         make(map[string]message.AdapterSms),
 		mail:        make(map[string]message.AdapterMail),
 		amqp:        make(map[string]message.AdapterAmqp),
+		mqtt:        make(map[string]message.AdapterMqtt),
 		thirdParty:  make(map[string]third_party.AdapterThirdParty),
 		lbs:         make(map[string]lbs.AdapterLocationBasedService),
 		payment:     make(map[string]payment.AdapterPaymentService),
@@ -381,6 +384,30 @@ func (e *Application) GetAmqpKey(key string) message.AdapterAmqp {
 	e.mux.Lock()
 	defer e.mux.Unlock()
 	return e.amqp[key]
+}
+
+// SetMqttAdapter 设置MQTT适配器
+func (e *Application) SetMqttAdapter(key string, c message.AdapterMqtt) {
+	e.mux.Lock()
+	defer e.mux.Unlock()
+	e.mqtt[key] = c
+}
+
+// GetMqttAdapter 获取MQTT适配器
+func (e *Application) GetMqttAdapter() message.AdapterMqtt {
+	return e.GetMqttKey("*")
+}
+
+// GetMqttAdapters 获取MQTT适配器列表
+func (e *Application) GetMqttAdapters() map[string]message.AdapterMqtt {
+	return e.mqtt
+}
+
+// GetMqttKey 获取对应key的MQTT适配器
+func (e *Application) GetMqttKey(key string) message.AdapterMqtt {
+	e.mux.Lock()
+	defer e.mux.Unlock()
+	return e.mqtt[key]
 }
 
 // SetThirdPartyAdapter 设置缓存
