@@ -117,6 +117,13 @@ func (e *Api) MakeService(c *service.Service) *Api {
 	return e
 }
 
+// MakeServiceBase 返回填充后的 Service 基座（不绑定业务依赖）
+func (e *Api) MakeServiceBase() service.Service {
+	base := service.Service{}
+	e.MakeService(&base)
+	return base
+}
+
 // Error 通常错误数据处理
 func (e Api) Error(code int, err error, message ...string) {
 	response.Error(e.Context, code, err, message...)
