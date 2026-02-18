@@ -33,7 +33,9 @@ func (e *Api) AddError(err error) {
 	if e.Errors == nil {
 		e.Errors = err
 	} else if err != nil {
-		e.Logger.Error(err)
+		if e.Logger != nil {
+			e.Logger.Error(err)
+		}
 		e.Errors = fmt.Errorf("%v; %w", e.Errors, err)
 	}
 }
@@ -110,6 +112,25 @@ func (e *Api) MakeOrm() *Api {
 }
 
 func (e *Api) MakeService(c *service.Service) *Api {
+	if c == nil {
+		return e
+	}
+	if e != nil && e.Context != nil {
+		if e.Logger == nil {
+			e.Logger = GetRequestLogger(e.Context)
+		}
+		if e.Orm == nil {
+			db, err := pkg.GetOrm(e.Context)
+			if err != nil {
+				if e.Logger != nil {
+					e.Logger.Error(http.StatusInternalServerError, err, "数据库连接获取失败")
+				}
+				e.AddError(err)
+			} else {
+				e.Orm = db
+			}
+		}
+	}
 	c.Log = e.Logger
 	c.Orm = e.Orm
 	c.Cache = sdk.Runtime.GetCacheAdapter()

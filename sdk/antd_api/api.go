@@ -3,17 +3,19 @@ package antd_apis
 import (
 	"errors"
 	"fmt"
-	vd "github.com/bytedance/go-tagexpr/v2/validator"
-	"github.com/gin-gonic/gin/binding"
-	"github.com/xuanlingzi/go-admin-core/sdk/service"
 	"net/http"
 	"strconv"
 
+	vd "github.com/bytedance/go-tagexpr/v2/validator"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 	"github.com/xuanlingzi/go-admin-core/logger"
+	"github.com/xuanlingzi/go-admin-core/sdk"
 	"github.com/xuanlingzi/go-admin-core/sdk/api"
 	"github.com/xuanlingzi/go-admin-core/sdk/pkg"
 	"github.com/xuanlingzi/go-admin-core/sdk/pkg/response/antd"
+	"github.com/xuanlingzi/go-admin-core/sdk/service"
+	"github.com/xuanlingzi/go-admin-core/storage"
 	"gorm.io/gorm"
 )
 
@@ -22,6 +24,7 @@ type Api struct {
 	Logger  *logger.Helper
 	Orm     *gorm.DB
 	Errors  error
+	Cache   storage.AdapterCache
 }
 
 // GetLogger 获取上下文提供的日志
@@ -71,6 +74,7 @@ func (e *Api) Custom(data gin.H) {
 func (e *Api) MakeContext(c *gin.Context) *Api {
 	e.Context = c
 	e.Logger = api.GetRequestLogger(c)
+	e.Errors = nil
 	return e
 }
 
@@ -120,8 +124,29 @@ func (e *Api) MakeOrm() *Api {
 }
 
 func (e *Api) MakeService(c *service.Service) *Api {
+	if c == nil {
+		return e
+	}
+	if e != nil && e.Context != nil {
+		if e.Logger == nil {
+			e.Logger = api.GetRequestLogger(e.Context)
+		}
+		if e.Orm == nil {
+			db, err := pkg.GetOrm(e.Context)
+			if err != nil {
+				if e.Logger != nil {
+					e.Logger.Error(http.StatusInternalServerError, err, "数据库连接获取失败")
+				}
+				e.AddError(err)
+			} else {
+				e.Orm = db
+			}
+		}
+	}
 	c.Log = e.Logger
 	c.Orm = e.Orm
+	c.Cache = sdk.Runtime.GetCacheAdapter()
+	e.Cache = c.Cache
 	return e
 }
 
@@ -136,8 +161,10 @@ func (e *Api) AddError(err error) {
 	if e.Errors == nil {
 		e.Errors = err
 	} else if err != nil {
-		e.Logger.Error(err)
-		e.Errors = fmt.Errorf("%v; %w", e.Error, err)
+		if e.Logger != nil {
+			e.Logger.Error(err)
+		}
+		e.Errors = fmt.Errorf("%v; %w", e.Errors, err)
 	}
 }
 
