@@ -13,3 +13,18 @@ type AdapterPaymentService interface {
 	QueryOrder(orderId string) (string, error)
 	GetClient() interface{}
 }
+
+type AdapterLeshuaService interface {
+	String() string
+	Close() error
+	PayByAuthCode(merchantID string, thirdOrderID string, authCode string, amountFen int64, body string, shopNo string, posNo string, terminalType string, terminalID string, goodsDetail string, sceneInfo string) (map[string]string, error)
+	QueryOrder(merchantID, thirdOrderID string) (map[string]string, error)
+	CloseOrder(merchantID, thirdOrderID, leshuaOrderID string) (map[string]string, error)
+	CollectTerminalID(merchantID, serialNum, existingDeviceID string) (string, error)
+	DeregisterTerminal(merchantID, deviceID string) (string, error)
+	QueryTerminalReport(merchantID, serialNum, deviceID string) (map[string]interface{}, error)
+	VerifyNotifySign(payload map[string]string) error
+	VerifyResponseSign(payload map[string]string) error
+	ParseNotifyXML(raw []byte) (map[string]string, error)
+	GetClient() interface{}
+}

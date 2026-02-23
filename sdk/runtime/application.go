@@ -41,6 +41,7 @@ type Application struct {
 	thirdParty  map[string]third_party.AdapterThirdParty
 	lbs         map[string]lbs.AdapterLocationBasedService
 	payment     map[string]payment.AdapterPaymentService
+	leshua      map[string]payment.AdapterLeshuaService
 	handler     map[string][]func(r *gin.RouterGroup, hand ...*gin.HandlerFunc)
 	routers     []Router
 	configs     map[string]interface{} // 系统参数
@@ -154,6 +155,7 @@ func NewConfig() *Application {
 		thirdParty:  make(map[string]third_party.AdapterThirdParty),
 		lbs:         make(map[string]lbs.AdapterLocationBasedService),
 		payment:     make(map[string]payment.AdapterPaymentService),
+		leshua:      make(map[string]payment.AdapterLeshuaService),
 		handler:     make(map[string][]func(r *gin.RouterGroup, hand ...*gin.HandlerFunc)),
 		routers:     make([]Router, 0),
 		configs:     make(map[string]interface{}),
@@ -480,6 +482,30 @@ func (e *Application) GetPaymentServiceKey(key string) payment.AdapterPaymentSer
 	e.mux.Lock()
 	defer e.mux.Unlock()
 	return e.payment[key]
+}
+
+// SetLeshuaServiceAdapter 设置乐刷
+func (e *Application) SetLeshuaServiceAdapter(key string, c payment.AdapterLeshuaService) {
+	e.mux.Lock()
+	defer e.mux.Unlock()
+	e.leshua[key] = c
+}
+
+// GetLeshuaServiceAdapter 获取乐刷
+func (e *Application) GetLeshuaServiceAdapter() payment.AdapterLeshuaService {
+	return e.GetLeshuaServiceKey("*")
+}
+
+// GetLeshuaServiceAdapters 获取乐刷
+func (e *Application) GetLeshuaServiceAdapters() map[string]payment.AdapterLeshuaService {
+	return e.leshua
+}
+
+// GetLeshuaServiceKey 获取乐刷
+func (e *Application) GetLeshuaServiceKey(key string) payment.AdapterLeshuaService {
+	e.mux.Lock()
+	defer e.mux.Unlock()
+	return e.leshua[key]
 }
 
 func (e *Application) SetHandler(key string, routerGroup func(r *gin.RouterGroup, hand ...*gin.HandlerFunc)) {
