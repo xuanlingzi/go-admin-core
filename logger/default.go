@@ -80,14 +80,14 @@ func logCallerfilePath(loggingFilePath string) string {
 }
 
 func (l *defaultLogger) Log(level Level, v ...interface{}) {
-	l.logf(level, "", v...)
+	l.writeMessage(level, fmt.Sprint(v...))
 }
 
 func (l *defaultLogger) Logf(level Level, format string, v ...interface{}) {
-	l.logf(level, format, v...)
+	l.writeMessage(level, fmt.Sprintf(format, v...))
 }
 
-func (l *defaultLogger) logf(level Level, format string, v ...interface{}) {
+func (l *defaultLogger) writeMessage(level Level, message string) {
 	// TODO decide does we need to write message if log level not used?
 	if !l.opts.Level.Enabled(level) {
 		return
@@ -107,11 +107,7 @@ func (l *defaultLogger) logf(level Level, format string, v ...interface{}) {
 		Timestamp: time.Now(),
 		Metadata:  make(map[string]string, len(fields)),
 	}
-	if format == "" {
-		rec.Message = fmt.Sprint(v...)
-	} else {
-		rec.Message = fmt.Sprintf(format, v...)
-	}
+	rec.Message = message
 
 	keys := make([]string, 0, len(fields))
 	for k, v := range fields {
