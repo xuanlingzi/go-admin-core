@@ -168,6 +168,15 @@ func (e *Api) AddError(err error) {
 	}
 }
 
+
+// MakeServiceBase returns initialized service.Service based on Api settings.
+func (e *Api) MakeServiceBase() service.Service {
+	var s service.Service
+	e.MakeService(&s)
+	return s
+}
+
+
 func (e Api) Translate(form, to interface{}) {
 	pkg.Translate(form, to)
 }
