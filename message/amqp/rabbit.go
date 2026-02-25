@@ -20,7 +20,7 @@ type Rabbit struct {
 }
 
 // NewRabbit redis模式
-func NewRabbit(addr, accessKey, secretKey, vhost string) *Rabbit {
+func NewRabbit(addr, accessKey, secretKey, vhost string) (*Rabbit, error) {
 	config := rabbitmq.Config{
 		Vhost:      vhost,
 		Properties: rabbitmq.NewConnectionProperties(),
@@ -35,19 +35,22 @@ func NewRabbit(addr, accessKey, secretKey, vhost string) *Rabbit {
 		connNotify: make(chan *rabbitmq.Error),
 	}
 
-	r.reconnect()
+	if err := r.reconnect(); err != nil {
+		return nil, err
+	}
 	go r.keepAlive()
 
-	return r
+	return r, nil
 }
 
-func (m *Rabbit) reconnect() {
+func (m *Rabbit) reconnect() error {
 	var err error
 	m.conn, err = rabbitmq.DialConfig(m.endpoint, m.config)
 	if err != nil {
-		panic(fmt.Sprintf("Error to reconnect to RabbitMQ: %v", err.Error()))
+		return fmt.Errorf("reconnect to RabbitMQ: %w", err)
 	}
 	m.connNotify = m.conn.NotifyClose(make(chan *rabbitmq.Error))
+	return nil
 }
 
 func (m *Rabbit) keepAlive() {
@@ -56,7 +59,9 @@ func (m *Rabbit) keepAlive() {
 		case errNotify := <-m.connNotify:
 
 			logger.Errorf("RabbitMQ connection closed: %v", errNotify.Error())
-			m.reconnect()
+			if err := m.reconnect(); err != nil {
+				logger.Errorf("RabbitMQ reconnect failed: %v", err.Error())
+			}
 		}
 
 		for err := range m.connNotify {
@@ -82,7 +87,9 @@ func (m *Rabbit) PublishOnQueue(exchangeName, exchangeType, queueName, key, tag 
 	}
 
 	if m.conn.IsClosed() {
-		m.reconnect()
+		if err := m.reconnect(); err != nil {
+			return fmt.Errorf("reconnect failed: %w", err)
+		}
 	}
 
 	var channel *rabbitmq.Channel
@@ -145,7 +152,7 @@ func (m *Rabbit) SubscribeToQueue(exchangeName, exchangeType, queueName, key, ta
 
 	conn, err := rabbitmq.DialConfig(m.endpoint, m.config)
 	if err != nil {
-		panic(fmt.Sprintf("Error to reconnect to RabbitMQ: %v", err.Error()))
+		return fmt.Errorf("reconnect to RabbitMQ: %w", err)
 	}
 
 	channel, err := conn.Channel()

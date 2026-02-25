@@ -13,19 +13,19 @@ import (
 func NewRedis(
 	producerOptions *redisqueue.ProducerOptions,
 	consumerOptions *redisqueue.ConsumerOptions,
-) *Redis {
-	var err error
+) (*Redis, error) {
 	r := &Redis{}
+	var err error
 	r.producer, err = r.newProducer(producerOptions)
 	if err != nil {
-		panic(fmt.Sprintf("Redis queue producer init error %s", err.Error()))
+		return nil, fmt.Errorf("redis queue producer init: %w", err)
 	}
 	r.consumer, err = r.newConsumer(consumerOptions)
 	if err != nil {
-		panic(fmt.Sprintf("Redis queue consumer init error %s", err.Error()))
+		return nil, fmt.Errorf("redis queue consumer init: %w", err)
 	}
 	r.stopErrors = make(chan struct{}, 1)
-	return r
+	return r, nil
 }
 
 // Redis cache implement

@@ -13,11 +13,12 @@ var smtpLock sync.Mutex
 var _smtp *smtp.Client
 
 type SmtpClient struct {
-	client *smtp.Client
-	host   string
-	port   string
-	auth   smtp.Auth
-	from   string
+	client             *smtp.Client
+	host               string
+	port               string
+	auth               smtp.Auth
+	from               string
+	insecureSkipVerify bool
 }
 
 // GetSmtpClient 获取smtp客户端
@@ -25,31 +26,31 @@ func GetSmtpClient() *smtp.Client {
 	return _smtp
 }
 
-func NewSmtpClient(client *smtp.Client, addr string, username, password, from string) *SmtpClient {
-	var err error
+func NewSmtpClient(client *smtp.Client, addr string, username, password, from string, insecureSkipVerify bool) (*SmtpClient, error) {
 	// client
 	// smtp每次发送邮件时重新初始化http连接
 
 	host, port, err := net.SplitHostPort(addr)
 	if err != nil {
-		panic(fmt.Sprintf("SMTP init error: %v", err))
+		return nil, fmt.Errorf("SMTP init error: %w", err)
 	}
 
 	auth := smtp.PlainAuth("", username, password, host)
 
 	c := &SmtpClient{
-		client: client,
-		host:   host,
-		port:   port,
-		auth:   auth,
-		from:   from,
+		client:             client,
+		host:               host,
+		port:               port,
+		auth:               auth,
+		from:               from,
+		insecureSkipVerify: insecureSkipVerify,
 	}
-	return c
+	return c, nil
 }
 
 func (m *SmtpClient) Setup() error {
 	tlsConfig := &tls.Config{
-		InsecureSkipVerify: true,
+		InsecureSkipVerify: m.insecureSkipVerify,
 		ServerName:         m.host,
 	}
 

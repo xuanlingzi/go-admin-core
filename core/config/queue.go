@@ -39,7 +39,7 @@ func (e Queue) Empty() bool {
 }
 
 // Setup 启用顺序 redis > 其他 > memory
-func (e Queue) Setup() storage.AdapterQueue {
+func (e Queue) Setup() (storage.AdapterQueue, error) {
 	if e.Redis != nil {
 		e.Redis.Consumer.ReclaimInterval = e.Redis.Consumer.ReclaimInterval * time.Second
 		e.Redis.Consumer.BlockingTimeout = e.Redis.Consumer.BlockingTimeout * time.Second
@@ -56,9 +56,9 @@ func (e Queue) Setup() storage.AdapterQueue {
 	if e.NSQ != nil {
 		cfg, err := e.NSQ.GetNSQOptions()
 		if err != nil {
-			panic(fmt.Sprintf("NSQ queue init error %s", err.Error()))
+			return nil, fmt.Errorf("NSQ queue init: %w", err)
 		}
 		return queue.NewNSQ(e.NSQ.Addresses, cfg, e.NSQ.ChannelPrefix)
 	}
-	return queue.NewMemory(e.Memory.PoolSize)
+	return queue.NewMemory(e.Memory.PoolSize), nil
 }

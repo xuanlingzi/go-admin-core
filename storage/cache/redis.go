@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/redis/go-redis/v9"
 	"github.com/spf13/cast"
-	"strings"
 	"time"
 )
 
@@ -26,7 +25,7 @@ func SetRedisClient(c *redis.Client) {
 }
 
 // NewRedis redis模式
-func NewRedis(client *redis.Client, options *redis.Options) *Redis {
+func NewRedis(client *redis.Client, options *redis.Options) (*Redis, error) {
 	if client == nil {
 		client = redis.NewClient(options)
 		_redis = client
@@ -34,11 +33,10 @@ func NewRedis(client *redis.Client, options *redis.Options) *Redis {
 	r := &Redis{
 		client: client,
 	}
-	err := r.connect()
-	if err != nil {
-		panic(fmt.Sprintf("Redis cache init error %s", err.Error()))
+	if err := r.connect(); err != nil {
+		return nil, fmt.Errorf("redis cache init: %w", err)
 	}
-	return r
+	return r, nil
 }
 
 // Redis cache implement
@@ -72,16 +70,35 @@ func (r *Redis) Del(key ...string) error {
 	return r.client.Del(context.TODO(), key...).Err()
 }
 
-// DelPattern delete key in redis
+// DelPattern delete key in redis using SCAN to avoid blocking
 func (r *Redis) DelPattern(pattern string) error {
-	keys, err := r.client.Keys(context.Background(), pattern).Result()
-	if err != nil {
-		if errors.Is(err, redis.Nil) {
-			return nil
+	ctx := context.Background()
+	var cursor uint64
+	var deletedCount int64
+
+	for {
+		var keys []string
+		var err error
+		keys, cursor, err = r.client.Scan(ctx, cursor, pattern, 100).Result()
+		if err != nil {
+			return fmt.Errorf("scan keys: %w", err)
 		}
-		return err
+
+		if len(keys) > 0 {
+			// 使用 Unlink 而不是 Del，更快（异步删除）
+			deleted, err := r.client.Unlink(ctx, keys...).Result()
+			if err != nil {
+				return fmt.Errorf("delete keys: %w", err)
+			}
+			deletedCount += deleted
+		}
+
+		if cursor == 0 {
+			break
+		}
 	}
-	return r.client.Del(context.Background(), keys...).Err()
+
+	return nil
 }
 
 // HashKeys from key
@@ -109,22 +126,37 @@ func (r *Redis) HashDel(hk string, key ...string) error {
 	return r.client.HDel(context.TODO(), hk, key...).Err()
 }
 
-// HashDelPattern delete key in specify redis's hashtable
+// HashDelPattern delete key in specify redis's hashtable using HSCAN
 func (r *Redis) HashDelPattern(hk, pattern string) error {
-	keys, err := r.client.HKeys(context.Background(), hk).Result()
-	if err != nil {
-		if errors.Is(err, redis.Nil) {
-			return nil
-		}
-		return err
-	}
+	ctx := context.Background()
+	var cursor uint64
 	var delKeys []string
-	for _, key := range keys {
-		if strings.Contains(key, pattern) {
-			delKeys = append(delKeys, key)
+
+	for {
+		var keys []string
+		var err error
+		keys, cursor, err = r.client.HScan(ctx, hk, cursor, pattern, 100).Result()
+		if err != nil {
+			if errors.Is(err, redis.Nil) {
+				return nil
+			}
+			return fmt.Errorf("hscan keys: %w", err)
+		}
+
+		// HScan returns key-value pairs, so we need to extract keys only
+		for i := 0; i < len(keys); i += 2 {
+			delKeys = append(delKeys, keys[i])
+		}
+
+		if cursor == 0 {
+			break
 		}
 	}
-	return r.client.HDel(context.Background(), hk, delKeys...).Err()
+
+	if len(delKeys) > 0 {
+		return r.client.HDel(ctx, hk, delKeys...).Err()
+	}
+	return nil
 }
 
 func (r *Redis) Increase(key string, val interface{}) (int64, error) {

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/hmac"
 	"crypto/md5"
+	"crypto/rand"
 	"crypto/sha1"
 	"crypto/sha256"
 	"encoding/base64"
@@ -12,12 +13,11 @@ import (
 	"fmt"
 	"github.com/xuanlingzi/go-admin-core/logger"
 	"io"
-	"math/rand"
+	"math/big"
 	"net"
 	"net/http"
 	"os"
 	"regexp"
-	"strconv"
 	"strings"
 	"time"
 
@@ -259,23 +259,30 @@ func FastSimpleUUID() string {
 	return strings.ReplaceAll(uuid.String(), "-", "")
 }
 
-func GenerateRandomCode(num int) string {
-	rand.Seed(time.Now().UnixNano())
-	var codes string
-	for i := 0; i < num; i++ {
-		codes += strconv.Itoa(rand.Intn(9))
+func GenerateRandomCode(num int) (string, error) {
+	const digits = "0123456789"
+	b := make([]byte, num)
+	for i := range b {
+		n, err := rand.Int(rand.Reader, big.NewInt(10))
+		if err != nil {
+			return "", fmt.Errorf("generate random code: %w", err)
+		}
+		b[i] = digits[n.Int64()]
 	}
-	return codes
+	return string(b), nil
 }
 
-func GenerateRandomString(num int) string {
-	strs := "01234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-	var codes string
-	for i := 0; i < num; i++ {
-		rand.Seed(time.Now().UnixNano())
-		codes += string(strs[rand.Intn(len(strs)-1)])
+func GenerateRandomString(num int) (string, error) {
+	const charset = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+	b := make([]byte, num)
+	for i := range b {
+		n, err := rand.Int(rand.Reader, big.NewInt(int64(len(charset))))
+		if err != nil {
+			return "", fmt.Errorf("generate random string: %w", err)
+		}
+		b[i] = charset[n.Int64()]
 	}
-	return codes
+	return string(b), nil
 }
 
 func CompareSignature(signature, message, accessSecret string) bool {
@@ -296,7 +303,10 @@ func UniqueId(prefix string) string {
 	}
 	now := time.Now().In(loc)
 	timeString := strings.Replace(now.Format("20060102150405.999"), ".", "", 1)
-	code := GenerateRandomCode(4)
+	code, err := GenerateRandomCode(4)
+	if err != nil {
+		return ""
+	}
 	return fmt.Sprintf("%s%s%s", prefix, timeString, code)
 }
 

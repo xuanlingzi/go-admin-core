@@ -3,12 +3,13 @@ package third_party
 import (
 	"errors"
 	"fmt"
-	"github.com/spf13/cast"
-	"github.com/tidwall/gjson"
-	"github.com/tidwall/sjson"
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/spf13/cast"
+	"github.com/tidwall/gjson"
+	"github.com/tidwall/sjson"
 )
 
 var _wechatClient = make(map[string]*http.Client)
@@ -105,9 +106,7 @@ func (m *WeChatClient) GetJSApiTicket(accessToken string) (string, int, error) {
 
 func (m *WeChatClient) GetConnectUrl(state, scope string, popUp bool, redirectPath string) (string, error) {
 
-	if strings.HasSuffix(m.callbackAddr, "/") {
-		m.callbackAddr = m.callbackAddr[:len(m.callbackAddr)-1]
-	}
+	m.callbackAddr = strings.TrimSuffix(m.callbackAddr, "/")
 
 	if strings.HasPrefix(redirectPath, "/") == false {
 		redirectPath = fmt.Sprintf("/%s", redirectPath)

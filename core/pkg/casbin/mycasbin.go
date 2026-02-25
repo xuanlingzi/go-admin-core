@@ -36,24 +36,29 @@ var (
 	once     sync.Once
 )
 
-func Setup(db *gorm.DB, _ string) *casbin.SyncedEnforcer {
+func Setup(db *gorm.DB, _ string) (*casbin.SyncedEnforcer, error) {
+	var setupErr error
 	once.Do(func() {
 		Apter, err := gormAdapter.NewAdapterByDBUseTableName(db, "sys", "casbin_rule")
 		if err != nil && err.Error() != "invalid DDL" {
-			panic(err)
+			setupErr = err
+			return
 		}
 
 		m, err := model.NewModelFromString(text)
 		if err != nil {
-			panic(err)
+			setupErr = err
+			return
 		}
 		enforcer, err = casbin.NewSyncedEnforcer(m, Apter)
 		if err != nil {
-			panic(err)
+			setupErr = err
+			return
 		}
 		err = enforcer.LoadPolicy()
 		if err != nil {
-			panic(err)
+			setupErr = err
+			return
 		}
 		// set redis watcher if redis config is not nil
 		if config.CacheConfig.Redis != nil {
@@ -66,16 +71,19 @@ func Setup(db *gorm.DB, _ string) *casbin.SyncedEnforcer {
 				IgnoreSelf: false,
 			})
 			if err != nil {
-				panic(err)
+				setupErr = err
+				return
 			}
 
 			err = w.SetUpdateCallback(updateCallback)
 			if err != nil {
-				panic(err)
+				setupErr = err
+				return
 			}
 			err = enforcer.SetWatcher(w)
 			if err != nil {
-				panic(err)
+				setupErr = err
+				return
 			}
 		}
 
@@ -83,7 +91,10 @@ func Setup(db *gorm.DB, _ string) *casbin.SyncedEnforcer {
 		enforcer.EnableLog(true)
 	})
 
-	return enforcer
+	if setupErr != nil {
+		return nil, setupErr
+	}
+	return enforcer, nil
 }
 
 func updateCallback(msg string) {

@@ -27,10 +27,10 @@ func getResourceReader(src string) (r *bytes.Reader, err error) {
 		return nil, errors.New("图片源错误")
 	}
 
-	//跳过证书验证
+	// 默认使用安全的TLS配置
 	c := &http.Client{
 		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: false},
 		},
 	}
 	if src[0:4] == "http" {

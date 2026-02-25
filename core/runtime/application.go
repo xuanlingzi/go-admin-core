@@ -58,6 +58,31 @@ type Routers struct {
 	List []Router
 }
 
+// Generic helper functions to reduce code duplication
+func setAdapter[T any](app *Application, m map[string]T, key string, adapter T) {
+	app.mux.Lock()
+	defer app.mux.Unlock()
+	if key == "" {
+		key = "*"
+	}
+	m[key] = adapter
+}
+
+func getAdapter[T any](app *Application, m map[string]T, key string) T {
+	app.mux.RLock()
+	defer app.mux.RUnlock()
+	if v, ok := m["*"]; ok && key != "*" {
+		return v
+	}
+	return m[key]
+}
+
+func getAllAdapters[T any](app *Application, m map[string]T) map[string]T {
+	app.mux.RLock()
+	defer app.mux.RUnlock()
+	return m
+}
+
 // SetDb 设置对应key的db
 func (e *Application) SetDb(key string, db *gorm.DB) {
 	e.mux.Lock()
@@ -279,9 +304,7 @@ func (e *Application) GetLockerPrefix(key string) storage.AdapterLocker {
 
 // SetSmsAdapter 设置缓存
 func (e *Application) SetSmsAdapter(key string, c message.AdapterSms) {
-	e.mux.Lock()
-	defer e.mux.Unlock()
-	e.sms[key] = c
+	setAdapter(e, e.sms, key, c)
 }
 
 // GetSmsAdapter 获取缓存
@@ -291,23 +314,17 @@ func (e *Application) GetSmsAdapter() message.AdapterSms {
 
 // GetSmsAdapters 获取缓存
 func (e *Application) GetSmsAdapters() map[string]message.AdapterSms {
-	e.mux.RLock()
-	defer e.mux.RUnlock()
-	return e.sms
+	return getAllAdapters(e, e.sms)
 }
 
 // GetSmsKey 获取带租户标记的sms
 func (e *Application) GetSmsKey(key string) message.AdapterSms {
-	e.mux.RLock()
-	defer e.mux.RUnlock()
-	return e.sms[key]
+	return getAdapter(e, e.sms, key)
 }
 
 // SetMailAdapter 设置缓存
 func (e *Application) SetMailAdapter(key string, c message.AdapterMail) {
-	e.mux.Lock()
-	defer e.mux.Unlock()
-	e.mail[key] = c
+	setAdapter(e, e.mail, key, c)
 }
 
 // GetMailAdapter 获取缓存
@@ -317,23 +334,17 @@ func (e *Application) GetMailAdapter() message.AdapterMail {
 
 // GetMailAdapters 获取缓存
 func (e *Application) GetMailAdapters() map[string]message.AdapterMail {
-	e.mux.RLock()
-	defer e.mux.RUnlock()
-	return e.mail
+	return getAllAdapters(e, e.mail)
 }
 
 // GetMailKey 获取带租户标记的mail
 func (e *Application) GetMailKey(key string) message.AdapterMail {
-	e.mux.RLock()
-	defer e.mux.RUnlock()
-	return e.mail[key]
+	return getAdapter(e, e.mail, key)
 }
 
 // SetFileStoreAdapter 设置缓存
 func (e *Application) SetFileStoreAdapter(key string, c storage.AdapterFileStore) {
-	e.mux.Lock()
-	defer e.mux.Unlock()
-	e.fileStores[key] = c
+	setAdapter(e, e.fileStores, key, c)
 }
 
 // GetFileStoreAdapter 获取缓存
@@ -343,23 +354,17 @@ func (e *Application) GetFileStoreAdapter() storage.AdapterFileStore {
 
 // GetFileStoreAdapters 获取缓存
 func (e *Application) GetFileStoreAdapters() map[string]storage.AdapterFileStore {
-	e.mux.RLock()
-	defer e.mux.RUnlock()
-	return e.fileStores
+	return getAllAdapters(e, e.fileStores)
 }
 
 // GetFileStoreKey 获取带租户标记的cos
 func (e *Application) GetFileStoreKey(key string) storage.AdapterFileStore {
-	e.mux.RLock()
-	defer e.mux.RUnlock()
-	return e.fileStores[key]
+	return getAdapter(e, e.fileStores, key)
 }
 
 // SetModerationAdapter 设置缓存
 func (e *Application) SetModerationAdapter(key string, c moderation.AdapterModeration) {
-	e.mux.Lock()
-	defer e.mux.Unlock()
-	e.moderation[key] = c
+	setAdapter(e, e.moderation, key, c)
 }
 
 // GetModerationAdapter 获取缓存
@@ -369,23 +374,17 @@ func (e *Application) GetModerationAdapter() moderation.AdapterModeration {
 
 // GetModerationAdapters 获取缓存
 func (e *Application) GetModerationAdapters() map[string]moderation.AdapterModeration {
-	e.mux.RLock()
-	defer e.mux.RUnlock()
-	return e.moderation
+	return getAllAdapters(e, e.moderation)
 }
 
 // GetModerationKey 获取带租户标记的cos
 func (e *Application) GetModerationKey(key string) moderation.AdapterModeration {
-	e.mux.RLock()
-	defer e.mux.RUnlock()
-	return e.moderation[key]
+	return getAdapter(e, e.moderation, key)
 }
 
 // SetAmqpAdapter 设置缓存
 func (e *Application) SetAmqpAdapter(key string, c message.AdapterAmqp) {
-	e.mux.Lock()
-	defer e.mux.Unlock()
-	e.amqp[key] = c
+	setAdapter(e, e.amqp, key, c)
 }
 
 // GetAmqpAdapter 获取缓存
@@ -395,23 +394,17 @@ func (e *Application) GetAmqpAdapter() message.AdapterAmqp {
 
 // GetAmqpAdapters 获取缓存
 func (e *Application) GetAmqpAdapters() map[string]message.AdapterAmqp {
-	e.mux.RLock()
-	defer e.mux.RUnlock()
-	return e.amqp
+	return getAllAdapters(e, e.amqp)
 }
 
 // GetAmqpKey 获取带租户标记的amqp
 func (e *Application) GetAmqpKey(key string) message.AdapterAmqp {
-	e.mux.RLock()
-	defer e.mux.RUnlock()
-	return e.amqp[key]
+	return getAdapter(e, e.amqp, key)
 }
 
 // SetMqttAdapter 设置MQTT适配器
 func (e *Application) SetMqttAdapter(key string, c message.AdapterMqtt) {
-	e.mux.Lock()
-	defer e.mux.Unlock()
-	e.mqtt[key] = c
+	setAdapter(e, e.mqtt, key, c)
 }
 
 // GetMqttAdapter 获取MQTT适配器
@@ -421,23 +414,17 @@ func (e *Application) GetMqttAdapter() message.AdapterMqtt {
 
 // GetMqttAdapters 获取MQTT适配器列表
 func (e *Application) GetMqttAdapters() map[string]message.AdapterMqtt {
-	e.mux.RLock()
-	defer e.mux.RUnlock()
-	return e.mqtt
+	return getAllAdapters(e, e.mqtt)
 }
 
 // GetMqttKey 获取对应key的MQTT适配器
 func (e *Application) GetMqttKey(key string) message.AdapterMqtt {
-	e.mux.RLock()
-	defer e.mux.RUnlock()
-	return e.mqtt[key]
+	return getAdapter(e, e.mqtt, key)
 }
 
 // SetThirdPartyAdapter 设置缓存
 func (e *Application) SetThirdPartyAdapter(key string, c third_party.AdapterThirdParty) {
-	e.mux.Lock()
-	defer e.mux.Unlock()
-	e.thirdParty[key] = c
+	setAdapter(e, e.thirdParty, key, c)
 }
 
 // GetThirdPartyAdapter 获取缓存
@@ -447,23 +434,17 @@ func (e *Application) GetThirdPartyAdapter() third_party.AdapterThirdParty {
 
 // GetThirdPartyAdapters 获取缓存
 func (e *Application) GetThirdPartyAdapters() map[string]third_party.AdapterThirdParty {
-	e.mux.RLock()
-	defer e.mux.RUnlock()
-	return e.thirdParty
+	return getAllAdapters(e, e.thirdParty)
 }
 
 // GetThirdPartyKey 获取带租户标记的amqp
 func (e *Application) GetThirdPartyKey(key string) third_party.AdapterThirdParty {
-	e.mux.RLock()
-	defer e.mux.RUnlock()
-	return e.thirdParty[key]
+	return getAdapter(e, e.thirdParty, key)
 }
 
 // SetLocationBasedServiceAdapter 设置LBS
 func (e *Application) SetLocationBasedServiceAdapter(key string, c lbs.AdapterLocationBasedService) {
-	e.mux.Lock()
-	defer e.mux.Unlock()
-	e.lbs[key] = c
+	setAdapter(e, e.lbs, key, c)
 }
 
 // GetLocationBasedServiceAdapter 获取LBS
@@ -473,23 +454,17 @@ func (e *Application) GetLocationBasedServiceAdapter() lbs.AdapterLocationBasedS
 
 // GetLocationBasedServiceAdapters 获取LBS
 func (e *Application) GetLocationBasedServiceAdapters() map[string]lbs.AdapterLocationBasedService {
-	e.mux.RLock()
-	defer e.mux.RUnlock()
-	return e.lbs
+	return getAllAdapters(e, e.lbs)
 }
 
 // GetLocationBasedServiceKey 获取LBS
 func (e *Application) GetLocationBasedServiceKey(key string) lbs.AdapterLocationBasedService {
-	e.mux.RLock()
-	defer e.mux.RUnlock()
-	return e.lbs[key]
+	return getAdapter(e, e.lbs, key)
 }
 
 // SetPaymentServiceAdapter 设置支付
 func (e *Application) SetPaymentServiceAdapter(key string, c payment.AdapterPaymentService) {
-	e.mux.Lock()
-	defer e.mux.Unlock()
-	e.payment[key] = c
+	setAdapter(e, e.payment, key, c)
 }
 
 // GetPaymentServiceAdapter 获取支付
@@ -499,23 +474,17 @@ func (e *Application) GetPaymentServiceAdapter() payment.AdapterPaymentService {
 
 // GetPaymentServiceAdapters 获取支付
 func (e *Application) GetPaymentServiceAdapters() map[string]payment.AdapterPaymentService {
-	e.mux.RLock()
-	defer e.mux.RUnlock()
-	return e.payment
+	return getAllAdapters(e, e.payment)
 }
 
 // GetPaymentServiceKey 获取支付
 func (e *Application) GetPaymentServiceKey(key string) payment.AdapterPaymentService {
-	e.mux.RLock()
-	defer e.mux.RUnlock()
-	return e.payment[key]
+	return getAdapter(e, e.payment, key)
 }
 
 // SetLeshuaServiceAdapter 设置乐刷
 func (e *Application) SetLeshuaServiceAdapter(key string, c payment.AdapterLeshuaService) {
-	e.mux.Lock()
-	defer e.mux.Unlock()
-	e.leshua[key] = c
+	setAdapter(e, e.leshua, key, c)
 }
 
 // GetLeshuaServiceAdapter 获取乐刷
@@ -525,23 +494,17 @@ func (e *Application) GetLeshuaServiceAdapter() payment.AdapterLeshuaService {
 
 // GetLeshuaServiceAdapters 获取乐刷
 func (e *Application) GetLeshuaServiceAdapters() map[string]payment.AdapterLeshuaService {
-	e.mux.RLock()
-	defer e.mux.RUnlock()
-	return e.leshua
+	return getAllAdapters(e, e.leshua)
 }
 
 // GetLeshuaServiceKey 获取乐刷
 func (e *Application) GetLeshuaServiceKey(key string) payment.AdapterLeshuaService {
-	e.mux.RLock()
-	defer e.mux.RUnlock()
-	return e.leshua[key]
+	return getAdapter(e, e.leshua, key)
 }
 
 // SetZegoServiceAdapter 设置即构
 func (e *Application) SetZegoServiceAdapter(key string, c rtc.AdapterZegoService) {
-	e.mux.Lock()
-	defer e.mux.Unlock()
-	e.zego[key] = c
+	setAdapter(e, e.zego, key, c)
 }
 
 // GetZegoServiceAdapter 获取即构
@@ -551,16 +514,12 @@ func (e *Application) GetZegoServiceAdapter() rtc.AdapterZegoService {
 
 // GetZegoServiceAdapters 获取即构
 func (e *Application) GetZegoServiceAdapters() map[string]rtc.AdapterZegoService {
-	e.mux.RLock()
-	defer e.mux.RUnlock()
-	return e.zego
+	return getAllAdapters(e, e.zego)
 }
 
 // GetZegoServiceKey 获取即构
 func (e *Application) GetZegoServiceKey(key string) rtc.AdapterZegoService {
-	e.mux.RLock()
-	defer e.mux.RUnlock()
-	return e.zego[key]
+	return getAdapter(e, e.zego, key)
 }
 
 func (e *Application) SetHandler(key string, routerGroup func(r *gin.RouterGroup, hand ...*gin.HandlerFunc)) {

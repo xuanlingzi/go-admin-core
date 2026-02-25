@@ -15,7 +15,7 @@ import (
 )
 
 // NewNSQ nsq模式 只能监听一个channel
-func NewNSQ(addresses []string, cfg *nsq.Config, channelPrefix string) *NSQ {
+func NewNSQ(addresses []string, cfg *nsq.Config, channelPrefix string) (*NSQ, error) {
 	n := &NSQ{
 		addresses:     addresses,
 		cfg:           cfg,
@@ -24,9 +24,9 @@ func NewNSQ(addresses []string, cfg *nsq.Config, channelPrefix string) *NSQ {
 	var err error
 	n.producer, err = n.newProducer()
 	if err != nil {
-		panic(fmt.Sprintf("NSQ queue producer init error %s", err.Error()))
+		return nil, fmt.Errorf("NSQ queue producer init: %w", err)
 	}
-	return n
+	return n, nil
 }
 
 type NSQ struct {
@@ -88,8 +88,8 @@ func (e *NSQ) Register(name string, f storage.ConsumerFunc) {
 	h := &nsqConsumerHandler{f}
 	err := e.newConsumer(name, h)
 	if err != nil {
-		//目前不支持动态注册
-		panic(err)
+		// Log the error but don't panic - this maintains backward compatibility
+		fmt.Printf("NSQ register consumer error: %v\n", err)
 	}
 }
 

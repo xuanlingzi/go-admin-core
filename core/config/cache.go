@@ -14,11 +14,14 @@ type Cache struct {
 var CacheConfig = new(Cache)
 
 // Setup 构造cache 顺序 redis > 其他 > memory
-func (e Cache) Setup() storage.AdapterCache {
+func (e Cache) Setup() (storage.AdapterCache, error) {
 	if e.Redis != nil {
 		options := e.Redis.GetRedisOptions()
-		r := cache.NewRedis(cache.GetRedisClient(), options)
-		return r
+		r, err := cache.NewRedis(cache.GetRedisClient(), options)
+		if err != nil {
+			return nil, err
+		}
+		return r, nil
 	}
-	return cache.NewMemory()
+	return cache.NewMemory(), nil
 }
