@@ -150,15 +150,6 @@ func (e Api) Error(code int, err error, message ...string) {
 	response.Error(e.Context, code, err, message...)
 }
 
-
-// MakeServiceBase returns initialized service.Service based on Api settings.
-func (e *Api) MakeServiceBase() service.Service {
-	var s service.Service
-	e.MakeService(&s)
-	return s
-}
-
-
 func (e Api) OK(data interface{}, message ...string) {
 	response.OK(e.Context, data, message...)
 }
