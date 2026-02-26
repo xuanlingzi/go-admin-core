@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/spf13/cast"
 )
 
 const (
@@ -23,14 +24,14 @@ const (
 // Zego adapter 封装即构服务端 API 的通用调用能力。
 type Zego struct {
 	Addr             string
-	AppID            string
+	AppID            uint32
 	ServerSecret     string
 	SignatureVersion string
 	client           *http.Client
 }
 
 // NewZego 构建 Zego adapter。
-func NewZego(addr, appID, serverSecret, signatureVersion string, timeoutSec int) *Zego {
+func NewZego(addr string, appID uint32, serverSecret, signatureVersion string, timeoutSec int) *Zego {
 	addr = strings.TrimSpace(addr)
 	if addr == "" {
 		addr = ZegoDefaultAddr
@@ -45,7 +46,7 @@ func NewZego(addr, appID, serverSecret, signatureVersion string, timeoutSec int)
 
 	return &Zego{
 		Addr:             strings.TrimRight(addr, "/"),
-		AppID:            strings.TrimSpace(appID),
+		AppID:            appID,
 		ServerSecret:     strings.TrimSpace(serverSecret),
 		SignatureVersion: signatureVersion,
 		client: &http.Client{
@@ -161,7 +162,7 @@ func (m *Zego) buildRequestURL(action string, query map[string]string) (string, 
 
 	values := u.Query()
 	values.Set("Action", action)
-	values.Set("AppId", m.AppID)
+	values.Set("AppId", cast.ToString(m.AppID))
 	values.Set("SignatureNonce", nonce)
 	values.Set("SignatureVersion", m.SignatureVersion)
 	values.Set("Timestamp", timestamp)
@@ -180,7 +181,7 @@ func (m *Zego) buildRequestURL(action string, query map[string]string) (string, 
 }
 
 func (m *Zego) calcSignature(nonce, timestamp string) string {
-	signData := m.AppID + nonce + m.ServerSecret + timestamp
+	signData := cast.ToString(m.AppID) + nonce + m.ServerSecret + timestamp
 	sum := md5.Sum([]byte(signData))
 	return hex.EncodeToString(sum[:])
 }
