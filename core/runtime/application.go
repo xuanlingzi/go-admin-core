@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"sync"
 
+	"github.com/xuanlingzi/go-admin-core/barcode"
 	"github.com/xuanlingzi/go-admin-core/core/pkg/utils"
 
 	"github.com/casbin/casbin/v2"
@@ -44,6 +45,7 @@ type Application struct {
 	payment     map[string]payment.AdapterPaymentService
 	leshua      map[string]payment.AdapterLeshuaService
 	zego        map[string]rtc.AdapterZegoService
+	barcode     map[string]barcode.AdapterBarcode
 	handler     map[string][]func(r *gin.RouterGroup, hand ...*gin.HandlerFunc)
 	routers     []Router
 	configs     map[string]interface{} // 系统参数
@@ -196,6 +198,7 @@ func NewConfig() *Application {
 		payment:     make(map[string]payment.AdapterPaymentService),
 		leshua:      make(map[string]payment.AdapterLeshuaService),
 		zego:        make(map[string]rtc.AdapterZegoService),
+		barcode:     make(map[string]barcode.AdapterBarcode),
 		handler:     make(map[string][]func(r *gin.RouterGroup, hand ...*gin.HandlerFunc)),
 		routers:     make([]Router, 0),
 		configs:     make(map[string]interface{}),
@@ -579,4 +582,24 @@ func (e *Application) GetAppRouters() []func() {
 	e.mux.RLock()
 	defer e.mux.RUnlock()
 	return e.appRouters
+}
+
+// SetBarcodeAdapter 设置条码查询适配器
+func (e *Application) SetBarcodeAdapter(key string, c barcode.AdapterBarcode) {
+	setAdapter(e, e.barcode, key, c)
+}
+
+// GetBarcodeAdapter 获取默认条码查询适配器
+func (e *Application) GetBarcodeAdapter() barcode.AdapterBarcode {
+	return e.GetBarcodeKey("*")
+}
+
+// GetBarcodeAdapters 获取全部条码查询适配器
+func (e *Application) GetBarcodeAdapters() map[string]barcode.AdapterBarcode {
+	return getAllAdapters(e, e.barcode)
+}
+
+// GetBarcodeKey 获取指定 key 的条码查询适配器
+func (e *Application) GetBarcodeKey(key string) barcode.AdapterBarcode {
+	return getAdapter(e, e.barcode, key)
 }

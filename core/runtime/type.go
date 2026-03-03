@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/xuanlingzi/go-admin-core/barcode"
 	"github.com/xuanlingzi/go-admin-core/lbs"
 	"github.com/xuanlingzi/go-admin-core/message"
 	"github.com/xuanlingzi/go-admin-core/moderation"
@@ -117,6 +118,11 @@ type Runtime interface {
 	GetZegoServiceAdapter() rtc.AdapterZegoService
 	GetZegoServiceAdapters() map[string]rtc.AdapterZegoService
 	GetZegoServiceKey(string) rtc.AdapterZegoService
+
+	SetBarcodeAdapter(string, barcode.AdapterBarcode)
+	GetBarcodeAdapter() barcode.AdapterBarcode
+	GetBarcodeAdapters() map[string]barcode.AdapterBarcode
+	GetBarcodeKey(string) barcode.AdapterBarcode
 
 	SetHandler(key string, routerGroup func(r *gin.RouterGroup, hand ...*gin.HandlerFunc))
 	GetHandler() map[string][]func(r *gin.RouterGroup, hand ...*gin.HandlerFunc)

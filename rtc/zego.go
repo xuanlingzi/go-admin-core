@@ -16,11 +16,6 @@ import (
 	"github.com/spf13/cast"
 )
 
-const (
-	ZegoDefaultAddr             = "https://rtc-api.zego.im"
-	ZegoDefaultSignatureVersion = "2.0"
-)
-
 // Zego adapter 封装即构服务端 API 的通用调用能力。
 type Zego struct {
 	Addr             string
@@ -33,13 +28,7 @@ type Zego struct {
 // NewZego 构建 Zego adapter。
 func NewZego(addr string, appID uint32, serverSecret, signatureVersion string, timeoutSec int) *Zego {
 	addr = strings.TrimSpace(addr)
-	if addr == "" {
-		addr = ZegoDefaultAddr
-	}
 	signatureVersion = strings.TrimSpace(signatureVersion)
-	if signatureVersion == "" {
-		signatureVersion = ZegoDefaultSignatureVersion
-	}
 	if timeoutSec <= 0 {
 		timeoutSec = 8
 	}
@@ -148,10 +137,6 @@ func (m *Zego) Call(action, method string, query map[string]string, payload inte
 
 func (m *Zego) buildRequestURL(action string, query map[string]string) (string, error) {
 	addr := strings.TrimSpace(m.Addr)
-	if addr == "" {
-		addr = ZegoDefaultAddr
-	}
-
 	u, err := url.Parse(addr)
 	if err != nil {
 		return "", fmt.Errorf("即构地址格式错误: %s", err.Error())

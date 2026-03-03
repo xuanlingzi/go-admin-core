@@ -50,7 +50,6 @@ type Config struct {
 	Jwt         *Jwt                  `json:"jwt" yaml:"jwt"`
 	Database    *Database             `json:"database" yaml:"database"`
 	Databases   *map[string]*Database `json:"databases" yaml:"databases"`
-	Gen         *Gen                  `json:"gen" yaml:"gen"`
 	Cache       *Cache                `json:"cache" yaml:"cache"`
 	Queue       *Queue                `json:"queue" yaml:"queue"`
 	Locker      *Locker               `json:"locker" yaml:"locker"`
@@ -63,6 +62,7 @@ type Config struct {
 	WeChat      *WeChat               `json:"wechat,omitempty" yaml:"wechat"`
 	Payment     *Payment              `json:"payment,omitempty" yaml:"payment"`
 	Rtc         *Rtc                  `json:"rtc,omitempty" yaml:"rtc"`
+	Barcode     *Barcode              `json:"barcode,omitempty" yaml:"barcode"`
 	Extend      interface{}           `json:"extend" yaml:"extend"`
 }
 
@@ -88,7 +88,6 @@ func Setup(s source.Source,
 			Jwt:         JwtConfig,
 			Database:    DatabaseConfig,
 			Databases:   &DatabasesConfig,
-			Gen:         GenConfig,
 			Cache:       CacheConfig,
 			Queue:       QueueConfig,
 			Locker:      LockerConfig,
