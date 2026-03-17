@@ -203,7 +203,7 @@ func (m *Leshua) CollectTerminalID(merchantID, serialNum, existingDeviceID strin
 func (m *Leshua) DeregisterTerminal(merchantID, deviceID string) (string, error) {
 	bizData := map[string]string{
 		"merchantId":    merchantID,
-		"operationId":   "01",
+		"operationId":   "02",
 		"terminalState": "01",
 		"terminalType":  "11",
 		"deviceId":      deviceID,
