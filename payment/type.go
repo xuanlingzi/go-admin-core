@@ -26,5 +26,10 @@ type AdapterLeshuaService interface {
 	VerifyNotifySign(payload map[string]string) error
 	VerifyResponseSign(payload map[string]string) error
 	ParseNotifyXML(raw []byte) (map[string]string, error)
+	// 分账接口
+	ApplyLedger(merchantID, ledgerMethod, insertFlag, splitRate, feeRate, callbackUrl string) (map[string]interface{}, error)
+	QueryLedgerStatus(merchantID string) (map[string]interface{}, error)
+	BindLedgerReceiver(merchantID, receiverType, receiverNo, receiverName, splitRate string) (map[string]interface{}, error)
+	UnbindLedgerReceiver(merchantID, receiverType, receiverNo string) (map[string]interface{}, error)
 	GetClient() interface{}
 }

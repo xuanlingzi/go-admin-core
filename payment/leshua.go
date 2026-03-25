@@ -476,3 +476,117 @@ func calcCollectSign(dataJSON, key string) string {
 	md5Str := hex.EncodeToString(sum[:])
 	return base64.StdEncoding.EncodeToString([]byte(md5Str))
 }
+
+// -------- 分账接口 --------
+
+const (
+	LedgerApplyPath    = "/cgi-bin/lepos_pay_gateway.cgi" // 分账开通复用支付网关
+	LedgerQueryPath    = "/cgi-bin/lepos_pay_gateway.cgi" // 分账查询复用支付网关
+	LedgerReceiverPath = "/cgi-bin/lepos_pay_gateway.cgi" // 分账关系复用支付网关
+)
+
+// ApplyLedger 商户开通分账申请（电子协议）
+func (m *Leshua) ApplyLedger(merchantID, ledgerMethod, insertFlag, splitRate, feeRate, callbackUrl string) (map[string]interface{}, error) {
+	params := map[string]string{
+		"service":       "apply_ledger",
+		"sign_type":     "MD5",
+		"merchant_id":   merchantID,
+		"ledger_method": ledgerMethod,
+		"insert_flag":   insertFlag,
+		"nonce_str":     m.nonce(16),
+	}
+	if splitRate != "" {
+		params["split_rate"] = splitRate
+	}
+	if feeRate != "" {
+		params["fee_rate"] = feeRate
+	}
+	if callbackUrl != "" {
+		params["callback_url"] = callbackUrl
+	}
+	params["sign"] = m.calcTradeSign(params)
+
+	addr := m.PaymentAddr + LedgerApplyPath
+	respMap, err := m.postXML(addr, params)
+	if err != nil {
+		return nil, err
+	}
+	result := make(map[string]interface{})
+	for k, v := range respMap {
+		result[k] = v
+	}
+	return result, nil
+}
+
+// QueryLedgerStatus 商户分账开通结果查询
+func (m *Leshua) QueryLedgerStatus(merchantID string) (map[string]interface{}, error) {
+	params := map[string]string{
+		"service":     "query_ledger_status",
+		"sign_type":   "MD5",
+		"merchant_id": merchantID,
+		"nonce_str":   m.nonce(16),
+	}
+	params["sign"] = m.calcTradeSign(params)
+
+	addr := m.PaymentAddr + LedgerQueryPath
+	respMap, err := m.postXML(addr, params)
+	if err != nil {
+		return nil, err
+	}
+	result := make(map[string]interface{})
+	for k, v := range respMap {
+		result[k] = v
+	}
+	return result, nil
+}
+
+// BindLedgerReceiver 分账关系绑定
+func (m *Leshua) BindLedgerReceiver(merchantID, receiverType, receiverNo, receiverName, splitRate string) (map[string]interface{}, error) {
+	params := map[string]string{
+		"service":       "bind_ledger_receiver",
+		"sign_type":     "MD5",
+		"merchant_id":   merchantID,
+		"receiver_type": receiverType,
+		"receiver_no":   receiverNo,
+		"receiver_name": receiverName,
+		"split_rate":    splitRate,
+		"nonce_str":     m.nonce(16),
+	}
+	params["sign"] = m.calcTradeSign(params)
+
+	addr := m.PaymentAddr + LedgerReceiverPath
+	respMap, err := m.postXML(addr, params)
+	if err != nil {
+		return nil, err
+	}
+	result := make(map[string]interface{})
+	for k, v := range respMap {
+		result[k] = v
+	}
+	return result, nil
+}
+
+// UnbindLedgerReceiver 分账关系解绑
+func (m *Leshua) UnbindLedgerReceiver(merchantID, receiverType, receiverNo string) (map[string]interface{}, error) {
+	params := map[string]string{
+		"service":       "unbind_ledger_receiver",
+		"sign_type":     "MD5",
+		"merchant_id":   merchantID,
+		"receiver_type": receiverType,
+		"receiver_no":   receiverNo,
+		"nonce_str":     m.nonce(16),
+	}
+	params["sign"] = m.calcTradeSign(params)
+
+	addr := m.PaymentAddr + LedgerReceiverPath
+	respMap, err := m.postXML(addr, params)
+	if err != nil {
+		return nil, err
+	}
+	result := make(map[string]interface{})
+	for k, v := range respMap {
+		result[k] = v
+	}
+	return result, nil
+}
+
