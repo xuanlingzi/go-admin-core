@@ -249,7 +249,11 @@ func (r *leshuaCollectResp) pickTerminalInfo(serialNum, deviceID string) map[str
 	if r == nil || r.Data == nil {
 		return nil
 	}
-	list, _ := r.Data["terminalInfo"].([]interface{})
+	dataMap, ok := r.Data.(map[string]interface{})
+	if !ok {
+		return nil
+	}
+	list, _ := dataMap["terminalInfo"].([]interface{})
 	var items []map[string]interface{}
 	for _, raw := range list {
 		if item, ok := raw.(map[string]interface{}); ok {
@@ -309,18 +313,22 @@ func (m *Leshua) postXML(addr string, params map[string]string) (map[string]stri
 
 type leshuaCollectResp struct {
 	RespCode    string                 `json:"respCode"`
-	RespMsg     string                 `json:"respMsg"`
-	ReqSerialNo string                 `json:"reqSerialNo"`
-	Version     string                 `json:"version"`
-	Data        map[string]interface{} `json:"data"`
+	RespMsg     string      `json:"respMsg"`
+	ReqSerialNo string      `json:"reqSerialNo"`
+	Version     string      `json:"version"`
+	Data        interface{} `json:"data"`
 }
 
 func (r *leshuaCollectResp) deviceID() string {
 	if r == nil || r.Data == nil {
 		return ""
 	}
+	dataMap, ok := r.Data.(map[string]interface{})
+	if !ok {
+		return ""
+	}
 	for _, key := range []string{"deviceId", "device_id"} {
-		v, ok := r.Data[key]
+		v, ok := dataMap[key]
 		if !ok {
 			continue
 		}
@@ -477,116 +485,397 @@ func calcCollectSign(dataJSON, key string) string {
 	return base64.StdEncoding.EncodeToString([]byte(md5Str))
 }
 
-// -------- 分账接口 --------
+// -------- 分账接口（全部使用聚合签名） --------
 
 const (
-	LedgerApplyPath    = "/cgi-bin/lepos_pay_gateway.cgi" // 分账开通复用支付网关
-	LedgerQueryPath    = "/cgi-bin/lepos_pay_gateway.cgi" // 分账查询复用支付网关
-	LedgerReceiverPath = "/cgi-bin/lepos_pay_gateway.cgi" // 分账关系复用支付网关
+	LedgerApplyPath     = "/api/share-merchant/elec-contract-accredit" // 商户开通分账申请（电子协议）
+	LedgerQueryPath     = "/api/share-merchant/accreditQuery"          // 商户开通分账结果查询
+	LedgerBindPath      = "/api/share-merchant/bind"                   // 分账关系绑定
+	LedgerUnbindPath    = "/api/share-merchant/unbind"                 // 分账关系解绑
+	LedgerQueryBindPath = "/api/share-merchant/queryBind"              // 分账关系绑定查询
 )
 
 // ApplyLedger 商户开通分账申请（电子协议）
-func (m *Leshua) ApplyLedger(merchantID, ledgerMethod, insertFlag, splitRate, feeRate, callbackUrl string) (map[string]interface{}, error) {
-	params := map[string]string{
-		"service":       "apply_ledger",
-		"sign_type":     "MD5",
-		"merchant_id":   merchantID,
-		"ledger_method": ledgerMethod,
-		"insert_flag":   insertFlag,
-		"nonce_str":     m.nonce(16),
+// 文档: /api/share-merchant/elec-contract-accredit
+func (m *Leshua) ApplyLedger(merchantID string, sharePercent string, insertFlag int, feeRate int, ledgerMethod int, authTypes string, callbackUrl string) (map[string]interface{}, error) {
+	bizData := map[string]interface{}{
+		"merchantId": merchantID,
+		"baseInfo": map[string]interface{}{
+			"shareRole": 0, // 目前只允许商户授权
+		},
 	}
-	if splitRate != "" {
-		params["split_rate"] = splitRate
+
+	otherInfo := map[string]interface{}{}
+	if sharePercent != "" {
+		otherInfo["sharePercent"] = sharePercent
 	}
-	if feeRate != "" {
-		params["fee_rate"] = feeRate
+	if authTypes != "" {
+		otherInfo["authTypes"] = authTypes
+	} else {
+		otherInfo["authTypes"] = "1,2" // 默认使用手机+银行卡验证
 	}
 	if callbackUrl != "" {
-		params["callback_url"] = callbackUrl
+		otherInfo["callBackUrl"] = callbackUrl
 	}
-	params["sign"] = m.calcTradeSign(params)
+	if len(otherInfo) > 0 {
+		bizData["otherInfo"] = otherInfo
+	}
 
-	addr := m.PaymentAddr + LedgerApplyPath
-	respMap, err := m.postXML(addr, params)
+	if insertFlag > 0 {
+		bizData["insertFlag"] = insertFlag
+	}
+	if feeRate > 0 {
+		bizData["feeRate"] = feeRate
+	}
+	if ledgerMethod > 0 {
+		bizData["ledgerMethod"] = ledgerMethod
+	}
+
+	addr := m.CollectAddr + LedgerApplyPath
+	raw, err := m.postAggregateJSON(addr, bizData)
 	if err != nil {
 		return nil, err
 	}
-	result := make(map[string]interface{})
-	for k, v := range respMap {
-		result[k] = v
+	if strings.TrimSpace(raw.RespCode) != "000000" {
+		return nil, fmt.Errorf("分账开通申请失败: [%s] %s", raw.RespCode, raw.RespMsg)
 	}
-	return result, nil
+	if raw.Data == nil {
+		return nil, fmt.Errorf("分账开通返回数据为空")
+	}
+	if dataMap, ok := raw.Data.(map[string]interface{}); ok {
+		return dataMap, nil
+	}
+	return nil, fmt.Errorf("返回数据并非JSON对象")
 }
 
-// QueryLedgerStatus 商户分账开通结果查询
+// QueryLedgerStatus 商户开通分账结果查询
+// 文档: /api/share-merchant/accreditQuery
 func (m *Leshua) QueryLedgerStatus(merchantID string) (map[string]interface{}, error) {
-	params := map[string]string{
-		"service":     "query_ledger_status",
-		"sign_type":   "MD5",
-		"merchant_id": merchantID,
-		"nonce_str":   m.nonce(16),
+	bizData := map[string]interface{}{
+		"merchantId": merchantID,
 	}
-	params["sign"] = m.calcTradeSign(params)
 
-	addr := m.PaymentAddr + LedgerQueryPath
-	respMap, err := m.postXML(addr, params)
+	addr := m.CollectAddr + LedgerQueryPath
+	raw, err := m.postAggregateJSON(addr, bizData)
 	if err != nil {
 		return nil, err
 	}
-	result := make(map[string]interface{})
-	for k, v := range respMap {
-		result[k] = v
+	if strings.TrimSpace(raw.RespCode) != "000000" {
+		return nil, fmt.Errorf("分账状态查询失败: [%s] %s", raw.RespCode, raw.RespMsg)
 	}
-	return result, nil
+	if raw.Data == nil {
+		return nil, fmt.Errorf("分账状态查询返回数据为空")
+	}
+	if dataMap, ok := raw.Data.(map[string]interface{}); ok {
+		return dataMap, nil
+	}
+	return nil, fmt.Errorf("返回数据并非JSON对象")
 }
 
 // BindLedgerReceiver 分账关系绑定
-func (m *Leshua) BindLedgerReceiver(merchantID, receiverType, receiverNo, receiverName, splitRate string) (map[string]interface{}, error) {
-	params := map[string]string{
-		"service":       "bind_ledger_receiver",
-		"sign_type":     "MD5",
-		"merchant_id":   merchantID,
-		"receiver_type": receiverType,
-		"receiver_no":   receiverNo,
-		"receiver_name": receiverName,
-		"split_rate":    splitRate,
-		"nonce_str":     m.nonce(16),
+// 文档: /api/share-merchant/bind
+func (m *Leshua) BindLedgerReceiver(merchantID1, merchantID2 string, protocolPic string, remark string) (map[string]interface{}, error) {
+	bizData := map[string]interface{}{
+		"merchantId1": merchantID1,
+		"merchantId2": merchantID2,
 	}
-	params["sign"] = m.calcTradeSign(params)
+	if protocolPic != "" {
+		bizData["protocolPic"] = protocolPic
+	}
+	if remark != "" {
+		bizData["remark"] = remark
+	}
 
-	addr := m.PaymentAddr + LedgerReceiverPath
-	respMap, err := m.postXML(addr, params)
+	addr := m.CollectAddr + LedgerBindPath
+	raw, err := m.postAggregateJSON(addr, bizData)
 	if err != nil {
 		return nil, err
 	}
-	result := make(map[string]interface{})
-	for k, v := range respMap {
-		result[k] = v
+	if strings.TrimSpace(raw.RespCode) != "000000" {
+		return nil, fmt.Errorf("分账关系绑定失败: [%s] %s", raw.RespCode, raw.RespMsg)
+	}
+	result := map[string]interface{}{
+		"respCode": raw.RespCode,
+		"respMsg":  raw.RespMsg,
+	}
+	if raw.Data != nil {
+		if dataMap, ok := raw.Data.(map[string]interface{}); ok {
+			for k, v := range dataMap {
+				result[k] = v
+			}
+		} else {
+			result["data"] = raw.Data
+		}
 	}
 	return result, nil
 }
 
 // UnbindLedgerReceiver 分账关系解绑
-func (m *Leshua) UnbindLedgerReceiver(merchantID, receiverType, receiverNo string) (map[string]interface{}, error) {
-	params := map[string]string{
-		"service":       "unbind_ledger_receiver",
-		"sign_type":     "MD5",
-		"merchant_id":   merchantID,
-		"receiver_type": receiverType,
-		"receiver_no":   receiverNo,
-		"nonce_str":     m.nonce(16),
+// 文档: /api/share-merchant/unbind
+func (m *Leshua) UnbindLedgerReceiver(merchantID1, merchantID2 string, remark string) (map[string]interface{}, error) {
+	bizData := map[string]interface{}{
+		"merchantId1": merchantID1,
+		"merchantId2": merchantID2,
 	}
-	params["sign"] = m.calcTradeSign(params)
+	if remark != "" {
+		bizData["remark"] = remark
+	}
 
-	addr := m.PaymentAddr + LedgerReceiverPath
-	respMap, err := m.postXML(addr, params)
+	addr := m.CollectAddr + LedgerUnbindPath
+	raw, err := m.postAggregateJSON(addr, bizData)
 	if err != nil {
 		return nil, err
 	}
-	result := make(map[string]interface{})
-	for k, v := range respMap {
-		result[k] = v
+	if strings.TrimSpace(raw.RespCode) != "000000" {
+		return nil, fmt.Errorf("分账关系解绑失败: [%s] %s", raw.RespCode, raw.RespMsg)
+	}
+	result := map[string]interface{}{
+		"respCode": raw.RespCode,
+		"respMsg":  raw.RespMsg,
+	}
+	if raw.Data != nil {
+		if dataMap, ok := raw.Data.(map[string]interface{}); ok {
+			for k, v := range dataMap {
+				result[k] = v
+			}
+		} else {
+			result["data"] = raw.Data
+		}
 	}
 	return result, nil
+}
+
+// QueryBindRelation 分账关系绑定查询
+// 文档: /api/share-merchant/queryBind
+func (m *Leshua) QueryBindRelation(merchantID1 string) (map[string]interface{}, error) {
+	bizData := map[string]interface{}{
+		"merchantId1": merchantID1,
+	}
+
+	addr := m.CollectAddr + LedgerQueryBindPath
+	raw, err := m.postAggregateJSON(addr, bizData)
+	if err != nil {
+		return nil, err
+	}
+	if strings.TrimSpace(raw.RespCode) != "000000" {
+		return nil, fmt.Errorf("分账绑定查询失败: [%s] %s", raw.RespCode, raw.RespMsg)
+	}
+	result := map[string]interface{}{
+		"respCode": raw.RespCode,
+		"respMsg":  raw.RespMsg,
+	}
+	if raw.Data != nil {
+		result["data"] = raw.Data
+	}
+	return result, nil
+}
+
+// -------- 订单分账接口（聚合签名） --------
+
+const (
+	SplitApplyPath       = "/api/share-merchant/multi-apply"
+	SplitQueryPath       = "/api/share-merchant/multi-query"
+	SplitCancelPath      = "/api/share-merchant/cancel"
+	SplitRefundPath      = "/api/share-merchant/refund"
+	SplitRefundQueryPath = "/api/share-merchant/refundQuery"
+)
+
+// postAggregateJSON 使用聚合常规签名发起 JSON 请求
+// 签名方式: Base64(md5("lepos" + key + dataJSON).toLowerCase())
+func (m *Leshua) postAggregateJSON(addr string, bizData interface{}) (*leshuaCollectResp, error) {
+	dataBytes, err := json.Marshal(bizData)
+	if err != nil {
+		return nil, fmt.Errorf("构造请求参数失败: %w", err)
+	}
+	dataJSON := string(dataBytes)
+	form := url.Values{}
+	form.Set("agentId", m.CollectAgentID)
+	form.Set("version", "1.0")
+	form.Set("reqSerialNo", buildCollectReqSerialNo())
+	form.Set("data", dataJSON)
+	form.Set("sign", calcCollectSign(dataJSON, m.TradeKey))
+
+	logger.Infof("[乐刷分账] POST %s\n请求data: %s", addr, dataJSON)
+
+	req, err := http.NewRequest(http.MethodPost, addr, strings.NewReader(form.Encode()))
+	if err != nil {
+		return nil, fmt.Errorf("创建请求失败: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	resp, err := m.client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("请求失败: %w", err)
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("读取响应失败: %w", err)
+	}
+	logger.Infof("[乐刷分账] 响应(HTTP %d): %s", resp.StatusCode, string(body))
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return nil, fmt.Errorf("HTTP 异常(%d): %s", resp.StatusCode, string(body))
+	}
+	var result leshuaCollectResp
+	if err = json.Unmarshal(body, &result); err != nil {
+		return nil, fmt.Errorf("解析响应失败: %w", err)
+	}
+	return &result, nil
+}
+
+// ApplyOrderSplit 订单分账申请
+func (m *Leshua) ApplyOrderSplit(merchantID, leshuaOrderID, thirdOrderID, thirdRoyaltyID string, shareDetail []map[string]interface{}, remark string) (map[string]interface{}, error) {
+	bizData := map[string]interface{}{
+		"merchantId":     merchantID,
+		"leshuaOrderId":  leshuaOrderID,
+		"thirdOrderId":   thirdOrderID,
+		"thirdRoyaltyId": thirdRoyaltyID,
+		"shareDetail":    shareDetail,
+	}
+	if remark != "" {
+		bizData["Remark"] = remark
+	}
+
+	addr := m.CollectAddr + SplitApplyPath
+	raw, err := m.postAggregateJSON(addr, bizData)
+	if err != nil {
+		return nil, err
+	}
+	if strings.TrimSpace(raw.RespCode) != "000000" {
+		return nil, fmt.Errorf("分账申请网关失败: [%s] %s", raw.RespCode, raw.RespMsg)
+	}
+	if raw.Data == nil {
+		return nil, fmt.Errorf("分账申请返回数据为空")
+	}
+	if dataMap, ok := raw.Data.(map[string]interface{}); ok {
+		return dataMap, nil
+	}
+	return nil, fmt.Errorf("返回数据并非JSON对象")
+}
+
+// QueryOrderSplit 订单分账结果查询
+func (m *Leshua) QueryOrderSplit(merchantID, leshuaOrderID string, allRoyaltyFlag int, leshuaRoyaltyID, thirdRoyaltyID string) (map[string]interface{}, error) {
+	bizData := map[string]interface{}{
+		"merchantId":     merchantID,
+		"leshuaOrderId":  leshuaOrderID,
+		"allRoyaltyFlag": allRoyaltyFlag,
+	}
+	if leshuaRoyaltyID != "" {
+		bizData["leshuaRoyaltyId"] = leshuaRoyaltyID
+	}
+	if thirdRoyaltyID != "" {
+		bizData["thirdRoyaltyId"] = thirdRoyaltyID
+	}
+
+	addr := m.CollectAddr + SplitQueryPath
+	raw, err := m.postAggregateJSON(addr, bizData)
+	if err != nil {
+		return nil, err
+	}
+	if strings.TrimSpace(raw.RespCode) != "000000" {
+		return nil, fmt.Errorf("分账查询网关失败: [%s] %s", raw.RespCode, raw.RespMsg)
+	}
+	if raw.Data == nil {
+		return nil, fmt.Errorf("分账查询返回数据为空")
+	}
+	if dataMap, ok := raw.Data.(map[string]interface{}); ok {
+		return dataMap, nil
+	}
+	return nil, fmt.Errorf("返回数据并非JSON对象")
+}
+
+// CancelOrderSplit 订单分账撤销
+func (m *Leshua) CancelOrderSplit(merchantID, leshuaOrderID, leshuaRoyaltyID, thirdRoyaltyID string) (map[string]interface{}, error) {
+	bizData := map[string]interface{}{
+		"merchantId":     merchantID,
+		"leshuaOrderId":  leshuaOrderID,
+		"thirdRoyaltyId": thirdRoyaltyID,
+	}
+	if leshuaRoyaltyID != "" {
+		bizData["leshuaRoyaltyId"] = leshuaRoyaltyID
+	}
+
+	addr := m.CollectAddr + SplitCancelPath
+	raw, err := m.postAggregateJSON(addr, bizData)
+	if err != nil {
+		return nil, err
+	}
+	if strings.TrimSpace(raw.RespCode) != "000000" {
+		return nil, fmt.Errorf("分账撤销网关失败: [%s] %s", raw.RespCode, raw.RespMsg)
+	}
+	if raw.Data == nil {
+		return nil, fmt.Errorf("分账撤销返回数据为空")
+	}
+	if dataMap, ok := raw.Data.(map[string]interface{}); ok {
+		return dataMap, nil
+	}
+	return nil, fmt.Errorf("返回数据并非JSON对象")
+}
+
+// RefundOrderSplit 分账交易退款
+func (m *Leshua) RefundOrderSplit(merchantID, thirdOrderID, leshuaOrderID, thirdRefundID string, refundAmount int64, refundMode string, thirdRoyaltyID string, refundDetails []map[string]interface{}, notifyUrl string) (map[string]interface{}, error) {
+	bizData := map[string]interface{}{
+		"merchantId":    merchantID,
+		"thirdOrderId":  thirdOrderID,
+		"leshuaOrderId": leshuaOrderID,
+		"thirdRefundId": thirdRefundID,
+		"refundAmount":  refundAmount,
+	}
+	if refundMode != "" {
+		bizData["refundMode"] = refundMode
+	}
+	if thirdRoyaltyID != "" {
+		bizData["thirdRoyaltyId"] = thirdRoyaltyID
+	}
+	if len(refundDetails) > 0 {
+		bizData["refundDetails"] = refundDetails
+	}
+	if notifyUrl != "" {
+		bizData["notifyUrl"] = notifyUrl
+	}
+
+	addr := m.CollectAddr + SplitRefundPath
+	raw, err := m.postAggregateJSON(addr, bizData)
+	if err != nil {
+		return nil, err
+	}
+	if strings.TrimSpace(raw.RespCode) != "000000" {
+		return nil, fmt.Errorf("分账退款网关失败: [%s] %s", raw.RespCode, raw.RespMsg)
+	}
+	if raw.Data == nil {
+		return nil, fmt.Errorf("分账退款返回数据为空")
+	}
+	if dataMap, ok := raw.Data.(map[string]interface{}); ok {
+		return dataMap, nil
+	}
+	return nil, fmt.Errorf("返回数据并非JSON对象")
+}
+
+// QueryRefundOrderSplit 分账退款查询
+func (m *Leshua) QueryRefundOrderSplit(merchantID, leshuaOrderID, thirdOrderID, thirdRefundID, leshuaRefundID string) (map[string]interface{}, error) {
+	bizData := map[string]interface{}{
+		"merchantId":    merchantID,
+		"leshuaOrderId": leshuaOrderID,
+		"thirdOrderId":  thirdOrderID,
+		"thirdRefundId": thirdRefundID,
+	}
+	if leshuaRefundID != "" {
+		bizData["leshuaRefundId"] = leshuaRefundID
+	}
+
+	addr := m.CollectAddr + SplitRefundQueryPath
+	raw, err := m.postAggregateJSON(addr, bizData)
+	if err != nil {
+		return nil, err
+	}
+	if strings.TrimSpace(raw.RespCode) != "000000" {
+		return nil, fmt.Errorf("分账退款查询网关失败: [%s] %s", raw.RespCode, raw.RespMsg)
+	}
+	if raw.Data == nil {
+		return nil, fmt.Errorf("分账退款查询返回数据为空")
+	}
+	if dataMap, ok := raw.Data.(map[string]interface{}); ok {
+		return dataMap, nil
+	}
+	return nil, fmt.Errorf("返回数据并非JSON对象")
 }
 
