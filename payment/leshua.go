@@ -9,6 +9,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"net/url"
 	"sort"
@@ -312,7 +313,7 @@ func (m *Leshua) postXML(addr string, params map[string]string) (map[string]stri
 }
 
 type leshuaCollectResp struct {
-	RespCode    string                 `json:"respCode"`
+	RespCode    string      `json:"respCode"`
 	RespMsg     string      `json:"respMsg"`
 	ReqSerialNo string      `json:"reqSerialNo"`
 	Version     string      `json:"version"`
@@ -879,3 +880,293 @@ func (m *Leshua) QueryRefundOrderSplit(merchantID, leshuaOrderID, thirdOrderID, 
 	return nil, fmt.Errorf("返回数据并非JSON对象")
 }
 
+// -------- 商户入驻管理 API --------
+
+// postMchJSON 商户管理 API 通用 POST，签名：lepos+key+data 的 MD5 Base64。
+func (m *Leshua) postMchJSON(endpoint string, data interface{}) (map[string]interface{}, error) {
+	dataBytes, err := json.Marshal(data)
+	if err != nil {
+		return nil, fmt.Errorf("序列化业务数据失败: %w", err)
+	}
+	dataStr := string(dataBytes)
+
+	reqSerialNo := buildCollectReqSerialNo()
+	form := url.Values{}
+	form.Set("agentId", m.CollectAgentID)
+	form.Set("version", "2.0")
+	form.Set("reqSerialNo", reqSerialNo)
+	form.Set("sign", calcCollectSign(dataStr, m.TradeKey))
+	form.Set("data", dataStr)
+
+	requestURL := strings.TrimRight(m.CollectAddr, "/") + endpoint
+	req, err := http.NewRequest(http.MethodPost, requestURL, strings.NewReader(form.Encode()))
+	if err != nil {
+		return nil, fmt.Errorf("创建请求失败: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	start := time.Now()
+	resp, err := m.client.Do(req)
+	elapsed := time.Since(start)
+	if err != nil {
+		logger.Errorf("[乐刷商户] POST %s FAILED (%.0fms) err=%s", endpoint, float64(elapsed.Milliseconds()), err.Error())
+		return nil, fmt.Errorf("HTTP请求失败: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("读取响应失败: %w", err)
+	}
+	logger.Infof("[乐刷商户] POST %s %d (%.0fms) body=%s", endpoint, resp.StatusCode, float64(elapsed.Milliseconds()), string(body))
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("HTTP状态码异常: %d", resp.StatusCode)
+	}
+	var result map[string]interface{}
+	if err = json.Unmarshal(body, &result); err != nil {
+		return nil, fmt.Errorf("解析响应JSON失败: %w", err)
+	}
+	if respCode, _ := result["respCode"].(string); respCode != "000000" {
+		respMsg, _ := result["respMsg"].(string)
+		return result, fmt.Errorf("乐刷业务失败[%s]: %s", respCode, respMsg)
+	}
+	return result, nil
+}
+
+// UploadMchPicture 上传图片到乐刷商户管理平台（multipart，不走 postMchJSON）
+func (m *Leshua) UploadMchPicture(fileData []byte, fileName string) (string, error) {
+	var buf bytes.Buffer
+	writer := multipart.NewWriter(&buf)
+
+	dataStr := "{}"
+	_ = writer.WriteField("agentId", m.CollectAgentID)
+	_ = writer.WriteField("version", "2.0")
+	_ = writer.WriteField("reqSerialNo", buildCollectReqSerialNo())
+	_ = writer.WriteField("sign", calcCollectSign(dataStr, m.TradeKey))
+	_ = writer.WriteField("data", dataStr)
+
+	part, err := writer.CreateFormFile("media", fileName)
+	if err != nil {
+		return "", fmt.Errorf("创建文件字段失败: %w", err)
+	}
+	if _, err = part.Write(fileData); err != nil {
+		return "", fmt.Errorf("写入文件数据失败: %w", err)
+	}
+	writer.Close()
+
+	requestURL := strings.TrimRight(m.CollectAddr, "/") + "/apiv2/picture/upload"
+	req, err := http.NewRequest("POST", requestURL, &buf)
+	if err != nil {
+		return "", fmt.Errorf("创建请求失败: %w", err)
+	}
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+
+	resp, err := m.client.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("上传请求失败: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("读取上传响应失败: %w", err)
+	}
+	var result map[string]interface{}
+	if err = json.Unmarshal(body, &result); err != nil {
+		return "", fmt.Errorf("解析上传响应失败: %w", err)
+	}
+	if respCode, _ := result["respCode"].(string); respCode != "000000" {
+		respMsg, _ := result["respMsg"].(string)
+		return "", fmt.Errorf("乐刷业务失败[%s]: %s", respCode, respMsg)
+	}
+	dataMap, _ := result["data"].(map[string]interface{})
+	photoUrl, _ := dataMap["photoUrl"].(string)
+	if photoUrl == "" {
+		return "", fmt.Errorf("上传成功但未返回图片URL")
+	}
+	return photoUrl, nil
+}
+
+func (m *Leshua) QueryRegion(parentCode string) (map[string]interface{}, error) {
+	data := map[string]string{}
+	if parentCode != "" {
+		data["parentCode"] = parentCode
+	}
+	return m.postMchJSON("/data/area", data)
+}
+
+func (m *Leshua) QueryMcc(parentCode string) (map[string]interface{}, error) {
+	data := map[string]string{}
+	if parentCode != "" {
+		data["parentCode"] = parentCode
+	}
+	return m.postMchJSON("/data/mcc", data)
+}
+
+func (m *Leshua) QueryBankBranch(bankName string, cityCode string) (map[string]interface{}, error) {
+	data := map[string]string{}
+	if bankName != "" {
+		data["bankName"] = bankName
+	}
+	if cityCode != "" {
+		data["cityCode"] = cityCode
+	}
+	return m.postMchJSON("/data/bankbranch2", data)
+}
+
+func (m *Leshua) RegisterMerchant(data map[string]interface{}) (map[string]interface{}, error) {
+	return m.postMchJSON("/apiv2/merchant/register", data)
+}
+
+func (m *Leshua) QueryMchAudit(merchantId string) (map[string]interface{}, error) {
+	return m.postMchJSON("/apiv2/merchant/audit_qry", map[string]string{"merchantId": merchantId})
+}
+
+func (m *Leshua) UpdateMerchant(merchantId string, data map[string]interface{}) (map[string]interface{}, error) {
+	payload := cloneMchPayload(data)
+	payload["merchantId"] = merchantId
+	return m.postMchJSON("/apiv2/merchant/update", payload)
+}
+
+func (m *Leshua) QuerySettlementStatus(merchantId string) (map[string]interface{}, error) {
+	return m.postMchJSON("/apiv2/risk-work-order/querySettlementStatus", map[string]string{"merchantId": merchantId})
+}
+
+func (m *Leshua) QueryMchFeeRate(merchantId string) (map[string]interface{}, error) {
+	return m.postMchJSON("/apiv2/merchant/fee_qry", map[string]string{"merchantId": merchantId})
+}
+
+func (m *Leshua) QuerySubMerchant(merchantId string, channel string) (map[string]interface{}, error) {
+	return m.postMchJSON("/apiv2/submch/query", map[string]string{
+		"merchantId": merchantId,
+		"channel":    channel,
+	})
+}
+
+func (m *Leshua) OpenMerchant(merchantId string, data map[string]interface{}) (map[string]interface{}, error) {
+	payload := cloneMchPayload(data)
+	payload["merchantId"] = merchantId
+	return m.postMchJSON("/apiv2/merchant/open", payload)
+}
+
+func (m *Leshua) UpdateMchIdCardInfo(merchantId string, data map[string]interface{}) (map[string]interface{}, error) {
+	payload := cloneMchPayload(data)
+	payload["merchantId"] = merchantId
+	return m.postMchJSON("/apiv2/merchant/updateIdCardInfo", payload)
+}
+
+func (m *Leshua) UpdateMchContactInfo(merchantId string, data map[string]interface{}) (map[string]interface{}, error) {
+	payload := cloneMchPayload(data)
+	payload["merchantId"] = merchantId
+	return m.postMchJSON("/apiv2/merchant/updateContactInfo", payload)
+}
+
+func (m *Leshua) SaveOrUpdateWxAuthFurtherInfo(merchantId string, data map[string]interface{}) (map[string]interface{}, error) {
+	payload := cloneMchPayload(data)
+	payload["merchantId"] = merchantId
+	return m.postMchJSON("/apiv2/merchant-wx-auth-further-info/saveOrUpdateInfo", payload)
+}
+
+func (m *Leshua) UpdateMchShortName(merchantId string, channel string, data map[string]interface{}) (map[string]interface{}, error) {
+	payload := cloneMchPayload(data)
+	payload["merchantId"] = merchantId
+
+	endpoint := ""
+	switch channel {
+	case "weixin":
+		endpoint = "/apiv2/merchant/merchantUpdateShortname"
+	case "alipay":
+		endpoint = "/apiv2/submch/syncZfbMsg"
+	default:
+		return nil, fmt.Errorf("不支持的渠道类型: %s", channel)
+	}
+
+	return m.postMchJSON(endpoint, payload)
+}
+
+func (m *Leshua) WechatSubjectPreCheck(merchantId string) (map[string]interface{}, error) {
+	return m.postMchJSON("/apiv2/wechat/subject/preCheck", map[string]string{"merchantId": merchantId})
+}
+
+func (m *Leshua) SetWechatPayConfig(merchantId string, data map[string]interface{}) (map[string]interface{}, error) {
+	payload := cloneMchPayload(data)
+	payload["merchantId"] = merchantId
+	return m.postMchJSON("/apiv2/wechat/wxpayconfig", payload)
+}
+
+func (m *Leshua) ReReportSubMerchant(merchantId string, channel string) (map[string]interface{}, error) {
+	return m.postMchJSON("/apiv2/submch/reReport", map[string]string{
+		"merchantId": merchantId,
+		"channel":    channel,
+	})
+}
+
+func (m *Leshua) ApplyMerchantAcqProtocol(merchantId string) (map[string]interface{}, error) {
+	return m.postMchJSON("/apiv2/merchantAcqProtocol/apply", map[string]string{"merchantId": merchantId})
+}
+
+func (m *Leshua) QueryMerchantAcqProtocol(merchantId string, contractId string) (map[string]interface{}, error) {
+	payload := map[string]string{"merchantId": merchantId}
+	if contractId != "" {
+		payload["contractId"] = contractId
+	}
+	return m.postMchJSON("/apiv2/merchantAcqProtocol/signQuery", payload)
+}
+
+func (m *Leshua) ApplyWechatSubjectVerify(merchantId string, microBizType string, confirmMchidList string) (map[string]interface{}, error) {
+	data := map[string]string{"merchantId": merchantId}
+	if microBizType != "" {
+		data["microBizType"] = microBizType
+	}
+	if confirmMchidList != "" {
+		data["confirmMchidList"] = confirmMchidList
+	}
+	return m.postMchJSON("/apiv2/wechat/subject/apply", data)
+}
+
+func (m *Leshua) QueryWechatSubjectVerify(merchantId string) (map[string]interface{}, error) {
+	return m.postMchJSON("/apiv2/wechat/subject/query", map[string]string{"merchantId": merchantId})
+}
+
+func (m *Leshua) ApplyAlipayVerification(merchantId string, confirmMchidList string) (map[string]interface{}, error) {
+	data := map[string]string{"merchantId": merchantId}
+	if confirmMchidList != "" {
+		data["confirmMchidList"] = confirmMchidList
+	}
+	return m.postMchJSON("/apiv2/zfbVerify/apply", data)
+}
+
+func (m *Leshua) QueryAlipayVerification(merchantId string, businessCode string, applymentId string) (map[string]interface{}, error) {
+	data := map[string]string{"merchantId": merchantId}
+	if businessCode != "" {
+		data["businessCode"] = businessCode
+	}
+	if applymentId != "" {
+		data["applymentId"] = applymentId
+	}
+	return m.postMchJSON("/apiv2/zfbVerify/queryApplyStatus", data)
+}
+
+func (m *Leshua) CancelWechatSubjectVerify(merchantId string) (map[string]interface{}, error) {
+	return m.postMchJSON("/apiv2/wechat/subject/cancel", map[string]string{"merchantId": merchantId})
+}
+
+func (m *Leshua) CancelAlipayVerification(merchantId string, businessCode string, applymentId string) (map[string]interface{}, error) {
+	data := map[string]string{"merchantId": merchantId}
+	if businessCode != "" {
+		data["businessCode"] = businessCode
+	}
+	if applymentId != "" {
+		data["applymentId"] = applymentId
+	}
+	return m.postMchJSON("/apiv2/zfbVerify/revoke", data)
+}
+
+func cloneMchPayload(data map[string]interface{}) map[string]interface{} {
+	payload := make(map[string]interface{}, len(data)+1)
+	for key, value := range data {
+		payload[key] = value
+	}
+	return payload
+}
