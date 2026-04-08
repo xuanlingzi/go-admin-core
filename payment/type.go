@@ -17,7 +17,7 @@ type AdapterPaymentService interface {
 type AdapterLeshuaService interface {
 	String() string
 	Close() error
-	PayByAuthCode(merchantID string, thirdOrderID string, authCode string, amountFen int64, body string, shopNo string, posNo string, terminalType string, terminalID string, goodsDetail string, sceneInfo string) (map[string]string, error)
+	PayByAuthCode(merchantID string, thirdOrderID string, authCode string, amountFen int64, body string, shopNo string, posNo string, terminalType string, terminalID string, goodsDetail string, sceneInfo string, royalty string) (map[string]string, error)
 	QueryOrder(merchantID, thirdOrderID string) (map[string]string, error)
 	CloseOrder(merchantID, thirdOrderID, leshuaOrderID string) (map[string]string, error)
 	CollectTerminalID(merchantID, serialNum, existingDeviceID string) (string, error)

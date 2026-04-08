@@ -79,7 +79,7 @@ func (m *Leshua) Close() error {
 // -------- 支付网关调用 --------
 
 // PayByAuthCode 发起付款码支付，返回原始响应 map，由 Service 层解析
-func (m *Leshua) PayByAuthCode(merchantID string, thirdOrderID string, authCode string, amountFen int64, body string, shopNo string, posNo string, terminalType string, terminalID string, goodsDetail string, sceneInfo string) (map[string]string, error) {
+func (m *Leshua) PayByAuthCode(merchantID string, thirdOrderID string, authCode string, amountFen int64, body string, shopNo string, posNo string, terminalType string, terminalID string, goodsDetail string, sceneInfo string, royalty string) (map[string]string, error) {
 	terminalInfo, _ := json.Marshal(map[string]string{
 		"device_type": terminalType,
 		"device_id":   terminalID,
@@ -102,6 +102,9 @@ func (m *Leshua) PayByAuthCode(merchantID string, thirdOrderID string, authCode 
 	}
 	if sceneInfo != "" {
 		params["scene_info"] = sceneInfo
+	}
+	if strings.TrimSpace(royalty) != "" {
+		params["royalty"] = strings.TrimSpace(royalty)
 	}
 	if m.NotifyURL != "" {
 		params["notify_url"] = m.NotifyURL
