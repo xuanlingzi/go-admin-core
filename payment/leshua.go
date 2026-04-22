@@ -118,7 +118,7 @@ func (m *Leshua) PayByAuthCode(merchantID string, thirdOrderID string, authCode 
 // QueryOrder 查询订单状态
 func (m *Leshua) QueryOrder(merchantID, thirdOrderID string) (map[string]string, error) {
 	params := map[string]string{
-		"service":        "query_order",
+		"service":        "query_status",
 		"sign_type":      "MD5",
 		"merchant_id":    merchantID,
 		"third_order_id": thirdOrderID,
@@ -682,6 +682,7 @@ const (
 	SplitCancelPath      = "/api/share-merchant/cancel"
 	SplitRefundPath      = "/api/share-merchant/refund"
 	SplitRefundQueryPath = "/api/share-merchant/refundQuery"
+	OrderSettleInfoPath  = "/apiv2/merchant/getOrderSettleInfo" // 商户交易订单清分结果查询
 )
 
 // postAggregateJSON 使用聚合常规签名发起 JSON 请求
@@ -881,6 +882,27 @@ func (m *Leshua) QueryRefundOrderSplit(merchantID, leshuaOrderID, thirdOrderID, 
 		return dataMap, nil
 	}
 	return nil, fmt.Errorf("返回数据并非JSON对象")
+}
+
+// -------- 订单清分结果查询（聚合签名） --------
+
+// QueryOrderSettleInfo 查询商户交易订单的清分结果（含交易手续费明细）
+// tradeType: 1=刷卡交易 2=扫码交易
+func (m *Leshua) QueryOrderSettleInfo(merchantID, leshuaOrderID string, tradeType string) (interface{}, error) {
+	bizData := map[string]interface{}{
+		"merchantId": merchantID,
+		"orderId":    leshuaOrderID,
+		"tradeType":  tradeType,
+	}
+	addr := m.CollectAddr + OrderSettleInfoPath
+	raw, err := m.postAggregateJSON(addr, bizData)
+	if err != nil {
+		return nil, err
+	}
+	if strings.TrimSpace(raw.RespCode) != "000000" {
+		return nil, fmt.Errorf("清分查询失败[%s]: %s", raw.RespCode, raw.RespMsg)
+	}
+	return raw.Data, nil
 }
 
 // -------- 商户入驻管理 API --------

@@ -39,5 +39,7 @@ type AdapterLeshuaService interface {
 	CancelOrderSplit(merchantID, leshuaOrderID, leshuaRoyaltyID, thirdRoyaltyID string) (map[string]interface{}, error)
 	RefundOrderSplit(merchantID, thirdOrderID, leshuaOrderID, thirdRefundID string, refundAmount int64, refundMode string, thirdRoyaltyID string, refundDetails []map[string]interface{}, notifyUrl string) (map[string]interface{}, error)
 	QueryRefundOrderSplit(merchantID, leshuaOrderID, thirdOrderID, thirdRefundID, leshuaRefundID string) (map[string]interface{}, error)
+	// 订单清分查询（聚合签名）
+	QueryOrderSettleInfo(merchantID, leshuaOrderID string, tradeType string) (interface{}, error)
 	GetClient() interface{}
 }
