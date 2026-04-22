@@ -28,6 +28,7 @@ type AmqpConsumerFunc func([]byte) error
 
 type AdapterMqtt interface {
 	String() string
+	Start() error
 	Subscribe(topic string, handlerFunc MqttConsumerFunc) error
 	Publish(topic string, payload interface{}) error
 	Close()
