@@ -41,5 +41,8 @@ type AdapterLeshuaService interface {
 	QueryRefundOrderSplit(merchantID, leshuaOrderID, thirdOrderID, thirdRefundID, leshuaRefundID string) (map[string]interface{}, error)
 	// 订单清分查询（聚合签名）
 	QueryOrderSettleInfo(merchantID, leshuaOrderID string, tradeType string) (interface{}, error)
+	// 商户账户查询（专用签名）
+	QueryAccountBalance(merchantID string, bookTypeNo string) (map[string]interface{}, error)
+	QueryAccountFlow(merchantID string, bookType int, remark string, beginTime, endTime string, page, num int) (map[string]interface{}, error)
 	GetClient() interface{}
 }

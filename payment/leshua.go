@@ -1195,3 +1195,145 @@ func cloneMchPayload(data map[string]interface{}) map[string]interface{} {
 	}
 	return payload
 }
+
+// -------- 商户账户查询接口（专用签名方式） --------
+
+const (
+	AccountBalanceQueryPath = "/open-api/merchant-withdraw/balance-query" // 商户账户余额查询
+	AccountFlowQueryPath    = "/open-api/merchant-withdraw/new-flow-query" // 商户账户流水查询
+)
+
+// calcAccountSign 商户账户接口签名：MD5(key + reqSerialNo + version + dataJSON)，32位小写
+func calcAccountSign(key, reqSerialNo, version, dataJSON string) string {
+	raw := key + reqSerialNo + version + dataJSON
+	sum := md5.Sum([]byte(raw))
+	return hex.EncodeToString(sum[:])
+}
+
+// leshuaAccountResp 账户接口的 JSON 响应结构
+type leshuaAccountResp struct {
+	Code int         `json:"code"`
+	Msg  string      `json:"msg"`
+	Data interface{} `json:"data"`
+}
+
+// postAccountJSON 商户账户接口通用请求（Content-Type: application/json，专用签名）
+func (m *Leshua) postAccountJSON(endpoint string, bizData interface{}) (*leshuaAccountResp, error) {
+	dataBytes, err := json.Marshal(bizData)
+	if err != nil {
+		return nil, fmt.Errorf("构造请求参数失败: %w", err)
+	}
+	dataJSON := string(dataBytes)
+
+	reqSerialNo := buildCollectReqSerialNo()
+	version := "2.0"
+	sign := calcAccountSign(m.TradeKey, reqSerialNo, version, dataJSON)
+
+	reqBody := map[string]interface{}{
+		"agentId":    m.CollectAgentID,
+		"version":    version,
+		"reqSerialNo": reqSerialNo,
+		"data":       bizData,
+		"sign":       sign,
+	}
+	bodyBytes, err := json.Marshal(reqBody)
+	if err != nil {
+		return nil, fmt.Errorf("序列化请求体失败: %w", err)
+	}
+
+	requestURL := strings.TrimRight(m.CollectAddr, "/") + endpoint
+	logger.Infof("[乐刷账户] POST %s\n请求: %s", endpoint, string(bodyBytes))
+
+	req, err := http.NewRequest(http.MethodPost, requestURL, bytes.NewReader(bodyBytes))
+	if err != nil {
+		return nil, fmt.Errorf("创建请求失败: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	start := time.Now()
+	resp, err := m.client.Do(req)
+	elapsed := time.Since(start)
+	if err != nil {
+		logger.Errorf("[乐刷账户] POST %s FAILED (%.0fms) err=%s", endpoint, float64(elapsed.Milliseconds()), err.Error())
+		return nil, fmt.Errorf("请求失败: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("读取响应失败: %w", err)
+	}
+	logger.Infof("[乐刷账户] POST %s %d (%.0fms) body=%s", endpoint, resp.StatusCode, float64(elapsed.Milliseconds()), string(body))
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("HTTP状态码异常: %d", resp.StatusCode)
+	}
+
+	var result leshuaAccountResp
+	if err = json.Unmarshal(body, &result); err != nil {
+		return nil, fmt.Errorf("解析响应JSON失败: %w", err)
+	}
+	return &result, nil
+}
+
+// QueryAccountBalance 查询商户账户余额
+// merchantID: 乐刷商户号
+// bookTypeNo: 账本类型编号（可选），如 "2031"=结算账本, "2025"=分账账本, 为空查全部
+func (m *Leshua) QueryAccountBalance(merchantID string, bookTypeNo string) (map[string]interface{}, error) {
+	bizData := map[string]interface{}{
+		"merchantId": merchantID,
+	}
+	if bookTypeNo != "" {
+		bizData["bookTypeNo"] = bookTypeNo
+	}
+
+	raw, err := m.postAccountJSON(AccountBalanceQueryPath, bizData)
+	if err != nil {
+		return nil, err
+	}
+	if raw.Code != 0 {
+		return nil, fmt.Errorf("余额查询失败[%d]: %s", raw.Code, raw.Msg)
+	}
+	if raw.Data == nil {
+		return nil, fmt.Errorf("余额查询返回数据为空")
+	}
+	if dataMap, ok := raw.Data.(map[string]interface{}); ok {
+		return dataMap, nil
+	}
+	return nil, fmt.Errorf("返回数据并非JSON对象")
+}
+
+// QueryAccountFlow 查询商户账户流水
+// merchantID: 乐刷商户号
+// bookType: 账本类型 1=结算账本 2=分账账本
+// remark: 流水类型筛选（可选）
+// beginTime/endTime: 查询时间范围（格式：yyyy-MM-dd HH:mm:ss）
+// page: 页码（从1开始）, num: 每页条数（最大200）
+func (m *Leshua) QueryAccountFlow(merchantID string, bookType int, remark string, beginTime, endTime string, page, num int) (map[string]interface{}, error) {
+	bizData := map[string]interface{}{
+		"merchantId": merchantID,
+		"bookType":   bookType,
+		"beginTime":  beginTime,
+		"endTime":    endTime,
+		"page":       page,
+		"num":        num,
+	}
+	if remark != "" {
+		bizData["remark"] = remark
+	}
+
+	raw, err := m.postAccountJSON(AccountFlowQueryPath, bizData)
+	if err != nil {
+		return nil, err
+	}
+	if raw.Code != 0 {
+		return nil, fmt.Errorf("流水查询失败[%d]: %s", raw.Code, raw.Msg)
+	}
+	if raw.Data == nil {
+		return nil, fmt.Errorf("流水查询返回数据为空")
+	}
+	if dataMap, ok := raw.Data.(map[string]interface{}); ok {
+		return dataMap, nil
+	}
+	return nil, fmt.Errorf("返回数据并非JSON对象")
+}
