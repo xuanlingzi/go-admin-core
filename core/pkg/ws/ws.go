@@ -5,13 +5,11 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"sync"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-
-	"github.com/xuanlingzi/go-admin-core/core/pkg"
 )
 
 // Manager 所有 websocket 信息
@@ -120,6 +118,13 @@ func (manager *Manager) Start() {
 				manager.Group[client.Group] = make(map[string]*Client)
 				manager.groupCount += 1
 			}
+			// 同 Group 同 Id 已有连接时，踢掉旧连接
+			if old, ok := manager.Group[client.Group][client.Id]; ok {
+				log.Printf("kick old client [%s] from group [%s]", old.Id, old.Group)
+				close(old.Message)
+				old.CancelFunc()
+				manager.clientCount -= 1
+			}
 			manager.Group[client.Group][client.Id] = client
 			manager.clientCount += 1
 			manager.Lock.Unlock()
@@ -130,26 +135,21 @@ func (manager *Manager) Start() {
 			manager.Lock.Lock()
 			if mGroup, ok := manager.Group[client.Group]; ok {
 				if mClient, ok := mGroup[client.Id]; ok {
-					close(mClient.Message)
-					delete(mGroup, client.Id)
-					manager.clientCount -= 1
-					if len(mGroup) == 0 {
-						//log.Printf("delete empty group [%s]", client.Group)
-						delete(manager.Group, client.Group)
-						manager.groupCount -= 1
+					// 只有当 map 中的 client 和请求注销的是同一个实例时才删除
+					// 避免旧连接的 UnRegister 误删已替换的新连接
+					if mClient == client {
+						close(mClient.Message)
+						delete(mGroup, client.Id)
+						manager.clientCount -= 1
+						if len(mGroup) == 0 {
+							delete(manager.Group, client.Group)
+							manager.groupCount -= 1
+						}
+						mClient.CancelFunc()
 					}
-					mClient.CancelFunc()
 				}
 			}
 			manager.Lock.Unlock()
-
-			// 发送广播数据到某个组的 channel 变量 Send 中
-			//case data := <-manager.boardCast:
-			//	if groupMap, ok := manager.wsGroup[data.GroupId]; ok {
-			//		for _, conn := range groupMap {
-			//			conn.Send <- data.Data
-			//		}
-			//	}
 		}
 	}
 }
@@ -172,7 +172,6 @@ func (manager *Manager) SendService() {
 func (manager *Manager) SendGroupService() {
 	for {
 		select {
-		// 发送广播数据到某个组的 channel 变量 Send 中
 		case data := <-manager.GroupMessage:
 			if groupMap, ok := manager.Group[data.Group]; ok {
 				for _, conn := range groupMap {
@@ -215,6 +214,20 @@ func (manager *Manager) SendGroup(group string, message []byte) {
 		Message: message,
 	}
 	manager.GroupMessage <- data
+}
+
+// SendByGroupPrefix 按 Group 名称前缀匹配广播
+// 用于按 dept_path 层级推送，例如 prefix="/0/1/" 会匹配 "/0/1/5/", "/0/1/6/" 等
+func (manager *Manager) SendByGroupPrefix(prefix string, message []byte) {
+	manager.Lock.Lock()
+	defer manager.Lock.Unlock()
+	for groupName, clients := range manager.Group {
+		if strings.HasPrefix(groupName, prefix) {
+			for _, conn := range clients {
+				conn.Message <- message
+			}
+		}
+	}
 }
 
 // 广播
@@ -270,7 +283,7 @@ var WebsocketManager = Manager{
 	clientCount:      0,
 }
 
-// gin 处理 websocket handler
+// gin 处理 websocket handler (通用版本，保留兼容)
 func (manager *Manager) WsClient(c *gin.Context) {
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -287,10 +300,9 @@ func (manager *Manager) WsClient(c *gin.Context) {
 	conn, err := upGrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		log.Printf("websocket connect error: %s", c.Param("channel"))
+		cancel()
 		return
 	}
-
-	fmt.Println("token: ", c.Query("token"))
 
 	client := &Client{
 		Id:         c.Param("id"),
@@ -304,9 +316,9 @@ func (manager *Manager) WsClient(c *gin.Context) {
 	manager.RegisterClient(client)
 	go client.Read(ctx)
 	go client.Write(ctx)
-	time.Sleep(time.Second * 15)
 
-	pkg.FileMonitoringById(ctx, "temp/logs/job/db-20200820.log", c.Param("id"), c.Param("channel"), SendOne)
+	// 阻塞等待连接关闭，保持 handler 不退出
+	<-ctx.Done()
 }
 
 func (manager *Manager) UnWsClient(c *gin.Context) {
@@ -319,21 +331,6 @@ func (manager *Manager) UnWsClient(c *gin.Context) {
 		"data": "ws close success",
 		"msg":  "success",
 	})
-}
-
-func SendGroup(msg []byte) {
-	WebsocketManager.SendGroup("leffss", []byte("{\"code\":200,\"data\":"+string(msg)+"}"))
-	fmt.Println(WebsocketManager.Info())
-}
-
-func SendAll(msg []byte) {
-	WebsocketManager.SendAll([]byte("{\"code\":200,\"data\":" + string(msg) + "}"))
-	fmt.Println(WebsocketManager.Info())
-}
-
-func SendOne(ctx context.Context, id string, group string, msg []byte) {
-	WebsocketManager.Send(ctx, id, group, []byte("{\"code\":200,\"data\":"+string(msg)+"}"))
-	fmt.Println(WebsocketManager.Info())
 }
 
 func WsLogout(id string, group string) {
