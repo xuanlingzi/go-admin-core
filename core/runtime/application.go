@@ -6,6 +6,7 @@ import (
 
 	"github.com/xuanlingzi/go-admin-core/barcode"
 	"github.com/xuanlingzi/go-admin-core/core/pkg/utils"
+	"github.com/xuanlingzi/go-admin-core/haibo"
 
 	"github.com/casbin/casbin/v2"
 	"github.com/gin-gonic/gin"
@@ -46,6 +47,7 @@ type Application struct {
 	leshua      map[string]payment.AdapterLeshuaService
 	zego        map[string]rtc.AdapterZegoService
 	barcode     map[string]barcode.AdapterBarcode
+	haibo       map[string]haibo.AdapterHaibo
 	handler     map[string][]func(r *gin.RouterGroup, hand ...*gin.HandlerFunc)
 	routers     []Router
 	configs     map[string]interface{} // 系统参数
@@ -199,6 +201,7 @@ func NewConfig() *Application {
 		leshua:      make(map[string]payment.AdapterLeshuaService),
 		zego:        make(map[string]rtc.AdapterZegoService),
 		barcode:     make(map[string]barcode.AdapterBarcode),
+		haibo:       make(map[string]haibo.AdapterHaibo),
 		handler:     make(map[string][]func(r *gin.RouterGroup, hand ...*gin.HandlerFunc)),
 		routers:     make([]Router, 0),
 		configs:     make(map[string]interface{}),
@@ -602,4 +605,24 @@ func (e *Application) GetBarcodeAdapters() map[string]barcode.AdapterBarcode {
 // GetBarcodeKey 获取指定 key 的条码查询适配器
 func (e *Application) GetBarcodeKey(key string) barcode.AdapterBarcode {
 	return getAdapter(e, e.barcode, key)
+}
+
+// SetHaiboServiceAdapter 设置海博开放平台适配器
+func (e *Application) SetHaiboServiceAdapter(key string, c haibo.AdapterHaibo) {
+	setAdapter(e, e.haibo, key, c)
+}
+
+// GetHaiboServiceAdapter 获取默认海博开放平台适配器
+func (e *Application) GetHaiboServiceAdapter() haibo.AdapterHaibo {
+	return e.GetHaiboServiceKey("*")
+}
+
+// GetHaiboServiceAdapters 获取全部海博开放平台适配器
+func (e *Application) GetHaiboServiceAdapters() map[string]haibo.AdapterHaibo {
+	return getAllAdapters(e, e.haibo)
+}
+
+// GetHaiboServiceKey 获取指定 key 的海博开放平台适配器
+func (e *Application) GetHaiboServiceKey(key string) haibo.AdapterHaibo {
+	return getAdapter(e, e.haibo, key)
 }
