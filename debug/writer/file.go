@@ -14,6 +14,11 @@ import (
 // 用于文件名称格式
 const timeFormat = "2006-01-02"
 
+const (
+	RotatePeriodDay  = "day"
+	RotatePeriodHour = "hour"
+)
+
 // FileWriter 文件写入结构体
 type FileWriter struct {
 	file         *os.File
@@ -77,10 +82,11 @@ func (p *FileWriter) write() {
 
 func (p *FileWriter) checkFile() {
 	info, _ := p.file.Stat()
-	if strings.Index(p.file.Name(), time.Now().Format(timeFormat)) < 0 ||
-		(p.opts.cap > 0 && uint(info.Size()) > p.opts.cap) {
+	periodChanged := p.periodRotateEnabled() && strings.Index(p.file.Name(), time.Now().Format(p.periodFormat())) < 0
+	capExceeded := p.opts.cap > 0 && uint(info.Size()) > p.opts.cap
+	if periodChanged || capExceeded {
 		//生成新文件
-		if uint(info.Size()) > p.opts.cap {
+		if capExceeded {
 			p.num++
 		} else {
 			p.num = 0
@@ -112,18 +118,51 @@ func (p *FileWriter) getFilename() string {
 	if p.FilenameFunc != nil {
 		return p.FilenameFunc(p)
 	}
+	period := time.Now().Format(p.periodFormat())
+	if p.opts.filename != "" && p.periodRotateEnabled() {
+		ext := filepath.Ext(p.opts.filename)
+		base := strings.TrimSuffix(p.opts.filename, ext)
+		if ext == "" {
+			ext = "." + p.opts.suffix
+		}
+		if p.opts.cap == 0 {
+			return filepath.Join(p.opts.path, fmt.Sprintf("%s.%s%s", base, period, ext))
+		}
+		return filepath.Join(p.opts.path, fmt.Sprintf("%s.%s-[%d]%s", base, period, p.num, ext))
+	}
 	if p.opts.filename != "" {
-		return filepath.Join(fmt.Sprintf("%s/%s", p.opts.path, p.opts.filename))
+		if p.opts.cap == 0 || p.num == 0 {
+			return filepath.Join(p.opts.path, p.opts.filename)
+		}
+		ext := filepath.Ext(p.opts.filename)
+		base := strings.TrimSuffix(p.opts.filename, ext)
+		if ext == "" {
+			ext = "." + p.opts.suffix
+		}
+		return filepath.Join(p.opts.path, fmt.Sprintf("%s-[%d]%s", base, p.num, ext))
 	}
 	if p.opts.cap == 0 {
 		return filepath.Join(p.opts.path,
 			fmt.Sprintf("%s.%s",
-				time.Now().Format(timeFormat),
+				period,
 				p.opts.suffix))
 	}
 	return filepath.Join(p.opts.path,
 		fmt.Sprintf("%s-[%d].%s",
-			time.Now().Format(timeFormat),
+			period,
 			p.num,
 			p.opts.suffix))
+}
+
+func (p *FileWriter) periodFormat() string {
+	if strings.EqualFold(p.opts.rotatePeriod, RotatePeriodHour) {
+		return "2006-01-02-15"
+	}
+	return timeFormat
+}
+
+func (p *FileWriter) periodRotateEnabled() bool {
+	return p.opts.filename == "" ||
+		strings.EqualFold(p.opts.rotatePeriod, RotatePeriodDay) ||
+		strings.EqualFold(p.opts.rotatePeriod, RotatePeriodHour)
 }

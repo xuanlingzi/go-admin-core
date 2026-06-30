@@ -4,10 +4,10 @@ import (
 	"io"
 	"os"
 
-	"github.com/xuanlingzi/go-admin-core/core/pkg"
 	"github.com/xuanlingzi/go-admin-core/debug/writer"
 	"github.com/xuanlingzi/go-admin-core/logger"
-	"github.com/xuanlingzi/go-admin-core/logger/zap"
+	"github.com/xuanlingzi/go-admin-core/plugins/logger/zap"
+	"github.com/xuanlingzi/go-admin-core/sdk/pkg"
 
 	log "github.com/xuanlingzi/go-admin-core/logger"
 )

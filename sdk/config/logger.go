@@ -1,6 +1,6 @@
 package config
 
-import "github.com/xuanlingzi/go-admin-core/core/pkg/logger"
+import "github.com/xuanlingzi/go-admin-core/sdk/pkg/logger"
 
 type Logger struct {
 	Type      string `json:"type,omitempty" yaml:"type"`

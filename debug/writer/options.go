@@ -9,10 +9,11 @@ package writer
 
 // Options 可配置参数
 type Options struct {
-	path     string
-	filename string
-	suffix   string //文件扩展名
-	cap      uint
+	path         string
+	filename     string
+	suffix       string //文件扩展名
+	cap          uint
+	rotatePeriod string
 }
 
 func setDefault() Options {
@@ -50,5 +51,12 @@ func WithSuffix(s string) Option {
 func WithCap(n uint) Option {
 	return func(o *Options) {
 		o.cap = n
+	}
+}
+
+// WithRotatePeriod set time based rotate period: day or hour
+func WithRotatePeriod(s string) Option {
+	return func(o *Options) {
+		o.rotatePeriod = s
 	}
 }
