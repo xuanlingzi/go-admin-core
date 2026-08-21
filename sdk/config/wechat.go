@@ -2,6 +2,9 @@ package config
 
 type WeChat struct {
 	Platforms *[]WeChatOption `json:"platforms" yaml:"platforms"`
+	// CryptoKey 解密 wechat_platform 表密文列（app_secret/aes_key/token）的口令，
+	// 与 rktv-console 的 WECHAT_CRYPTO_KEY 一致。为空则不启用「读库」，回退 yml。
+	CryptoKey string `json:"crypto_key" yaml:"crypto_key"`
 }
 
 var WeChatConfig = new(WeChat)
