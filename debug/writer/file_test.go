@@ -52,7 +52,7 @@ func TestFileWriterFilenameWithFixedNameAndRotate(t *testing.T) {
 				cap:      1024,
 			},
 			num:    2,
-			expect: filepath.Join("/tmp/logs", "app-[2].log"),
+			expect: filepath.Join("/tmp/logs", "app-2.log"),
 		},
 		{
 			name: "default filename with hour rotate",

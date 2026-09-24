@@ -8,6 +8,7 @@ import (
 	"github.com/xuanlingzi/go-admin-core/logger"
 	"github.com/xuanlingzi/go-admin-core/message"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -15,9 +16,15 @@ type Rabbit struct {
 	config   rabbitmq.Config
 	endpoint string
 
-	conn       *rabbitmq.Connection
-	connNotify chan *rabbitmq.Error
+	mu       sync.RWMutex
+	conn     *rabbitmq.Connection
+	shutdown chan struct{}
 }
+
+const (
+	reconnectMinBackoff = time.Second
+	reconnectMaxBackoff = 30 * time.Second
+)
 
 // NewRabbit redis模式
 func NewRabbit(addr, accessKey, secretKey, vhost string) (*Rabbit, error) {
@@ -30,12 +37,12 @@ func NewRabbit(addr, accessKey, secretKey, vhost string) (*Rabbit, error) {
 	endpoint := fmt.Sprintf("amqp://%v:%v@%v", accessKey, secretKey, addr)
 
 	r := &Rabbit{
-		config:     config,
-		endpoint:   endpoint,
-		connNotify: make(chan *rabbitmq.Error),
+		config:   config,
+		endpoint: endpoint,
+		shutdown: make(chan struct{}),
 	}
 
-	if err := r.reconnect(); err != nil {
+	if _, err := r.reconnect(); err != nil {
 		return nil, err
 	}
 	go r.keepAlive()
@@ -43,36 +50,93 @@ func NewRabbit(addr, accessKey, secretKey, vhost string) (*Rabbit, error) {
 	return r, nil
 }
 
-func (m *Rabbit) reconnect() error {
-	var err error
-	m.conn, err = rabbitmq.DialConfig(m.endpoint, m.config)
-	if err != nil {
-		return fmt.Errorf("reconnect to RabbitMQ: %w", err)
+// getConn 返回当前可用连接，已断开时就地重连一次（不重试，失败交给 keepAlive 兜底）
+func (m *Rabbit) getConn() (*rabbitmq.Connection, error) {
+	m.mu.RLock()
+	conn := m.conn
+	m.mu.RUnlock()
+	if conn != nil && !conn.IsClosed() {
+		return conn, nil
 	}
-	m.connNotify = m.conn.NotifyClose(make(chan *rabbitmq.Error))
-	return nil
+	return m.reconnect()
 }
 
+// reconnect 建立新连接；已有可用连接时直接复用，避免 keepAlive 与发布方并发重复拨号
+func (m *Rabbit) reconnect() (*rabbitmq.Connection, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	select {
+	case <-m.shutdown:
+		return nil, fmt.Errorf("RabbitMQ adapter closed")
+	default:
+	}
+	if m.conn != nil && !m.conn.IsClosed() {
+		return m.conn, nil
+	}
+
+	conn, err := rabbitmq.DialConfig(m.endpoint, m.config)
+	if err != nil {
+		return nil, fmt.Errorf("reconnect to RabbitMQ: %w", err)
+	}
+	m.conn = conn
+	return conn, nil
+}
+
+// keepAlive 监听连接关闭并持续重连（指数退避），任何失败都只记日志，绝不 panic
 func (m *Rabbit) keepAlive() {
 	for {
-		select {
-		case errNotify := <-m.connNotify:
+		m.mu.RLock()
+		conn := m.conn
+		m.mu.RUnlock()
 
-			logger.Errorf("RabbitMQ connection closed: %v", errNotify.Error())
-			if err := m.reconnect(); err != nil {
-				logger.Errorf("RabbitMQ reconnect failed: %v", err.Error())
+		// 连接已关闭时 NotifyClose 会立即关闭 channel，不会漏掉事件
+		notify := conn.NotifyClose(make(chan *rabbitmq.Error, 1))
+		select {
+		case <-m.shutdown:
+			return
+		case errNotify := <-notify:
+			if errNotify != nil {
+				logger.Errorf("RabbitMQ connection closed: %v", errNotify.Error())
+			} else {
+				logger.Errorf("RabbitMQ connection closed")
 			}
 		}
 
-		for err := range m.connNotify {
-			logger.Errorf("RabbitMQ connection closed: %v", err.Error())
+		backoff := reconnectMinBackoff
+		for {
+			if _, err := m.reconnect(); err == nil {
+				logger.Infof("RabbitMQ reconnected")
+				break
+			} else {
+				logger.Errorf("RabbitMQ reconnect failed, retry in %v: %v", backoff, err.Error())
+			}
+			select {
+			case <-m.shutdown:
+				return
+			case <-time.After(backoff):
+			}
+			backoff *= 2
+			if backoff > reconnectMaxBackoff {
+				backoff = reconnectMaxBackoff
+			}
 		}
 	}
 }
 
 // Close 关闭连接
 func (m *Rabbit) Close() {
-	_ = m.conn.Close()
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	select {
+	case <-m.shutdown:
+		return
+	default:
+		close(m.shutdown)
+	}
+	if m.conn != nil {
+		_ = m.conn.Close()
+	}
 }
 
 // PublishOnQueue 发布消息
@@ -86,14 +150,13 @@ func (m *Rabbit) PublishOnQueue(exchangeName, exchangeType, queueName, key, tag 
 		key = exchangeName
 	}
 
-	if m.conn.IsClosed() {
-		if err := m.reconnect(); err != nil {
-			return fmt.Errorf("reconnect failed: %w", err)
-		}
+	conn, err := m.getConn()
+	if err != nil {
+		return err
 	}
 
 	var channel *rabbitmq.Channel
-	channel, err = m.conn.Channel()
+	channel, err = conn.Channel()
 	if err != nil {
 		if channel != nil {
 			err = channel.Close()

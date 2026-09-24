@@ -113,7 +113,10 @@ func (p *FileWriter) Write(data []byte) (n int, err error) {
 }
 
 // getFilename 获取log文件名
-// 目前为：以日期格式命名，eg：2006-01-02.log or 2006-01-02.log
+// 统一命名契约：历史文件为 <name>.<日期段>[-<seq>].log，日期段在 .log 之前，
+// 大小分片序号 seq 递增不复用、无方括号（方括号是 shell glob / 正则元字符，
+// 会让外部日志打包脚本失配）。示例：prod-api.2026-09-08-10.log、
+// prod-api.2026-09-08-10-1.log。与 schedule-core(Python) 的命名保持一致。
 func (p *FileWriter) getFilename() string {
 	if p.FilenameFunc != nil {
 		return p.FilenameFunc(p)
@@ -128,7 +131,7 @@ func (p *FileWriter) getFilename() string {
 		if p.opts.cap == 0 {
 			return filepath.Join(p.opts.path, fmt.Sprintf("%s.%s%s", base, period, ext))
 		}
-		return filepath.Join(p.opts.path, fmt.Sprintf("%s.%s-[%d]%s", base, period, p.num, ext))
+		return filepath.Join(p.opts.path, fmt.Sprintf("%s.%s-%d%s", base, period, p.num, ext))
 	}
 	if p.opts.filename != "" {
 		if p.opts.cap == 0 || p.num == 0 {
@@ -139,7 +142,7 @@ func (p *FileWriter) getFilename() string {
 		if ext == "" {
 			ext = "." + p.opts.suffix
 		}
-		return filepath.Join(p.opts.path, fmt.Sprintf("%s-[%d]%s", base, p.num, ext))
+		return filepath.Join(p.opts.path, fmt.Sprintf("%s-%d%s", base, p.num, ext))
 	}
 	if p.opts.cap == 0 {
 		return filepath.Join(p.opts.path,
@@ -148,7 +151,7 @@ func (p *FileWriter) getFilename() string {
 				p.opts.suffix))
 	}
 	return filepath.Join(p.opts.path,
-		fmt.Sprintf("%s-[%d].%s",
+		fmt.Sprintf("%s-%d.%s",
 			period,
 			p.num,
 			p.opts.suffix))
