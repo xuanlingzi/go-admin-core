@@ -40,11 +40,21 @@ func (l *defaultLogger) String() string {
 	return "default"
 }
 
+// Fields 返回一个带上这些字段的新 logger，不改动自身（与 zap 实现一致）。
+//
+// 原实现直接改写共享 logger 的 opts.Fields 再返回自己。所有请求共用 DefaultLogger，
+// Helper 每次打日志都会先 Fields(h.fields)，并发时 A 请求设置的字段（request_id、url、
+// 响应体……）会被 B 请求、以及不带字段的 gorm SQL 日志打出来，日志前缀串到别的请求上。
 func (l *defaultLogger) Fields(fields map[string]interface{}) Logger {
-	l.Lock()
-	l.opts.Fields = copyFields(fields)
-	l.Unlock()
-	return l
+	l.RLock()
+	opts := l.opts
+	nfields := copyFields(l.opts.Fields)
+	l.RUnlock()
+	for k, v := range fields {
+		nfields[k] = v
+	}
+	opts.Fields = nfields
+	return &defaultLogger{opts: opts}
 }
 
 func copyFields(src map[string]interface{}) map[string]interface{} {
